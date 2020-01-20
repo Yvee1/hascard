@@ -1,16 +1,8 @@
+module Lib where
+
 import Data.List.Split
-import System.Environment (getArgs)
 import System.IO (stdin, hReady, hSetEcho, hSetBuffering, BufferMode(NoBuffering))
 import Data.Char
-
-main :: IO ()
-main = do
-  args <- getArgs
-  case args of
-    [input] -> do
-      file <- handleFilePath input
-      runFlashcards file
-    _ -> putStrLn "error: input filepath to a flashcard"
 
 handleFilePath :: FilePath -> IO String
 handleFilePath = readFile
