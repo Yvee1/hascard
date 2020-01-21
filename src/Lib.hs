@@ -1,23 +1,72 @@
+{-# LANGUAGE TemplateHaskell #-}
 module Lib where
 
 import Data.List.Split
 import System.IO (stdin, hReady, hSetEcho, hSetBuffering, BufferMode(NoBuffering))
 import Data.Char
+import Brick
+import qualified Brick.Widgets.Border as B
+import qualified Brick.Widgets.Border.Style as BS
+import qualified Brick.Widgets.Center as C
+import qualified Graphics.Vty as V
 
-handleFilePath :: FilePath -> IO String
-handleFilePath = readFile
+import Lens.Micro.Platform
 
 --                     Word   Description
 data Card = Definition String String
   deriving Show
 
-runFlashcards :: String -> IO ()
-runFlashcards input = do
-  hSetBuffering stdin NoBuffering
-  hSetEcho stdin False
+data State = State
+  { _cards    :: [Card]   -- list of flashcards
+  , _index    :: Int      -- current card index
+  , _correct  :: Int      -- not implemented, but for score keeping
+  }
+
+makeLenses ''State
+
+type Event = ()
+type Name = ()
+
+app :: App State Event Name
+app = App 
+  { appDraw = drawUI
+  , appChooseCursor = neverShowCursor
+  , appHandleEvent = handleEvent
+  , appStartEvent = return
+  , appAttrMap = const theMap
+  }
+
+drawUI :: State -> [Widget Name]
+drawUI s =  [drawCardUI s]
+
+drawCardUI :: State -> Widget Name
+drawCardUI s = C.center $
+               B.border $
+               hLimitPercent 60 $
+               vLimitPercent 40 $
+               padTopBottom 1 $
+               padLeftRight 5 $
+               C.hCenter (str title) <=> str descr
+  where Definition title descr = (s ^. cards) !! (s ^. index)
+
+handleEvent :: State -> BrickEvent Name Event -> EventM Name (Next State)
+handleEvent s (VtyEvent (V.EvKey (V.KChar 'q') [])) = halt s
+handleEvent s (VtyEvent (V.EvKey V.KEsc []))        = halt s
+handleEvent s (VtyEvent (V.EvKey V.KEnter []))      = continue $ next s
+handleEvent s _                                     = continue s
+
+theMap :: AttrMap
+theMap = attrMap V.defAttr []
+
+handleFilePath :: FilePath -> IO String
+handleFilePath = readFile
+
+runBrickFlashcards :: String -> IO ()
+runBrickFlashcards input = do
   let cards = stringToCards input
-  drawCards cards
-  quit 
+  let initialState = State cards 0 0
+  finalState <- defaultMain app initialState
+  pure ()
 
 stringToCards :: String -> [Card]
 stringToCards = map stringToCard . splitString
@@ -31,46 +80,5 @@ stringToCard s = let (firstLine : rest) = dropWhile (`elem` ["\n", "\r\n", "\r",
 splitString :: String -> [String]
 splitString = splitOn "---"
 
-drawCard :: Card -> IO ()
-drawCard (Definition word def) = do
-  cls
-  goto (1, 1)
-  putStr "\ESC[1;4m"
-  putStrLn word
-  putStr "\ESC[0m"
-  putStrLn def
-
-drawCards :: [Card] -> IO ()
-drawCards [] = pure ()
-drawCards (c : cs) = do
-  drawCard c
-  next cs
-  
-next :: [Card] -> IO ()
-next cs = do cmd <- getKey
-             case cmd of
-               "q" -> quit
-               "\ESC" -> quit
-               "\n" -> drawCards cs
-               _ -> next cs
-
-cls :: IO ()
-cls = putStr "\ESC[2J"
-
-type Pos = (Int, Int)
-
-goto :: Pos -> IO ()
-goto (x, y) = putStr ("\ESC[" ++ show y ++ ";" ++ show x ++ "H")
-
--- from https://stackoverflow.com/a/38553473/11931091
-getKey :: IO String
-getKey = reverse <$> getKey' ""
-  where getKey' chars = do
-          char <- getChar
-          more <- hReady stdin
-          (if more then getKey' else return) (char:chars)
-
-quit :: IO ()
-quit = do
-  cls
-  goto (1, 1)
+next :: State -> State
+next s = s & index %~ (+1)

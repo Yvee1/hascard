@@ -24,6 +24,8 @@ dependencies:
 - split
 - brick
 - word-wrap
+- vty
+- microlens-platform
 
 library:
   source-dirs: src

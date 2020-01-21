@@ -9,5 +9,5 @@ main = do
   case args of
     [input] -> do
       file <- handleFilePath input
-      runFlashcards file
+      runBrickFlashcards file
     _ -> putStrLn "error: input filepath to a flashcard"
