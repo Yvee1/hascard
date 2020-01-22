@@ -5,12 +5,12 @@ import Data.List.Split
 import System.IO (stdin, hReady, hSetEcho, hSetBuffering, BufferMode(NoBuffering))
 import Data.Char
 import Brick
+import Lens.Micro.Platform
 import qualified Brick.Widgets.Border as B
 import qualified Brick.Widgets.Border.Style as BS
 import qualified Brick.Widgets.Center as C
 import qualified Graphics.Vty as V
 
-import Lens.Micro.Platform
 
 --                     Word   Description
 data Card = Definition String String
@@ -39,25 +39,44 @@ app = App
 drawUI :: State -> [Widget Name]
 drawUI s =  [drawCardUI s]
 
+drawHeader :: String -> Widget Name
+drawHeader title = padBottom (Pad 1) $
+                   withAttr titleAttr $
+                   C.hCenter (str title)
+
+drawDescr :: String -> Widget Name
+drawDescr descr = padLeftRight 1 $
+                  strWrap descr
+
 drawCardUI :: State -> Widget Name
 drawCardUI s = C.center $
+               withBorderStyle BS.unicodeRounded $
                B.border $
+               withAttr textboxAttr $
                hLimitPercent 60 $
-               vLimitPercent 40 $
-               padTopBottom 1 $
-               padLeftRight 5 $
-               C.hCenter (str title) <=> str descr
+              --  vLimitPercent 40 $
+               drawHeader title <=> drawDescr descr
   where Definition title descr = (s ^. cards) !! (s ^. index)
 
 handleEvent :: State -> BrickEvent Name Event -> EventM Name (Next State)
-handleEvent s (VtyEvent (V.EvKey (V.KChar 'q') [])) = halt s
-handleEvent s (VtyEvent (V.EvKey V.KEsc []))        = halt s
-handleEvent s (VtyEvent (V.EvKey V.KEnter []))      = continue $ next s
-handleEvent s _                                     = continue s
+handleEvent s (VtyEvent (V.EvKey (V.KChar 'q') []))         = halt s
+handleEvent s (VtyEvent (V.EvKey V.KEsc []))                = halt s
+handleEvent s (VtyEvent (V.EvKey (V.KChar 'c') [V.MCtrl]))  = halt s
+handleEvent s (VtyEvent (V.EvKey V.KEnter []))              = continue $ next s
+handleEvent s _                                             = continue s
+
+titleAttr :: AttrName
+titleAttr = attrName "title"
+
+textboxAttr :: AttrName
+textboxAttr = attrName "textbox"
 
 theMap :: AttrMap
-theMap = attrMap V.defAttr []
-
+theMap = attrMap V.defAttr
+  [(titleAttr, bg V.green `V.withStyle` V.bold `V.withStyle` V.underline)
+  ,(textboxAttr, V.defAttr)
+  ]
+ 
 handleFilePath :: FilePath -> IO String
 handleFilePath = readFile
 
@@ -72,9 +91,10 @@ stringToCards :: String -> [Card]
 stringToCards = map stringToCard . splitString
 
 stringToCard :: String -> Card
-stringToCard s = let (firstLine : rest) = dropWhile (`elem` ["\n", "\r\n", "\r", ""]) (lines s) in
-  case firstLine of
-    ('#' : xs) -> Definition (dropWhile isSpace xs) (concat rest)
+stringToCard s = let (fstLine : ls@(sndLine : rest)) = dropWhile (`elem` ["\n", "\r\n", "\r", ""]) (lines s) in
+  case (fstLine, sndLine) of
+    -- ('#' : xs, '-' : ys) ->
+    ('#' : xs, _)        -> Definition (dropWhile isSpace xs) (concat ls)
     _ -> error ("encountered an invalid card: \n" ++ show (lines s))
 
 splitString :: String -> [String]
