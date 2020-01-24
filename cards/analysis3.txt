@@ -1,0 +1,45 @@
+# Irrotational
+curl F = 0
+
+---
+
+# Solenoïdal
+div F = 0
+
+---
+
+# Harmonic
+Δφ = div (grad φ) = 0
+
+---
+
+# Source-free
+∫∫(F, n)dσ = 0 for all closed surfaces S
+
+---
+
+# Hypothesis H
+For any closed surface in D, the domain enclosed by S is completely in D. Exs: sphere, cube, inside of torus, half-space. Not-fulfilling are: R^3 minus some points, domain in between two concentric spheres.
+
+---
+
+# div (curl F) = 0
+
+---
+
+# curl (grad φ) = 0
+
+---
+
+# Second derivative test
+f_xx * f_yy - f_xy^2 > 0 && f_xx > 0 => local min
+f_xx * f_yy - f_xy^2 > 0 && f_xx < 0 => local max
+f_xx * f_yy - f_xy^2 < 0 => saddle point
+
+---
+
+# Boundary candidates
+at a max && grad f(a) points outwards => max
+at a max && grad f(a) points inwards  => no extreme value
+at a min && grad f(a) points outwards => no extreme value
+at a min && grad f(a) points inwards  => min

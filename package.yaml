@@ -26,6 +26,7 @@ dependencies:
 - word-wrap
 - vty
 - microlens-platform
+- parsec
 
 library:
   source-dirs: src

@@ -1,32 +1,15 @@
 {-# LANGUAGE TemplateHaskell #-}
 module Lib where
 
-import Data.List.Split
 import System.IO (stdin, hReady, hSetEcho, hSetBuffering, BufferMode(NoBuffering))
 import Data.Char
-import Data.List (isPrefixOf)
 import Brick
 import Lens.Micro.Platform
-import qualified Data.List.NonEmpty as NE
+import Parser
 import qualified Brick.Widgets.Border as B
 import qualified Brick.Widgets.Border.Style as BS
 import qualified Brick.Widgets.Center as C
 import qualified Graphics.Vty as V
-
-data Type = Incorrect | Correct
-  deriving Show
-data CorrectOption = CorrectOption Int String
-  deriving Show
-newtype IncorrectOption = IncorrectOption String
-  deriving Show
-data Answer = Answer Type String
-  deriving Show
-
---                     Word   Description
-data Card = Definition String String
-          | MultipleChoice String CorrectOption [IncorrectOption]
-          | MultipleAnswer String (NE.NonEmpty Answer) 
-  deriving Show
 
 data State = State
   { _cards    :: [Card]   -- list of flashcards
@@ -93,6 +76,9 @@ handleEvent s (VtyEvent (V.EvKey (V.KChar 'q') []))         = halt s
 handleEvent s (VtyEvent (V.EvKey V.KEsc []))                = halt s
 handleEvent s (VtyEvent (V.EvKey (V.KChar 'c') [V.MCtrl]))  = halt s
 handleEvent s (VtyEvent (V.EvKey V.KEnter []))              = next s
+handleEvent s (VtyEvent (V.EvKey V.KRight []))              = next s
+handleEvent s (VtyEvent (V.EvKey (V.KChar ' ') []))         = next s
+handleEvent s (VtyEvent (V.EvKey V.KLeft  []))              = previous s
 handleEvent s _                                             = continue s
 
 titleAttr :: AttrName
@@ -117,33 +103,12 @@ runBrickFlashcards input = do
   finalState <- defaultMain app initialState
   pure ()
 
-stringToCards :: String -> [Card]
-stringToCards = map stringToCard . splitString
-
-stringToCard :: String -> Card
-stringToCard s = let (fstLine : ls@(sndLine : rest)) = dropWhile (`elem` ["\n", "\r\n", "\r", ""]) (lines s) in
-  case (fstLine, sndLine) of
-    ('#' : ' ' : question, '-' : ' ' : _) -> makeMultipleChoice question ls
-    ('#' : ' ' : question, '*' : ' ' : _) -> makeMultipleChoice question ls
-    ('#' : ' ' : title, _)           -> makeDefinition title ls
-    _                           -> error ("encountered an invalid card: \n" ++ show (lines s))
-
-makeDefinition :: String -> [String] -> Card
-makeDefinition title descr = Definition title (concat descr)
-
-makeMultipleChoice :: String -> [String] -> Card
-makeMultipleChoice question ls = MultipleChoice question correct incorrects
-  where (correct, incorrects) = makeMultipleChoice' [] [] 0 ls
-        makeMultipleChoice' [] _ _ [] = error ("multiple choice had no correct answer: \n" ++ unlines (question : ls))
-        makeMultipleChoice' [c] ics _ [] = (c, reverse ics)
-        makeMultipleChoice' _ _ _ [] = error ("multiple choice had multiple correct answers: \n" ++ unlines (question : ls))
-        makeMultipleChoice' cs ics i (('-' : ' ' : opt) : opts) = makeMultipleChoice' cs (IncorrectOption opt : ics) (i+1) opts
-        makeMultipleChoice' cs ics i (('*' : ' ' : opt) : opts) = makeMultipleChoice' (CorrectOption i opt : cs) ics (i+1) opts
-
-splitString :: String -> [String]
-splitString = splitOn "---"
-
 next :: State -> EventM Name (Next State)
 next s = if (s ^. index + 1) < length (s ^. cards)
           then continue $ s & index %~ (+1)
-          else halt s
+          -- else halt s
+          else continue s
+
+previous :: State -> EventM Name (Next State)
+previous s | s ^. index > 0 = continue $ s & index %~ subtract 1
+           | otherwise      = continue s
