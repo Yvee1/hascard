@@ -98,7 +98,9 @@ handleFilePath = readFile
 
 runBrickFlashcards :: String -> IO ()
 runBrickFlashcards input = do
-  let cards = stringToCards input
+  let cards = case parseCards input of
+              Left parseError -> error (show parseError)
+              Right result -> result 
   let initialState = State cards 0 0
   finalState <- defaultMain app initialState
   pure ()

@@ -43,3 +43,5 @@ at a max && grad f(a) points outwards => max
 at a max && grad f(a) points inwards  => no extreme value
 at a min && grad f(a) points outwards => no extreme value
 at a min && grad f(a) points inwards  => min
+
+---

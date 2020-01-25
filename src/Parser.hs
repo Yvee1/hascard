@@ -1,8 +1,7 @@
 module Parser where
   
-import Text.ParserCombinators.Parsec
-import Data.List.Split
-import qualified Data.List.NonEmpty as NE
+import Text.Parsec
+-- import qualified Data.List.NonEmpty as NE
 
 data Type = Incorrect | Correct
   deriving Show
@@ -13,53 +12,71 @@ newtype IncorrectOption = IncorrectOption String
 data Answer = Answer Type String
   deriving Show
 
---                     Word   Description
-data Card = Definition String String
-          | MultipleChoice String CorrectOption [IncorrectOption]
-          | MultipleAnswer String (NE.NonEmpty Answer) 
+--                         Pre    Gap    Post
+data Sentence = Perforated String String Sentence
+              | Normal String
+  deriving Show
+data Perforated = P String String Sentence
   deriving Show
 
--- cardsFile = sepBy card (char '|')
--- card = endBy line eol
--- line = prefix <|> sentence
--- sentence = many (noneOf "\n\r|")
--- eol = try (string "\n\r")
---   <|> try (string "\r\n")
---   <|> string "\n"
---   <|> string "\r"
---   <?> "end of line"
--- prefix = string "# "
---      <|> string "- "
---      <|> string "* "
+--                     Word   Description
+data Card = Definition String String
+          | OpenQuestion String Perforated
+          | MultipleChoice String CorrectOption [IncorrectOption]
+          -- | MultipleAnswer String (NE.NonEmpty Answer) 
+  deriving Show
 
--- parseCards :: String -> Either ParseError [[String]]
--- parseCards = parse cardsFile "(unknown)"
+uncurry3 f (a, b, c) = f a b c
+
+parseCards :: String -> Either ParseError [Card]
+parseCards = parse cards "failed when parsing cards"
+  where
+    cards = card `sepEndBy` seperator
+    card =  uncurry3 MultipleChoice<$> try pMultChoice
+        <|> uncurry Definition <$> pDef
+      --  <|> uncurry OpenQuestion <$> p_open
+
+    pHeader = do
+      many eol
+      char '#'
+      spaces
+      many notEOL
+
+    pDef = do
+      header <- pHeader
+      many eol
+      descr <- manyTill anyChar $ lookAhead (try seperator)
+      return (header, descr)
+
+    pMultChoice = do
+      header <- pHeader
+      many eol
+      options <- many1 pChoice
+      let (correct, incorrects) = makeMultipleChoice options
+      return (header, correct, incorrects)
+
+    pChoice = do
+      kind <- oneOf "*-"
+      space
+      text <- many (noneOf "*-") 
+      return (kind, text)
+
+    eol =  try (string "\n\r")
+       <|> try (string "\r\n")
+       <|> string "\n"
+       <|> string "\r"
+       <?> "end of line"
+
+    seperator = string "---"
+
+    notEOL = noneOf "\n\r"
 
 
---------------------------------
-
-stringToCards :: String -> [Card]
-stringToCards = map stringToCard . splitString
-
-stringToCard :: String -> Card
-stringToCard s = let (fstLine : ls@(sndLine : rest)) = dropWhile (`elem` ["\n", "\r\n", "\r", ""]) (lines s) in
-  case (fstLine, sndLine) of
-    ('#' : ' ' : question, '-' : ' ' : _) -> makeMultipleChoice question ls
-    ('#' : ' ' : question, '*' : ' ' : _) -> makeMultipleChoice question ls
-    ('#' : ' ' : title, _)           -> makeDefinition title ls
-    _                           -> error ("encountered an invalid card: \n" ++ show (lines s))
-
-makeDefinition :: String -> [String] -> Card
-makeDefinition title descr = Definition title (unlines descr)
-
-makeMultipleChoice :: String -> [String] -> Card
-makeMultipleChoice question ls = MultipleChoice question correct incorrects
-  where (correct, incorrects) = makeMultipleChoice' [] [] 0 ls
-        makeMultipleChoice' [] _ _ [] = error ("multiple choice had no correct answer: \n" ++ unlines (question : ls))
-        makeMultipleChoice' [c] ics _ [] = (c, reverse ics)
-        makeMultipleChoice' _ _ _ [] = error ("multiple choice had multiple correct answers: \n" ++ unlines (question : ls))
-        makeMultipleChoice' cs ics i (('-' : ' ' : opt) : opts) = makeMultipleChoice' cs (IncorrectOption opt : ics) (i+1) opts
-        makeMultipleChoice' cs ics i (('*' : ' ' : opt) : opts) = makeMultipleChoice' (CorrectOption i opt : cs) ics (i+1) opts
-
-splitString :: String -> [String]
-splitString = splitOn "---"
+makeMultipleChoice :: [(Char, String)] -> (CorrectOption, [IncorrectOption])
+makeMultipleChoice options = makeMultipleChoice' [] [] 0 options
+  where
+    makeMultipleChoice' [] _ _ [] = error ("multiple choice had no correct answer: \n" ++ show options)
+    makeMultipleChoice' [c] ics _ [] = (c, reverse ics)
+    makeMultipleChoice' _ _ _ [] = error ("multiple choice had multiple correct answers: \n" ++ show options)
+    makeMultipleChoice' cs ics i (('-', text) : opts) = makeMultipleChoice' cs (IncorrectOption text : ics) (i+1) opts
+    makeMultipleChoice' cs ics i (('*', text) : opts) = makeMultipleChoice' (CorrectOption i text : cs) ics (i+1) opts
