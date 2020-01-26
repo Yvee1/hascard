@@ -1,16 +1,15 @@
+# Multiple choice question, (only one answer is right)
+- Option 1
+* Option 2 (this is the correct answer)
+- Option 3
+- Option 4
+
+---
 # ipRGC
 intrinsically photosensitive Retinal Ganglion Cell
 
 ---
 # Retina
 Part of the eye that turns light into electrical neural impulses.
-
----
-
-# Multiple choice question, (only one answer is right)
-- Option 1
-* Option 2 (this is the correct answer)
-- Option 3
-- Option 4
 
 ---
