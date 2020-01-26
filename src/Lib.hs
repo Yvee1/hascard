@@ -45,7 +45,7 @@ drawDescr descr = padLeftRight 1 $
                   strWrap descr
 
 listMultipleChoice :: CorrectOption -> [IncorrectOption] -> String
-listMultipleChoice c = unlines . reverse . listMultipleChoice' [] 0 c
+listMultipleChoice c = concat . reverse . listMultipleChoice' [] 0 c
   where listMultipleChoice' opts i c@(CorrectOption j cStr) [] = 
           if i == j
             then cStr : opts
