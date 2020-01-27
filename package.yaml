@@ -27,6 +27,7 @@ dependencies:
 - vty
 - microlens-platform
 - parsec
+- containers
 
 library:
   source-dirs: src

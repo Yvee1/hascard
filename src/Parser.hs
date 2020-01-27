@@ -22,7 +22,10 @@ data Perforated = P String String Sentence
 --                     Word   Description
 data Card = Definition String String
           | OpenQuestion String Perforated
-          | MultipleChoice String CorrectOption [IncorrectOption]
+          | MultipleChoice {
+            mcQuestion   :: String,
+            mcCorrect    :: CorrectOption,
+            mcIncorrects :: [IncorrectOption]}
           -- | MultipleAnswer String (NE.NonEmpty Answer) 
   deriving Show
 

@@ -2,11 +2,12 @@
 
 module Lib where
 
-import System.IO (stdin, hReady, hSetEcho, hSetBuffering, BufferMode(NoBuffering))
 import Data.Char
 import Brick
 import Lens.Micro.Platform
 import Parser
+import Data.Map.Strict (Map)
+import qualified Data.Map.Strict as M
 import qualified Brick.Widgets.Border as B
 import qualified Brick.Widgets.Border.Style as BS
 import qualified Brick.Widgets.Center as C
@@ -20,7 +21,9 @@ data CardState =
   { _flipped        :: Bool }
   | MultipleChoiceState
   { _selected       :: Int
-  , _nChoices       :: Int }
+  , _nChoices       :: Int
+  , _tried          :: Map Int Bool      -- indices of tried choices
+  }
 
 data State = State
   { _cards          :: [Card]     -- list of flashcards
@@ -34,7 +37,7 @@ makeLenses ''State
 
 defaultCardState :: Card -> CardState
 defaultCardState Definition{} = DefinitionState { _flipped = False }
-defaultCardState (MultipleChoice _ _ ics) = MultipleChoiceState { _selected = 0, _nChoices = length ics + 1}
+defaultCardState (MultipleChoice _ _ ics) = MultipleChoiceState { _selected = 0, _nChoices = length ics + 1, _tried = M.fromList [(i, False) | i <- [0..length ics]]}
 
 app :: App State Event Name
 app = App 
@@ -80,10 +83,14 @@ drawCardUI s =
 
 drawOptions :: [String] -> State -> Widget Name
 drawOptions options s = case s ^. cardState of
-  MultipleChoiceState i _  -> drawDescr (concat formattedOptions)
-                              -- Add "* " to the beginning of selected option
-                              where formattedOptions = options & ix i %~ ("* "++) 
-  _                        -> error "impossible"
+  MultipleChoiceState {_selected=i, _tried=kvs}  -> vBox formattedOptions
+                  
+             where formattedOptions :: [Widget Name]
+                   formattedOptions = [ (if chosen then withAttr chosenOptAttr else id) $ drawDescr (if i==j then "* " ++ opt else opt) |
+                                        (j, opt) <- zip [0..] options,
+                                        let chosen = M.findWithDefault False j kvs ]
+
+  _                                  -> error "impossible"
 
 drawCardBox :: Widget Name -> Widget Name
 drawCardBox w = C.center $
@@ -96,18 +103,32 @@ handleEvent :: State -> BrickEvent Name Event -> EventM Name (Next State)
 handleEvent s (VtyEvent (V.EvKey (V.KChar 'q') []))         = halt s
 handleEvent s (VtyEvent (V.EvKey V.KEsc []))                = halt s
 handleEvent s (VtyEvent (V.EvKey (V.KChar 'c') [V.MCtrl]))  = halt s
-handleEvent s (VtyEvent (V.EvKey V.KEnter []))              = next s
 handleEvent s (VtyEvent (V.EvKey V.KRight []))              = next s
 handleEvent s (VtyEvent (V.EvKey (V.KChar ' ') []))         = next s
 handleEvent s (VtyEvent (V.EvKey V.KLeft  []))              = previous s
 handleEvent s (VtyEvent (V.EvKey V.KUp []))                 = continue $
   case s ^. cardState of
-    MultipleChoiceState i _ -> if i > 0 then s & (cardState.selected) -~ 1 else s
+    MultipleChoiceState {_selected=i} -> if i > 0 then s & (cardState.selected) -~ 1 else s
     _ -> s
-handleEvent s (VtyEvent (V.EvKey V.KDown []))                 = continue $
+
+handleEvent s (VtyEvent (V.EvKey V.KDown []))               = continue $
   case s ^. cardState of
-    MultipleChoiceState i nChoices -> if i < nChoices - 1 then s & (cardState.selected) +~ 1 else s
+    MultipleChoiceState {_selected=i, _nChoices = nChoices} ->
+      if i < nChoices - 1
+        then s & (cardState.selected) +~ 1
+        else s
     _ -> s
+
+handleEvent s (VtyEvent (V.EvKey V.KEnter []))              =
+  case s ^. cardState of
+    MultipleChoiceState {_selected=i} ->
+      case s ^. currentCard of
+        MultipleChoice _ (CorrectOption j _) _ ->
+          if i == j
+            then next s
+            else continue $ s & cardState.tried %~ M.insert i True
+        _ -> error "impossible"
+    _ -> continue s
 handleEvent s _                                             = continue s
   
 titleAttr :: AttrName
@@ -116,10 +137,14 @@ titleAttr = attrName "title"
 textboxAttr :: AttrName
 textboxAttr = attrName "textbox"
 
+chosenOptAttr :: AttrName
+chosenOptAttr = attrName "chosen option"
+
 theMap :: AttrMap
 theMap = attrMap V.defAttr
   [ (titleAttr, bg V.green `V.withStyle` V.bold `V.withStyle` V.underline)
   , (textboxAttr, V.defAttr)
+  , (chosenOptAttr, fg V.red)
   ]
  
 handleFilePath :: FilePath -> IO String
