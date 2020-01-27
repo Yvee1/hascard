@@ -76,13 +76,21 @@ drawCardUI :: State -> Widget Name
 drawCardUI s = 
   case (s ^. cards) !! (s ^. index) of
     Definition title descr -> drawCardBox $
-                              drawHeader title <=> drawDescr descr
+                              drawHeader title <=> drawDef s descr
                               
     MultipleChoice question correct others -> drawCardBox $
-                                              drawHeader question <=> drawOptions (listMultipleChoice correct others) s
+                                              drawHeader question <=> drawOptions s (listMultipleChoice correct others)
 
-drawOptions :: [String] -> State -> Widget Name
-drawOptions options s = case s ^. cardState of
+doif predicate action = if predicate then action else id
+
+drawDef :: State -> String -> Widget Name
+drawDef s def = case s ^. cardState of
+  DefinitionState {_flipped=f} -> doif (not f) (withAttr hiddenAttr) $ drawDescr def
+    
+  _ -> error "impossible: " 
+
+drawOptions :: State -> [String] -> Widget Name
+drawOptions s options = case s ^. cardState of
   MultipleChoiceState {_selected=i, _tried=kvs}  -> vBox formattedOptions
                   
              where formattedOptions :: [Widget Name]
@@ -128,7 +136,8 @@ handleEvent s (VtyEvent (V.EvKey V.KEnter []))              =
             then next s
             else continue $ s & cardState.tried %~ M.insert i True
         _ -> error "impossible"
-    _ -> continue s
+
+    DefinitionState{} -> continue $ s & cardState.flipped %~ not
 handleEvent s _                                             = continue s
   
 titleAttr :: AttrName
@@ -140,11 +149,15 @@ textboxAttr = attrName "textbox"
 chosenOptAttr :: AttrName
 chosenOptAttr = attrName "chosen option"
 
+hiddenAttr :: AttrName
+hiddenAttr = attrName "hidden"
+
 theMap :: AttrMap
 theMap = attrMap V.defAttr
   [ (titleAttr, bg V.green `V.withStyle` V.bold `V.withStyle` V.underline)
   , (textboxAttr, V.defAttr)
   , (chosenOptAttr, fg V.red)
+  , (hiddenAttr, fg V.black)
   ]
  
 handleFilePath :: FilePath -> IO String
@@ -163,12 +176,16 @@ runBrickFlashcards input = do
   pure ()
 
 next :: State -> EventM Name (Next State)
-next s = if (s ^. index + 1) < length (s ^. cards)
-          then continue $ s & index %~ (+1)
-          -- else halt s
-          else continue s
+next s
+  | s ^. index + 1 < length (s ^. cards) = continue . updateState $ s & index +~ 1
+  | otherwise                            = continue s
 
 previous :: State -> EventM Name (Next State)
-previous s | s ^. index > 0 = continue $ s & index %~ subtract 1
+previous s | s ^. index > 0 = continue . updateState $ s & index -~ 1
            | otherwise      = continue s
 
+updateState :: State -> State
+updateState s =
+  let card = (s ^. cards) !! (s ^. index) in s
+    & currentCard .~ card
+    & cardState .~ defaultCardState card
