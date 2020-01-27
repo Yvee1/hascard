@@ -81,11 +81,12 @@ drawCardUI s =
     MultipleChoice question correct others -> drawCardBox $
                                               drawHeader question <=> drawOptions s (listMultipleChoice correct others)
 
-doif predicate action = if predicate then action else id
+applyWhen predicate action = if predicate then action else id
+applyUnless p = applyWhen (not p)
 
 drawDef :: State -> String -> Widget Name
 drawDef s def = case s ^. cardState of
-  DefinitionState {_flipped=f} -> doif (not f) (withAttr hiddenAttr) $ drawDescr def
+  DefinitionState {_flipped=f} -> applyUnless f (withAttr hiddenAttr) $ drawDescr def
     
   _ -> error "impossible: " 
 
