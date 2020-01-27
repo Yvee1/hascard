@@ -29,6 +29,7 @@ dependencies:
 - parsec
 - containers
 - directory
+- text
 
 library:
   source-dirs: src
