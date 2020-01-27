@@ -58,8 +58,7 @@ drawProgress :: State -> Widget Name
 drawProgress s = C.hCenter $ str (show (s^.index + 1) ++ "/" ++ show (s^.nCards))
 
 drawHeader :: String -> Widget Name
-drawHeader title = padBottom (Pad 1) $
-                   withAttr titleAttr $
+drawHeader title = withAttr titleAttr $
                    padLeftRight 1 $
                    C.hCenter (strWrap title)
 
@@ -79,11 +78,11 @@ listMultipleChoice c = reverse . listMultipleChoice' [] 0 c
             else listMultipleChoice' (icStr : opts) (i+1) c ics'
 
 drawCardUI :: State -> Widget Name
-drawCardUI s = drawCardBox $ (<=> drawProgress s) $ 
+drawCardUI s = joinBorders $ drawCardBox $ (<=> drawProgress s) $
   case (s ^. cards) !! (s ^. index) of
-    Definition title descr -> drawHeader title <=> drawDef s descr
+    Definition title descr -> drawHeader title <=> B.hBorder <=> drawDef s descr
                               
-    MultipleChoice question correct others -> drawHeader question <=> drawOptions s (listMultipleChoice correct others)
+    MultipleChoice question correct others -> drawHeader question <=> B.hBorder <=> drawOptions s (listMultipleChoice correct others)
 
 applyWhen :: Bool -> (a -> a) -> a -> a
 applyWhen predicate action = if predicate then action else id
@@ -162,7 +161,7 @@ hiddenAttr = attrName "hidden"
 
 theMap :: AttrMap
 theMap = attrMap V.defAttr
-  [ (titleAttr, bg V.green `V.withStyle` V.bold `V.withStyle` V.underline)
+  [ (titleAttr, fg V.yellow `V.withStyle` V.bold)
   , (textboxAttr, V.defAttr)
   , (chosenOptAttr, fg V.red)
   , (hiddenAttr, fg V.black)
