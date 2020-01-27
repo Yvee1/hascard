@@ -1,6 +1,6 @@
 module Main where
 
-import Lib
+import Lib (runBrickFlashcards)
 import System.Environment (getArgs)
 
 main :: IO ()
@@ -11,3 +11,6 @@ main = do
       file <- handleFilePath input
       runBrickFlashcards file
     _ -> putStrLn "error: input filepath to a flashcard"
+
+handleFilePath :: FilePath -> IO String
+handleFilePath = readFile

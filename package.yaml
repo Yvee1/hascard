@@ -28,6 +28,7 @@ dependencies:
 - microlens-platform
 - parsec
 - containers
+- directory
 
 library:
   source-dirs: src
