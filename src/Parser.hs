@@ -53,8 +53,8 @@ parseCards = parse pCards "failed when parsing cards"
 
 pCards = pCard `sepEndBy` seperator
 pCard =  uncurry3 MultipleChoice<$> try pMultChoice
-    <|> uncurry Definition <$> pDef
-  --  <|> uncurry OpenQuestion <$> p_open
+     <|> uncurry OpenQuestion <$> try pOpen
+     <|> uncurry Definition <$> pDef
 
 pHeader = do
   many eol
@@ -78,11 +78,40 @@ pMultChoice = do
 pChoice = do
   kind <- oneOf "*-"
   space
-  text <- many (noneOf "*-") 
+  text <- many (noneOf "*-")
   return (kind, text)
 
 annoyance =  string "- "
          <|> string "* "
+
+pOpen = do
+  header <- pHeader
+  many eol
+  (pre, gap) <- pGap
+  sentence <- pSentence
+
+  return (header, P pre gap sentence)
+
+pSentence =  try pPerforated
+         <|> pNormal
+  
+pPerforated = do
+  (pre, gap) <- pGap
+  Perforated pre gap <$> pSentence 
+  
+pGap = do
+  pre <- manyTill anyChar $ lookAhead (try annoyance2)
+  char '_'
+  gap <- manyTill (noneOf "_") $ lookAhead (try annoyance2)
+  char '_'
+  return (pre, gap)
+
+annoyance2 =  seperator
+          <|> string "_"
+
+pNormal = do
+  text <- manyTill (noneOf "_") $ lookAhead (try annoyance2)
+  return (Normal text)
 
 eol =  try (string "\n\r")
     <|> try (string "\r\n")
