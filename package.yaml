@@ -30,6 +30,7 @@ dependencies:
 - containers
 - directory
 - text
+- vector
 
 library:
   source-dirs: src

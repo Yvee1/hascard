@@ -1,29 +1,22 @@
-{-# OPTIONS_GHC -Wall #-}
-{-# LANGUAGE OverloadedStrings #-}
-
 module MainMenuUI where
 
 import Brick
-import System.Directory (getDirectoryContents)
-import Parser
-import Data.Map.Strict (Map)
-import Data.List
-import Data.Char
--- import Data.
-import Control.Exception (displayException)
-import qualified Data.Map.Strict as M
 import Brick.Widgets.Border
 import Brick.Widgets.Border.Style
 import Brick.Widgets.Center
+import CardUI (runCardUI)
+import FileBrowserUI (runFileBrowserUI)
+import Brick.Widgets.FileBrowser (FileInfo, fileInfoFilePath)
 import qualified Data.Text as Text
-import Brick.Widgets.List
-import Brick.Widgets.FileBrowser
+import qualified Data.Vector as Vec
 import qualified Graphics.Vty as V
+import qualified Brick.Widgets.List as L
 
 type Event = ()
 type Name = ()
+type State = L.List Name String
 
-app :: App (FileBrowser Name) Event Name
+app :: App State Event Name
 app = App 
   { appDraw = drawUI
   , appChooseCursor = neverShowCursor
@@ -32,73 +25,92 @@ app = App
   , appAttrMap = const theMap
   }
 
-errorAttr :: AttrName
-errorAttr = "error"
+title :: Widget Name
+title = withAttr titleAttr $
+        str "┬ ┬┌─┐┌─┐┌─┐┌─┐┬─┐┌┬┐" <=>
+        str "├─┤├─┤└─┐│  ├─┤├┬┘ ││" <=>
+        str "┴ ┴┴ ┴└─┘└─┘┴ ┴┴└──┴┘" 
+
+drawUI :: State -> [Widget Name]
+drawUI s = 
+  [ drawMenu s ]
+
+drawMenu :: State -> Widget Name
+drawMenu s = 
+  joinBorders $
+  center $ 
+  withBorderStyle unicodeRounded $
+  border $
+  -- hLimit 21 $
+  hLimitPercent 60 $
+  hCenter title <=>
+  hBorder <=>
+  hCenter (drawList s)
+
+drawList :: State -> Widget Name
+drawList s = hLimit 11 $
+             vLimit 3  $
+             L.renderList drawListElement True s
+
+drawListElement :: Bool -> String -> Widget Name
+drawListElement selected text = str text
+
+titleAttr :: AttrName
+titleAttr = attrName "title"
 
 theMap :: AttrMap
 theMap = attrMap V.defAttr
-    [ (listSelectedFocusedAttr, V.black `on` V.yellow)
-    , (fileBrowserCurrentDirectoryAttr, V.white `on` V.blue)
-    , (fileBrowserSelectionInfoAttr, V.white `on` V.blue)
-    , (fileBrowserDirectoryAttr, fg V.blue)
-    , (fileBrowserBlockDeviceAttr, fg V.magenta)
-    , (fileBrowserCharacterDeviceAttr, fg V.green)
-    , (fileBrowserNamedPipeAttr, fg V.yellow)
-    , (fileBrowserSymbolicLinkAttr, fg V.cyan)
-    , (fileBrowserUnixSocketAttr, fg V.red)
-    , (fileBrowserSelectedAttr, V.white `on` V.magenta)
-    , (errorAttr, fg V.red)
-    ]
+    [ (L.listAttr,            V.defAttr)
+    , (L.listSelectedAttr,    fg V.white `V.withStyle` V.underline)
+    , (titleAttr, fg V.yellow) ]
 
--- drawUI :: FileBrowser Name -> [Widget Name]
--- drawUI b = [renderFileBrowser True b]
+handleEvent :: State -> BrickEvent Name Event -> EventM Name (Next State)
+handleEvent l (VtyEvent e) =
+    case e of
+        V.EvKey V.KEnter [] -> halt l
 
-drawUI :: FileBrowser Name -> [Widget Name]
-drawUI b = [center $ ui <=> help]
-    where
-        ui = hCenter $
-             vLimit 15 $
-             hLimit 50 $
-             borderWithLabel (txt "Choose a file") $
-             renderFileBrowser True b
-        help = padTop (Pad 1) $
-               vBox [ case fileBrowserException b of
-                          Nothing -> emptyWidget
-                          Just e -> hCenter $ withDefAttr errorAttr $
-                                    txt $ Text.pack $ displayException e
-                    , hCenter $ txt "Up/Down: select"
-                    , hCenter $ txt "/: search, Ctrl-C or Esc: cancel search"
-                    , hCenter $ txt "Enter: change directory or select file"
-                    , hCenter $ txt "Esc: quit"
-                    ]
+        ev -> continue =<< L.handleListEvent ev l
+handleEvent l _ = continue l
 
-handleEvent :: FileBrowser Name -> BrickEvent Name Event -> EventM Name (Next (FileBrowser Name))
-handleEvent b (VtyEvent ev) =
-    case ev of
-        V.EvKey V.KEsc [] | not (fileBrowserIsSearching b) ->
-            halt b
-        V.EvKey (V.KChar 'c') [V.MCtrl] | not (fileBrowserIsSearching b) ->
-            halt b
-        _ -> do
-            b' <- handleFileBrowserEvent ev b
-            -- If the browser has a selected file after handling the
-            -- event (because the user pressed Enter), shut down.
-            case ev of
-                V.EvKey V.KEnter [] ->
-                    case fileBrowserSelection b' of
-                        [] -> continue b'
-                        _ -> halt b'
-                _ -> continue b'
-handleEvent b _ = continue b
-
-runMainMenuUI :: IO FileInfo
+runMainMenuUI :: IO ()
 runMainMenuUI = do
-  browser <- newFileBrowser selectNonDirectories () Nothing
-  let filteredBrowser = setFileBrowserEntryFilter (Just (fileExtensionMatch' "txt")) browser
-  b <- defaultMain app filteredBrowser
-  return $ head (fileBrowserSelection b)
+  let initialState = L.list () (Vec.fromList
+                                [ "Select file"
+                                , "Info"
+                                , "Quit" ]) 1
+  endState <- defaultMain app initialState
+  case L.listSelected endState of
+    Just 0 -> runFileBrowser
+    Just 1 -> undefined
+    Just 2 -> return ()
+    _ -> undefined
 
-fileExtensionMatch' :: String -> FileInfo -> Bool
-fileExtensionMatch' ext i = case fileInfoFileType i of
-    Just RegularFile -> ('.' : (toLower <$> ext)) `isSuffixOf` (toLower <$> fileInfoFilename i)
-    _ -> True
+runFileBrowser :: IO ()
+runFileBrowser = do
+  mFileInfo <- runFileBrowserUI
+  case mFileInfo of
+    Nothing -> return ()
+    Just fileInfo -> do
+      str <- readFile $ fileInfoFilePath fileInfo
+      finalState <- runCardUI str
+      return ()
+
+--   _    _                             _ 
+--  | |  | |                           | |
+--  | |__| | __ _ ___  ___ __ _ _ __ __| |
+--  |  __  |/ _` / __|/ __/ _` | '__/ _` |
+--  | |  | | (_| \__ \ (_| (_| | | | (_| |
+--  |_|  |_|\__,_|___/\___\__,_|_|  \__,_|
+                                       
+                                       
+
+--   _                                 _ 
+--  | |                               | |
+--  | |__   __ _ ___  ___ __ _ _ __ __| |
+--  | '_ \ / _` / __|/ __/ _` | '__/ _` |
+--  | | | | (_| \__ \ (_| (_| | | | (_| |
+--  |_| |_|\__,_|___/\___\__,_|_|  \__,_|
+                                      
+-- ┬ ┬┌─┐┌─┐┌─┐┌─┐┬─┐┌┬┐
+-- ├─┤├─┤└─┐│  ├─┤├┬┘ ││
+-- ┴ ┴┴ ┴└─┘└─┘┴ ┴┴└──┴┘

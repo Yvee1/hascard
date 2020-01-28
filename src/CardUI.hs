@@ -161,7 +161,7 @@ hiddenAttr = attrName "hidden"
 
 theMap :: AttrMap
 theMap = attrMap V.defAttr
-  [ (titleAttr, fg V.yellow `V.withStyle` V.bold)
+  [ (titleAttr, fg V.yellow)
   , (textboxAttr, V.defAttr)
   , (chosenOptAttr, fg V.red)
   , (hiddenAttr, fg V.black)
