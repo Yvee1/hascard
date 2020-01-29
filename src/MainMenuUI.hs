@@ -53,15 +53,22 @@ drawList s = hLimit 11 $
              L.renderList drawListElement True s
 
 drawListElement :: Bool -> String -> Widget Name
-drawListElement selected text = str text
+drawListElement selected text = 
+  hCenter $
+  attr $
+  str text
+  where attr = if selected then withAttr selectedAttr else id
 
 titleAttr :: AttrName
 titleAttr = attrName "title"
 
+selectedAttr :: AttrName
+selectedAttr = attrName "selected"
+
 theMap :: AttrMap
 theMap = attrMap V.defAttr
     [ (L.listAttr,            V.defAttr)
-    , (L.listSelectedAttr,    fg V.white `V.withStyle` V.underline)
+    , (selectedAttr,    fg V.white `V.withStyle` V.underline)
     , (titleAttr, fg V.yellow) ]
 
 handleEvent :: State -> BrickEvent Name Event -> EventM Name (Next State)

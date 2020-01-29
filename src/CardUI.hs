@@ -26,6 +26,7 @@ data CardState =
   | OpenQuestionState
   { _gapInput       :: Map Int String
   , _selectedGap    :: Int
+  , _nGaps          :: Int
   }
   deriving Show
 
@@ -43,13 +44,13 @@ makeLenses ''State
 defaultCardState :: Card -> CardState
 defaultCardState Definition{} = DefinitionState { _flipped = False }
 defaultCardState (MultipleChoice _ _ ics) = MultipleChoiceState { _selected = 0, _nChoices = length ics + 1, _tried = M.fromList [(i, False) | i <- [0..length ics]]}
-defaultCardState (OpenQuestion _ perforated) = OpenQuestionState { _gapInput = M.empty, _selectedGap = 0 }
+defaultCardState (OpenQuestion _ perforated) = OpenQuestionState { _gapInput = M.empty, _selectedGap = 0, _nGaps = nGapsInPerforated perforated }
 
 
 app :: App State Event Name
 app = App 
   { appDraw = drawUI
-  , appChooseCursor = neverShowCursor
+  , appChooseCursor = showFirstCursor
   , appHandleEvent = handleEvent
   , appStartEvent = return
   , appAttrMap = const theMap
@@ -120,15 +121,14 @@ drawOptions s options = case s ^. cardState of
 drawPerforated :: State -> Perforated -> Widget Name
 drawPerforated s p = drawSentence s $ perforatedToSentence p
 
-perforatedToSentence :: Perforated -> Sentence
-perforatedToSentence (P pre gap sentence) = Perforated pre gap sentence
-
 drawSentence :: State -> Sentence -> Widget Name
 drawSentence = drawSentence' 0
 drawSentence' i s (Normal text)             = str text
 drawSentence' i s (Perforated pre gap post) = case s ^. cardState of
-  OpenQuestionState {_gapInput = kvs } -> str pre <+> str gap <+> drawSentence' (i+1) s post
-    where gap = M.findWithDefault "default" i kvs
+  OpenQuestionState {_gapInput = kvs, _selectedGap=j } -> str pre <+> cursor (str gap) <+> drawSentence' (i+1) s post
+    where gap = M.findWithDefault "" i kvs
+          cursor :: Widget Name -> Widget Name
+          cursor = if i == j then showCursor () (Location (length gap, 0)) else id
   _ -> error "impossible"
 
 drawCardBox :: Widget Name -> Widget Name
@@ -169,11 +169,23 @@ handleEvent s (VtyEvent ev) = case ev of
             else continue $ s & cardState.flipped %~ not
         _ -> continue s
     
-    OpenQuestionState {_selectedGap = i} ->
+    OpenQuestionState {_selectedGap = i, _nGaps = n, _gapInput = kvs} ->
       case ev of
+        V.EvKey (V.KChar '\t') [] -> continue $ 
+          if i < n - 1
+            then s & (cardState.selectedGap) +~ 1
+            else s & (cardState.selectedGap) .~ 0
         V.EvKey (V.KChar c) [] -> continue $
           s & cardState.gapInput.at i.non "" %~ (++[c])    -- should prob. use snoc list for better efficiency
-        V.EvKey V.KEnter [] -> error (show (s^.cardState))
+        V.EvKey V.KEnter [] -> case s ^. currentCard of
+          OpenQuestion _ perforated -> if correct then next s else continue s
+            where correct :: Bool
+                  correct = foldSentenceIndex sent perf sentence
+                  sentence = perforatedToSentence perforated
+                  sent _ _ = True
+                  perf _ gap acc i = acc && gap == M.findWithDefault "" i kvs
+                  
+          _ -> error "impossible"
         V.EvKey V.KBS [] -> continue $ s & cardState.gapInput.ix i %~ backspace
           where backspace "" = ""
                 backspace xs = init xs
@@ -217,7 +229,7 @@ runCardUI input = do
 next :: State -> EventM Name (Next State)
 next s
   | s ^. index + 1 < length (s ^. cards) = continue . updateState $ s & index +~ 1
-  | otherwise                            = continue s
+  | otherwise                            = halt s
 
 previous :: State -> EventM Name (Next State)
 previous s | s ^. index > 0 = continue . updateState $ s & index -~ 1
