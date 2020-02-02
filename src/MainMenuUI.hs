@@ -1,11 +1,11 @@
-module MainMenuUI where
+module MainMenuUI (runMainMenuUI) where
 
 import Brick
 import Brick.Widgets.Border
 import Brick.Widgets.Border.Style
 import Brick.Widgets.Center
-import CardUI (runCardUI)
-import FileBrowserUI (runFileBrowserUI)
+import CardUI
+import FileBrowserUI
 import Brick.Widgets.FileBrowser (FileInfo, fileInfoFilePath)
 import qualified Data.Text as Text
 import qualified Data.Vector as Vec

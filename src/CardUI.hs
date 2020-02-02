@@ -1,10 +1,11 @@
--- {-# OPTIONS_GHC -Wall #-}
+{-# OPTIONS_GHC -Wall #-}
 {-# LANGUAGE TemplateHaskell #-}
-module CardUI where
+module CardUI (runCardUI) where
 
 import Brick
 import Lens.Micro.Platform
 import Parser
+import Types
 import Data.Map.Strict (Map)
 import qualified Data.Map.Strict as M
 import qualified Brick.Widgets.Border as B
@@ -28,7 +29,6 @@ data CardState =
   , _selectedGap    :: Int
   , _nGaps          :: Int
   }
-  deriving Show
 
 data State = State
   { _cards          :: [Card]     -- list of flashcards
@@ -123,13 +123,14 @@ drawPerforated s p = drawSentence s $ perforatedToSentence p
 
 drawSentence :: State -> Sentence -> Widget Name
 drawSentence = drawSentence' 0
-drawSentence' i s (Normal text)             = str text
-drawSentence' i s (Perforated pre gap post) = case s ^. cardState of
-  OpenQuestionState {_gapInput = kvs, _selectedGap=j } -> str pre <+> cursor (str gap) <+> drawSentence' (i+1) s post
-    where gap = M.findWithDefault "" i kvs
-          cursor :: Widget Name -> Widget Name
-          cursor = if i == j then showCursor () (Location (length gap, 0)) else id
-  _ -> error "impossible"
+  where
+    drawSentence' _ _ (Normal text)             = str text
+    drawSentence' i s (Perforated pre gap post) = case s ^. cardState of
+      OpenQuestionState {_gapInput = kvs, _selectedGap=j } -> str pre <+> cursor (withAttr gapAttr (str gap)) <+> drawSentence' (i+1) s post
+        where gap = M.findWithDefault "" i kvs
+              cursor :: Widget Name -> Widget Name
+              cursor = if i == j then showCursor () (Location (length gap, 0)) else id
+      _ -> error "impossible"
 
 drawCardBox :: Widget Name -> Widget Name
 drawCardBox w = C.center $
@@ -190,6 +191,7 @@ handleEvent s (VtyEvent ev) = case ev of
           where backspace "" = ""
                 backspace xs = init xs
         _ -> continue s
+handleEvent s _ = continue s
 -- handleEvent s (VtyEvent (V.EvKey V.KRight []))              = next s
 -- handleEvent s (VtyEvent (V.EvKey (V.KChar ' ') []))         = next s
 -- handleEvent s (VtyEvent (V.EvKey V.KLeft  []))              = previous s
@@ -206,12 +208,16 @@ chosenOptAttr = attrName "chosen option"
 hiddenAttr :: AttrName
 hiddenAttr = attrName "hidden"
 
+gapAttr :: AttrName
+gapAttr = attrName "gap"
+
 theMap :: AttrMap
 theMap = attrMap V.defAttr
   [ (titleAttr, fg V.yellow)
   , (textboxAttr, V.defAttr)
   , (chosenOptAttr, fg V.red)
   , (hiddenAttr, fg V.black)
+  , (gapAttr, V.defAttr `V.withStyle` V.underline)
   ]
 
 runCardUI :: String -> IO State

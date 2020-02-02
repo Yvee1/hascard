@@ -1,5 +1,5 @@
 module Lib where
-import MainMenuUI (runMainMenuUI)
+import MainMenuUI
 
 runBrickFlashcards :: IO ()
 runBrickFlashcards = runMainMenuUI

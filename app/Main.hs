@@ -4,5 +4,4 @@ import Lib (runBrickFlashcards)
 import System.Environment (getArgs)
 
 main :: IO ()
-main = do
-  runBrickFlashcards
+main = runBrickFlashcards

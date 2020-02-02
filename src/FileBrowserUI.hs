@@ -1,7 +1,7 @@
 {-# OPTIONS_GHC -Wall #-}
 {-# LANGUAGE OverloadedStrings #-}
 
-module FileBrowserUI where
+module FileBrowserUI (runFileBrowserUI) where
 
 import Brick
 import Data.List
