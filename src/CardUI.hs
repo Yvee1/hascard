@@ -237,11 +237,8 @@ theMap = attrMap V.defAttr
   , (gapAttr, V.defAttr `V.withStyle` V.underline)
   ]
 
-runCardUI :: String -> IO State
-runCardUI input = do
-  let cards = case parseCards input of
-              Left parseError -> error (show parseError)
-              Right result -> result 
+runCardUI :: [Card] -> IO State
+runCardUI cards = do
   let initialState = State { _cards = cards
                            , _index = 0
                            , _currentCard = head cards

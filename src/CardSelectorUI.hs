@@ -1,3 +1,4 @@
+{-# LANGUAGE TemplateHaskell #-}
 module CardSelectorUI (runCardSelectorUI, getRecents, getRecentsFile, addRecent) where
 
 import Brick
@@ -5,8 +6,15 @@ import Brick.Widgets.Border
 import Brick.Widgets.Border.Style
 import Brick.Widgets.Center
 import Brick.Widgets.FileBrowser (FileInfo, fileInfoFilePath)
+import Control.Exception (displayException, try)
+import Control.Monad.IO.Class
 import FileBrowserUI
+import Lens.Micro.Platform
 import System.FilePath ((</>), takeBaseName)
+import Parser
+import Types
+import FileBrowserUI
+import CardUI
 import qualified System.Directory as D
 import qualified Data.Vector as Vec
 import qualified Graphics.Vty as V
@@ -16,7 +24,13 @@ import qualified Brick.Widgets.List as L
 
 type Event = ()
 type Name = ()
-type State = L.List Name String
+data State = State
+  { _list       :: L.List Name String
+  , _exception  :: Maybe String
+  , _recents    :: [String]
+  }
+
+makeLenses ''State
 
 app :: App State Event Name
 app = App 
@@ -32,7 +46,7 @@ drawUI s =
   [ drawMenu s ]
 
 title :: Widget Name
-title = withAttr titleAttr $ str "Select a card"
+title = withAttr titleAttr $ str "Select a deck of flashcards"
 
 drawMenu :: State -> Widget Name
 drawMenu s = 
@@ -47,16 +61,19 @@ drawMenu s =
   hCenter (drawList s)
 
 drawList :: State -> Widget Name
-drawList s = hLimit 11 $
+drawList s = hLimit 23 $
              vLimit 5  $
-             L.renderList drawListElement True s
+             L.renderListWithIndex (drawListElement l) True l
+              where l = s ^. list
 
-drawListElement :: Bool -> String -> Widget Name
-drawListElement selected text = 
+drawListElement :: L.List Name String -> Int -> Bool -> String -> Widget Name
+drawListElement l i selected text = 
   hCenter $
-  attr $
+  wAttr1 $
+  wAttr2 $
   str text
-  where attr = if selected then withAttr selectedAttr else id
+  where wAttr1 = if selected then withDefAttr selectedAttr else id
+        wAttr2 = if i == length l - 1 then withAttr lastElementAttr else id
 
 titleAttr :: AttrName
 titleAttr = attrName "title"
@@ -64,43 +81,57 @@ titleAttr = attrName "title"
 selectedAttr :: AttrName
 selectedAttr = attrName "selected"
 
+lastElementAttr :: AttrName
+lastElementAttr = attrName "last element"
+
 theMap :: AttrMap
 theMap = attrMap V.defAttr
     [ (L.listAttr,            V.defAttr)
     , (selectedAttr,    fg V.white `V.withStyle` V.underline)
-    , (titleAttr, fg V.yellow) ]
+    , (titleAttr, fg V.yellow)
+    , (lastElementAttr, fg V.blue) ]
 
 handleEvent :: State -> BrickEvent Name Event -> EventM Name (Next State)
-handleEvent l (VtyEvent e) =
+handleEvent s@State{_list=l} (VtyEvent e) =
     case e of
-        V.EvKey V.KEnter [] -> halt l
+        V.EvKey V.KEsc [] -> halt s
+        V.EvKey (V.KChar 'q') [] -> halt s
 
-        ev -> continue =<< L.handleListEventVi L.handleListEvent ev l
+        _ -> do l' <- L.handleListEventVi L.handleListEvent e l
+                let s' = (s & list .~ l') in
+                  case e of
+                    V.EvKey V.KEnter [] ->
+                      case L.listSelectedElement l' of
+                        Nothing -> continue s'
+                        Just (_, "Select file from system") -> suspendAndResume $ 
+                                                                  do runFileBrowser
+                                                                     return s'
+                        Just (i, _) -> do
+                            let fp = (s' ^. recents) !! i
+                            strOrExc <- liftIO (try (readFile fp) :: IO (Either IOError String))
+                            case strOrExc of
+                              Left exc -> continue (s' & exception .~ Just (displayException exc))
+                              Right str -> case parseCards str of
+                                Left parseError -> continue (s' & exception .~ Just (show parseError))
+                                Right result -> suspendAndResume $ do
+                                  _ <- runCardUI result               
+                                  return s'
+                    _ -> continue s'
+
 handleEvent l _ = continue l
 
 ----------------------- </Basic copy paste> --------------------------
 
-runCardSelectorUI :: IO (Maybe FilePath)
+runCardSelectorUI :: IO ()
 runCardSelectorUI = do
   recents <- getRecents
   let prettyRecents = map takeBaseName recents
   let options = Vec.fromList (prettyRecents ++ ["Select file from system"])
 
   --                                   listItemHeight
-  let initialState = L.list () options 1
-  endState <- defaultMain app initialState
-  case L.listSelected endState of
-    Nothing -> return Nothing
-    Just i  -> if i == length recents
-                then runFileBrowser
-                else return . Just $ recents !! i
-
-runFileBrowser :: IO (Maybe FilePath)
-runFileBrowser = do
-  mFileInfo <- runFileBrowserUI
-  case mFileInfo of
-    Nothing -> return Nothing
-    Just fileInfo -> return . Just $ fileInfoFilePath fileInfo
+  let initialState = State (L.list () options 1) Nothing recents
+  _ <- defaultMain app initialState
+  return () 
 
 getRecents :: IO [FilePath]
 getRecents = do
@@ -126,3 +157,10 @@ getRecentsFile = do
   xdg <- D.getXdgDirectory D.XdgData "hascard"
   D.createDirectoryIfMissing True xdg
   return (xdg </> "recents")
+
+runFileBrowser :: IO ()
+runFileBrowser = do
+  cards <- runFileBrowserUI
+  if length cards > 0
+    then runCardUI cards *> return ()
+    else return ()

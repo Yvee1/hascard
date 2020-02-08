@@ -29,6 +29,13 @@ title = withAttr titleAttr $
         str "┬ ┬┌─┐┌─┐┌─┐┌─┐┬─┐┌┬┐" <=>
         str "├─┤├─┤└─┐│  ├─┤├┬┘ ││" <=>
         str "┴ ┴┴ ┴└─┘└─┘┴ ┴┴└──┴┘" 
+        -- str " _                                 _" <=>
+        -- str "| |                               | |"<=>
+        -- str "| |__   __ _ ___  ___ __ _ _ __ __| |"<=>
+        -- str "| '_ \\ / _` / __|/ __/ _` | '__/ _` |"<=>
+        -- str "| | | | (_| \\__ \\ (_| (_| | | | (_| |"<=>
+        -- str "|_| |_|\\__,_|___/\\___\\__,_|_|  \\__,_|"
+
 
 drawUI :: State -> [Widget Name]
 drawUI s = 
@@ -48,7 +55,7 @@ drawMenu s =
 
 drawList :: State -> Widget Name
 drawList s = hLimit 11 $
-             vLimit 5  $
+             vLimit 3  $
              L.renderList drawListElement True s
 
 drawListElement :: Bool -> String -> Widget Name
@@ -73,9 +80,17 @@ theMap = attrMap V.defAttr
 handleEvent :: State -> BrickEvent Name Event -> EventM Name (Next State)
 handleEvent l (VtyEvent e) =
     case e of
-        V.EvKey V.KEnter [] -> halt l
+      V.EvKey (V.KChar 'q') [] -> halt l
+      V.EvKey V.KEsc [] -> halt l
+      V.EvKey V.KEnter [] -> do
+        case L.listSelected l of
+          Just 0 -> suspendAndResume $ do runCardSelectorUI
+                                          return l
+          Just 1 -> undefined
+          Just 2 -> halt l
+          _ -> undefined
 
-        ev -> continue =<< L.handleListEventVi L.handleListEvent ev l
+      ev -> continue =<< L.handleListEventVi L.handleListEvent ev l
 handleEvent l _ = continue l
 
 runMainMenuUI :: IO ()
@@ -85,23 +100,8 @@ runMainMenuUI = do
                                , "Quit" ]
 
   let initialState = L.list () options 1
-  endState <- defaultMain app initialState
-  case L.listSelected endState of
-    Just 0 -> runCardSelector
-    Just 1 -> undefined
-    Just 2 -> return ()
-    _ -> undefined
-
-runCardSelector :: IO ()
-runCardSelector = do
-  mFilePath <- runCardSelectorUI
-  case mFilePath of
-    Nothing -> runMainMenuUI
-    Just fp -> do
-      addRecent fp
-      str <- readFile fp
-      finalState <- runCardUI str
-      return ()
+  _ <- defaultMain app initialState
+  return ()
 
 --   _    _                             _ 
 --  | |  | |                           | |
@@ -110,8 +110,6 @@ runCardSelector = do
 --  | |  | | (_| \__ \ (_| (_| | | | (_| |
 --  |_|  |_|\__,_|___/\___\__,_|_|  \__,_|
                                        
-                                       
-
 --   _                                 _ 
 --  | |                               | |
 --  | |__   __ _ ___  ___ __ _ _ __ __| |
