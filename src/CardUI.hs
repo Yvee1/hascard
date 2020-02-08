@@ -146,14 +146,11 @@ handleEvent s (VtyEvent ev) = case ev of
   ev -> case s ^. cardState of
     MultipleChoiceState {_selected = i, _nChoices = nChoices} ->
       case ev of
-        V.EvKey V.KUp [] -> continue $ 
-          if i > 0
-            then s & (cardState.selected) -~ 1
-            else s
-        V.EvKey V.KDown [] -> continue $ 
-          if i < nChoices - 1
-            then s & (cardState.selected) +~ 1
-            else s
+        V.EvKey V.KUp [] -> continue up
+        V.EvKey (V.KChar 'k') [] -> continue up
+        V.EvKey V.KDown [] -> continue down 
+        V.EvKey (V.KChar 'j') [] -> continue down
+
         V.EvKey V.KEnter [] -> case s ^. currentCard of
           MultipleChoice _ (CorrectOption j _) _ ->
             if i == j
@@ -161,6 +158,14 @@ handleEvent s (VtyEvent ev) = case ev of
               else continue $ s & cardState.tried %~ M.insert i True
           _ -> error "impossible"
         _ -> continue s
+
+      where down = if i < nChoices - 1
+                     then s & (cardState.selected) +~ 1
+                     else s
+
+            up = if i > 0
+                   then s & (cardState.selected) -~ 1
+                   else s
 
     DefinitionState{_flipped = f} ->
       case ev of
@@ -176,6 +181,17 @@ handleEvent s (VtyEvent ev) = case ev of
           if i < n - 1
             then s & (cardState.selectedGap) +~ 1
             else s & (cardState.selectedGap) .~ 0
+        
+        V.EvKey V.KRight [] -> continue $ 
+          if i < n - 1
+            then s & (cardState.selectedGap) +~ 1
+            else s
+
+        V.EvKey V.KLeft [] -> continue $ 
+          if i > 0
+            then s & (cardState.selectedGap) -~ 1
+            else s
+
         V.EvKey (V.KChar c) [] -> continue $
           s & cardState.gapInput.at i.non "" %~ (++[c])    -- should prob. use snoc list for better efficiency
         V.EvKey V.KEnter [] -> case s ^. currentCard of

@@ -76,7 +76,7 @@ handleEvent l (VtyEvent e) =
     case e of
         V.EvKey V.KEnter [] -> halt l
 
-        ev -> continue =<< L.handleListEvent ev l
+        ev -> continue =<< L.handleListEventVi L.handleListEvent ev l
 handleEvent l _ = continue l
 
 runMainMenuUI :: IO ()
