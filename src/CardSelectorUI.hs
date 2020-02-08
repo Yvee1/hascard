@@ -1,15 +1,18 @@
-module MainMenuUI (runMainMenuUI) where
+module CardSelectorUI (runCardSelectorUI, getRecents, getRecentsFile, addRecent) where
 
 import Brick
 import Brick.Widgets.Border
 import Brick.Widgets.Border.Style
 import Brick.Widgets.Center
-import CardUI
-import CardSelectorUI
-import qualified Data.Text as Text
+import Brick.Widgets.FileBrowser (FileInfo, fileInfoFilePath)
+import FileBrowserUI
+import System.FilePath ((</>), takeBaseName)
+import qualified System.Directory as D
 import qualified Data.Vector as Vec
 import qualified Graphics.Vty as V
 import qualified Brick.Widgets.List as L
+
+----------------------- <Basic copy paste> --------------------------
 
 type Event = ()
 type Name = ()
@@ -24,15 +27,12 @@ app = App
   , appAttrMap = const theMap
   }
 
-title :: Widget Name
-title = withAttr titleAttr $
-        str "┬ ┬┌─┐┌─┐┌─┐┌─┐┬─┐┌┬┐" <=>
-        str "├─┤├─┤└─┐│  ├─┤├┬┘ ││" <=>
-        str "┴ ┴┴ ┴└─┘└─┘┴ ┴┴└──┴┘" 
-
 drawUI :: State -> [Widget Name]
 drawUI s = 
   [ drawMenu s ]
+
+title :: Widget Name
+title = withAttr titleAttr $ str "Select a card"
 
 drawMenu :: State -> Widget Name
 drawMenu s = 
@@ -78,47 +78,51 @@ handleEvent l (VtyEvent e) =
         ev -> continue =<< L.handleListEventVi L.handleListEvent ev l
 handleEvent l _ = continue l
 
-runMainMenuUI :: IO ()
-runMainMenuUI = do
-  let options = Vec.fromList $ [ "Start"
-                               , "Info"
-                               , "Quit" ]
+----------------------- </Basic copy paste> --------------------------
 
+runCardSelectorUI :: IO (Maybe FilePath)
+runCardSelectorUI = do
+  recents <- getRecents
+  let prettyRecents = map takeBaseName recents
+  let options = Vec.fromList (prettyRecents ++ ["Select file from system"])
+
+  --                                   listItemHeight
   let initialState = L.list () options 1
   endState <- defaultMain app initialState
   case L.listSelected endState of
-    Just 0 -> runCardSelector
-    Just 1 -> undefined
-    Just 2 -> return ()
-    _ -> undefined
+    Nothing -> return Nothing
+    Just i  -> if i == length recents
+                then runFileBrowser
+                else return . Just $ recents !! i
 
-runCardSelector :: IO ()
-runCardSelector = do
-  mFilePath <- runCardSelectorUI
-  case mFilePath of
-    Nothing -> runMainMenuUI
-    Just fp -> do
-      addRecent fp
-      str <- readFile fp
-      finalState <- runCardUI str
-      return ()
+runFileBrowser :: IO (Maybe FilePath)
+runFileBrowser = do
+  mFileInfo <- runFileBrowserUI
+  case mFileInfo of
+    Nothing -> return Nothing
+    Just fileInfo -> return . Just $ fileInfoFilePath fileInfo
 
---   _    _                             _ 
---  | |  | |                           | |
---  | |__| | __ _ ___  ___ __ _ _ __ __| |
---  |  __  |/ _` / __|/ __/ _` | '__/ _` |
---  | |  | | (_| \__ \ (_| (_| | | | (_| |
---  |_|  |_|\__,_|___/\___\__,_|_|  \__,_|
-                                       
-                                       
+getRecents :: IO [FilePath]
+getRecents = do
+  rf <- getRecentsFile
+  exists <- D.doesFileExist rf
+  if exists
+    then lines <$> readFile rf
+    else return []
 
---   _                                 _ 
---  | |                               | |
---  | |__   __ _ ___  ___ __ _ _ __ __| |
---  | '_ \ / _` / __|/ __/ _` | '__/ _` |
---  | | | | (_| \__ \ (_| (_| | | | (_| |
---  |_| |_|\__,_|___/\___\__,_|_|  \__,_|
-                                      
--- ┬ ┬┌─┐┌─┐┌─┐┌─┐┬─┐┌┬┐
--- ├─┤├─┤└─┐│  ├─┤├┬┘ ││
--- ┴ ┴┴ ┴└─┘└─┘┴ ┴┴└──┴┘
+addRecent :: FilePath -> IO ()
+addRecent s = do
+  rf <- getRecentsFile
+  recents <- getRecents
+  if s `elem` recents
+    then return () 
+    else if length recents < 5
+      then appendFile rf s'
+      else writeFile rf (unlines (tail recents)) *> appendFile rf s'
+        where s' = s ++ "\n"
+
+getRecentsFile :: IO FilePath
+getRecentsFile = do
+  xdg <- D.getXdgDirectory D.XdgData "hascard"
+  D.createDirectoryIfMissing True xdg
+  return (xdg </> "recents")

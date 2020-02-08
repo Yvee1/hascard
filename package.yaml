@@ -21,7 +21,6 @@ description:         Please see the README on GitHub at <https://github.com/Yvee
 
 dependencies:
 - base >= 4.7 && < 5
-- split
 - brick
 - word-wrap
 - vty
@@ -31,6 +30,7 @@ dependencies:
 - directory
 - text
 - vector
+- filepath
 
 library:
   source-dirs: src

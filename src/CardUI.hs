@@ -36,6 +36,7 @@ data State = State
   , _nCards         :: Int        -- number of cards
   , _currentCard    :: Card
   , _cardState      :: CardState
+  , _incorrectCards :: [Int]      -- list of indices of incorrect answers
   }
 
 makeLenses ''CardState
@@ -92,7 +93,7 @@ drawCardUI s = joinBorders $ drawCardBox $ (<=> drawProgress s) $
                               
     MultipleChoice question correct others -> drawHeader question <=> B.hBorder <=> drawOptions s (listMultipleChoice correct others)
 
-    OpenQuestion title perforated -> drawHeader title <=> B.hBorder <=> drawPerforated s perforated
+    OpenQuestion title perforated -> drawHeader title <=> B.hBorder <=> padLeftRight 1 (drawPerforated s perforated)
 
 
 applyWhen :: Bool -> (a -> a) -> a -> a
