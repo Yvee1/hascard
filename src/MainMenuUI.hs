@@ -80,7 +80,7 @@ theMap = attrMap V.defAttr
 handleEvent :: State -> BrickEvent Name Event -> EventM Name (Next State)
 handleEvent l (VtyEvent e) =
     case e of
-      V.EvKey (V.KChar 'q') [] -> halt l
+      V.EvKey (V.KChar 'c') [V.MCtrl]  -> halt l
       V.EvKey V.KEsc [] -> halt l
       V.EvKey V.KEnter [] -> do
         case L.listSelected l of

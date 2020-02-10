@@ -43,7 +43,7 @@ app = App
 
 drawUI :: State -> [Widget Name]
 drawUI s = 
-  [ drawMenu s ]
+  [ drawMenu s <=> drawException s]
 
 title :: Widget Name
 title = withAttr titleAttr $ str "Select a deck of flashcards"
@@ -75,6 +75,11 @@ drawListElement l i selected text =
   where wAttr1 = if selected then withDefAttr selectedAttr else id
         wAttr2 = if i == length l - 1 then withAttr lastElementAttr else id
 
+drawException :: State -> Widget Name
+drawException s = case s ^. exception of
+  Nothing -> emptyWidget
+  Just s  -> withAttr exceptionAttr $ str s
+
 titleAttr :: AttrName
 titleAttr = attrName "title"
 
@@ -84,18 +89,22 @@ selectedAttr = attrName "selected"
 lastElementAttr :: AttrName
 lastElementAttr = attrName "last element"
 
+exceptionAttr :: AttrName
+exceptionAttr = attrName "exception"
+
 theMap :: AttrMap
 theMap = attrMap V.defAttr
     [ (L.listAttr,            V.defAttr)
     , (selectedAttr,    fg V.white `V.withStyle` V.underline)
     , (titleAttr, fg V.yellow)
-    , (lastElementAttr, fg V.blue) ]
+    , (lastElementAttr, fg V.blue)
+    , (exceptionAttr, fg V.red) ]
 
 handleEvent :: State -> BrickEvent Name Event -> EventM Name (Next State)
 handleEvent s@State{_list=l} (VtyEvent e) =
     case e of
+        V.EvKey (V.KChar 'c') [V.MCtrl]  -> halt s
         V.EvKey V.KEsc [] -> halt s
-        V.EvKey (V.KChar 'q') [] -> halt s
 
         _ -> do l' <- L.handleListEventVi L.handleListEvent e l
                 let s' = (s & list .~ l') in
