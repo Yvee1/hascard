@@ -20,3 +20,33 @@ Part of the eye that turns _light_ into _electrical neural impulses_.
 ---
 # Choroid
 The choroid seperates from sclera and becomes the _ciliary body_, and then the _iris_.
+
+---
+# LGN
+_lateral geniculate nuclei_
+
+---
+# LGN 6 layers
+2 layers receive signals from _M_-ganglion cells.
+4 layers receive signals from _P_-ganglion cells.
+between is a thin layers that receives signals from _K_-ganglion cells.
+
+---
+# Color vision: types of cones
+Three different types of cones, for different wavelengths.
+S (short) corresponds roughly to the colour _blue_.
+M (medium) corresponds roughly to the colour _green_.
+L (long) corresponds roughly to the colour _red_.
+
+---
+# Color vision: color channels
+Achromatic channel = M + L
+Blue-yellow channel = M + L - S
+Red-green channel = L + S - M
+
+---
+# The visual system
+The visual system consists of two parts:
+- An optical system that produces an image on the retina.
+- An image-processing system. This spends most of its resources on the fovea.
+---

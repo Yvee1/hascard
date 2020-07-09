@@ -21,7 +21,7 @@ description:         Please see the README on GitHub at <https://github.com/Yvee
 
 dependencies:
 - base >= 4.7 && < 5
-- brick
+- brick >= 0.52
 - word-wrap
 - vty
 - microlens-platform
@@ -31,6 +31,7 @@ dependencies:
 - text
 - vector
 - filepath
+- microlens
 
 library:
   source-dirs: src

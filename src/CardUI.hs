@@ -3,10 +3,13 @@
 module CardUI (runCardUI) where
 
 import Brick
+import BrickHelpers
 import Lens.Micro.Platform
 import Parser
 import Types
+import Data.Char (isSeparator)
 import Data.Map.Strict (Map)
+import Text.Wrap (WrapSettings(..))
 import qualified Data.Map.Strict as M
 import qualified Brick.Widgets.Border as B
 import qualified Brick.Widgets.Border.Style as BS
@@ -69,11 +72,11 @@ drawProgress s = C.hCenter $ str (show (s^.index + 1) ++ "/" ++ show (s^.nCards)
 drawHeader :: String -> Widget Name
 drawHeader title = withAttr titleAttr $
                    padLeftRight 1 $
-                   C.hCenter (strWrap title)
+                   hCenteredStrWrap title
 
 drawDescr :: String -> Widget Name
 drawDescr descr = padLeftRight 1 $
-                  strWrap descr
+                  strWrapWith (WrapSettings {preserveIndentation=False, breakLongWords=True}) descr
 
 listMultipleChoice :: CorrectOption -> [IncorrectOption] -> [String]
 listMultipleChoice c = reverse . listMultipleChoice' [] 0 c
@@ -102,10 +105,14 @@ applyWhen predicate action = if predicate then action else id
 applyUnless :: Bool -> (a -> a) -> a -> a
 applyUnless p = applyWhen (not p)
 
-drawDef :: State -> String -> Widget Name
+drawHintedDef :: State -> String -> Widget Name
+drawHintedDef s def = case s ^. cardState of
+  DefinitionState {_flipped=f} -> if f then drawDescr def else drawDescr [if isSeparator char || char == '\n' then char else '_' | char <- def]
+  _ -> error "impossible: " 
+
+drawDef:: State -> String -> Widget Name
 drawDef s def = case s ^. cardState of
-  DefinitionState {_flipped=f} -> applyUnless f (withAttr hiddenAttr) $ drawDescr def
-    
+  DefinitionState {_flipped=f} -> if f then drawDescr def else drawDescr [if char == '\n' then char else ' ' | char <- def]
   _ -> error "impossible: " 
 
 drawOptions :: State -> [String] -> Widget Name
@@ -144,6 +151,9 @@ handleEvent :: State -> BrickEvent Name Event -> EventM Name (Next State)
 handleEvent s (VtyEvent ev) = case ev of
   V.EvKey V.KEsc []                -> halt s
   V.EvKey (V.KChar 'c') [V.MCtrl]  -> halt s
+  V.EvKey V.KRight []              -> next s
+  V.EvKey V.KLeft  []              -> previous s
+  -- V.EvKey (V.KChar ' ') []         -> next s
   ev -> case s ^. cardState of
     MultipleChoiceState {_selected = i, _nChoices = nChoices} ->
       case ev of
@@ -209,9 +219,6 @@ handleEvent s (VtyEvent ev) = case ev of
                 backspace xs = init xs
         _ -> continue s
 handleEvent s _ = continue s
--- handleEvent s (VtyEvent (V.EvKey V.KRight []))              = next s
--- handleEvent s (VtyEvent (V.EvKey (V.KChar ' ') []))         = next s
--- handleEvent s (VtyEvent (V.EvKey V.KLeft  []))              = previous s
       
 titleAttr :: AttrName
 titleAttr = attrName "title"
