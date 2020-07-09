@@ -32,12 +32,12 @@ nGapsInSentence' acc (Perforated pre gap post) = nGapsInSentence' (1+acc) post
 foldSentence :: (String -> a) -> (String -> String -> a -> a) -> Sentence -> a
 foldSentence norm perf = f where
   f (Normal text) = norm text
-  f (Perforated pre post sent) = perf pre post (f sent)
+  f (Perforated pre gap sent) = perf pre gap (f sent)
 
 foldSentenceIndex :: (String -> Int -> a) -> (String -> String -> a -> Int -> a) -> Sentence -> a
 foldSentenceIndex norm perf = f 0 where
   f i (Normal text) = norm text i
-  f i (Perforated pre post sent) = perf pre post (f (i+1) sent) i
+  f i (Perforated pre gap sent) = perf pre gap (f (i+1) sent) i
 
 data Perforated = P String String Sentence
   deriving Show
