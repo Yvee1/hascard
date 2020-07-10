@@ -140,6 +140,7 @@ drawSentence state sentence = Widget Greedy Fixed $ do
 helper2 :: Int -> State -> Sentence -> Widget Name
 helper2 w state = vBox . fst . helper2' 0 0
   where
+    helper2' :: Int -> Int -> Sentence -> ([Widget Name], Bool)
     helper2' padding _ (Normal s) = let (ws, _, fit) = helper padding w s in (ws, fit) 
     helper2' padding i (Perforated pre gapSolution post) = case state ^. cardState of
       OpenQuestionState {_gapInput = kvs, _selectedGap=j} ->
@@ -151,20 +152,21 @@ helper2 w state = vBox . fst . helper2' 0 0
             cursor = if i == j then showCursor () (Location (length gap, 0)) else id in
             
               if n' >= 0 
-                then let (ws1@(w':ws'), fit) = helper2' n' (i+1) post in
+                then let (ws1@(w':ws'), fit) = helper2' (w-n') (i+1) post in
                   if fit then ((ws & _last %~ (<+> (cursor (withAttr gapAttr (str gap)) <+> w'))) ++ ws', fit')
                   else ((ws & _last %~ (<+> cursor (withAttr gapAttr (str gap)))) ++ ws1, fit')
-              else let (ws1@(w':ws'), fit) = helper2' (w - length gap) (i+1) post in
+              else let (ws1@(w':ws'), fit) = helper2' (length gap) (i+1) post in
                 if fit then (ws ++ [cursor (withAttr gapAttr (str gap)) <+> w'] ++ ws', fit')
                 else (ws ++ [cursor (withAttr gapAttr (str gap))] ++ ws1, fit')
       _ -> error "PANIC!"
 
 helper :: Int -> Int -> String -> ([Widget Name], Int, Bool)
-helper padding w s = if words s == [] then ([], padding, True) else
+helper padding w s = if words s == [] then ([str ""], padding, True) else
   if length (head (words s)) <= w - padding then
     let s' = replicate padding 'X' ++ s 
-        ts = wrapTextToLines defaultWrapSettings w (pack s') & ix 0 %~ T.drop padding in
-          (map txt ts, w - T.length (last ts), True)
+        ts = wrapTextToLines defaultWrapSettings w (pack s') & ix 0 %~ T.drop padding
+        padding' = T.length (last ts) + (if length ts == 1 then 1 else 0) * padding in
+          (map txt (filter (/=T.empty) ts), padding', True)
   else let ts = wrapTextToLines defaultWrapSettings w (pack s) in
     (map txt ts, w - T.length (last ts), False)
 
