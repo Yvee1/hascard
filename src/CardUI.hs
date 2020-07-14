@@ -11,6 +11,8 @@ import Data.Char (isSeparator)
 import Data.Map.Strict (Map)
 import Text.Wrap
 import Data.Text (pack)
+import Debug.Trace (trace)
+import System.IO.Unsafe (unsafePerformIO)
 import qualified Data.Text as T
 import qualified Data.Map.Strict as M
 import qualified Brick.Widgets.Border as B
@@ -162,13 +164,29 @@ helper2 w state = vBox . fst . helper2' 0 0
 
 helper :: Int -> Int -> String -> ([Widget Name], Int, Bool)
 helper padding w s = if words s == [] then ([str ""], padding, True) else
-  if length (head (words s)) <= w - padding then
-    let s' = replicate padding 'X' ++ s 
-        ts = wrapTextToLines defaultWrapSettings w (pack s') & ix 0 %~ T.drop padding
-        padding' = T.length (last ts) + (if length ts == 1 then 1 else 0) * padding in
-          (map txt (filter (/=T.empty) ts), padding', True)
-  else let ts = wrapTextToLines defaultWrapSettings w (pack s) in
-    (map txt ts, w - T.length (last ts), False)
+  if length (head (words s)) < w - padding then
+    let startsWithSpace = head s == ' ' 
+        s' = if startsWithSpace then " " <> replicate padding 'X' <> tail s else replicate padding 'X' ++ s
+        -- lastLetter = trace ("String: " <> s <> "\n" <> "Last letter: " <> show (last s)) last s
+        lastLetter = last s
+        postfix = if lastLetter == ' ' then T.pack [lastLetter] else T.empty
+        ts = wrapTextToLines defaultWrapSettings w (pack s') & ix 0 %~ (if startsWithSpace then (T.pack " " `T.append`) . T.drop (padding + 1) else T.drop padding)
+        ts' = ts & _last %~ (`T.append` postfix)
+        padding' = T.length (last ts') + (if length ts' == 1 then 1 else 0) * padding in
+          (map txt (filter (/=T.empty) ts'), padding', True)
+  else
+    let lastLetter = last s
+        (x: xs) = s
+        s' = if x == ' ' then xs else s
+        postfix = if lastLetter == ' ' then T.pack [lastLetter] else T.empty
+        ts = wrapTextToLines defaultWrapSettings w (pack s')
+        ts' = ts & _last %~ (`T.append` postfix) in
+    (map txt (filter (/=T.empty) ts'), T.length (last ts'), False)
+
+debugToFile :: String -> a -> a
+debugToFile s expr = unsafePerformIO $ do
+  appendFile "log.txt" s
+  return expr
 
 -- drawSentence :: State -> Sentence -> Widget Name
 -- drawSentence = drawSentence' 0
