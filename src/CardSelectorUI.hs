@@ -169,7 +169,9 @@ getRecentsFile = do
 
 runFileBrowser :: IO ()
 runFileBrowser = do
-  cards <- runFileBrowserUI
+  (cards, fp) <- runFileBrowserUI
+  addRecent fp
+
   if length cards > 0
     then runCardUI cards *> return ()
     else return ()

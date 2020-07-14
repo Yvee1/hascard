@@ -10,6 +10,7 @@ import Types
 import Parser
 import Control.Exception (displayException, try)
 import Control.Monad.IO.Class
+import Data.Maybe (fromJust)
 import Brick.Widgets.Border
 import Brick.Widgets.Center
 import Brick.Widgets.List
@@ -17,13 +18,13 @@ import Brick.Widgets.FileBrowser
 import Lens.Micro.Platform
 import qualified Graphics.Vty as V
 
-
 type Event = ()
 type Name = ()
 data State = State
   { _fb        :: FileBrowser Name
   , _exception :: Maybe String
   , _cards     :: [Card]
+  , _filePath  :: Maybe FilePath
   }
 
 makeLenses ''State
@@ -103,18 +104,19 @@ handleEvent s@State{_fb=b} (VtyEvent ev) =
                             Left exc -> continue (s' & exception .~ Just (displayException exc))
                             Right str -> case parseCards str of
                               Left parseError -> continue (s' & exception .~ Just (show parseError))
-                              Right result -> halt (s' & cards .~ result)
+                              Right result -> halt (s' & cards .~ result & filePath .~ Just fp)
                         _ -> halt s'
 
                 _ -> continue s'
 handleEvent s _ = continue s
 
-runFileBrowserUI :: IO [Card]
+runFileBrowserUI :: IO ([Card], FilePath)
 runFileBrowserUI = do
   browser <- newFileBrowser selectNonDirectories () Nothing
   let filteredBrowser = setFileBrowserEntryFilter (Just (fileExtensionMatch' "txt")) browser
-  s <- defaultMain app (State filteredBrowser Nothing [])
-  return (s ^. cards)
+  s <- defaultMain app (State filteredBrowser Nothing [] Nothing)
+  let fp = fromJust $ s ^. filePath
+  return (s ^. cards, fp)
 
 fileExtensionMatch' :: String -> FileInfo -> Bool
 fileExtensionMatch' ext i = case fileInfoFileType i of
