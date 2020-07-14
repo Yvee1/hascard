@@ -47,3 +47,6 @@ perforatedToSentence (P pre gap sentence) = Perforated pre gap sentence
 
 nGapsInPerforated :: Perforated -> Int
 nGapsInPerforated = nGapsInSentence . perforatedToSentence
+
+sentenceToGaps :: Sentence -> [String]
+sentenceToGaps = foldSentence (const []) (\_ gap acc -> gap : acc)

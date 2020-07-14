@@ -35,6 +35,8 @@ data CardState =
   { _gapInput       :: Map Int String
   , _selectedGap    :: Int
   , _nGaps          :: Int
+  , _entered        :: Bool
+  , _correctGaps    :: Map Int Bool
   }
 
 data State = State
@@ -51,8 +53,16 @@ makeLenses ''State
 
 defaultCardState :: Card -> CardState
 defaultCardState Definition{} = DefinitionState { _flipped = False }
-defaultCardState (MultipleChoice _ _ ics) = MultipleChoiceState { _selected = 0, _nChoices = length ics + 1, _tried = M.fromList [(i, False) | i <- [0..length ics]]}
-defaultCardState (OpenQuestion _ perforated) = OpenQuestionState { _gapInput = M.empty, _selectedGap = 0, _nGaps = nGapsInPerforated perforated }
+defaultCardState (MultipleChoice _ _ ics) = MultipleChoiceState 
+  { _selected = 0
+  , _nChoices = length ics + 1
+  , _tried = M.fromList [(i, False) | i <- [0..length ics]]}
+defaultCardState (OpenQuestion _ perforated) = OpenQuestionState 
+  { _gapInput = M.empty
+  , _selectedGap = 0
+  , _nGaps = nGapsInPerforated perforated
+  , _entered = False
+  , _correctGaps = M.fromList [(i, False) | i <- [0..nGapsInPerforated perforated - 1]] }
 
 
 app :: App State Event Name
@@ -145,21 +155,30 @@ helper2 w state = vBox . fst . helper2' 0 0
     helper2' :: Int -> Int -> Sentence -> ([Widget Name], Bool)
     helper2' padding _ (Normal s) = let (ws, _, fit) = helper padding w s in (ws, fit) 
     helper2' padding i (Perforated pre gapSolution post) = case state ^. cardState of
-      OpenQuestionState {_gapInput = kvs, _selectedGap=j} ->
+      OpenQuestionState {_gapInput = kvs, _selectedGap=j, _entered=submitted, _correctGaps=cgs} ->
         let (ws, n, fit') = helper padding w pre
             gap = M.findWithDefault "" i kvs
             n' =  w - n - length gap 
 
             cursor :: Widget Name -> Widget Name
-            cursor = if i == j then showCursor () (Location (length gap, 0)) else id in
-            
+            -- i is the index of the gap that we are drawing; j is the gap that is currently selected
+            cursor = if i == j then showCursor () (Location (length gap, 0)) else id
+
+            correct = M.findWithDefault False i cgs
+            coloring = case (submitted, correct) of
+              (False, _) -> withAttr gapAttr
+              (True, False) -> withAttr incorrectGapAttr
+              (True, True) -> withAttr correctGapAttr
+              
+            gapWidget = cursor $ coloring (str gap) in
+
               if n' >= 0 
                 then let (ws1@(w':ws'), fit) = helper2' (w-n') (i+1) post in
-                  if fit then ((ws & _last %~ (<+> (cursor (withAttr gapAttr (str gap)) <+> w'))) ++ ws', fit')
-                  else ((ws & _last %~ (<+> cursor (withAttr gapAttr (str gap)))) ++ ws1, fit')
+                  if fit then ((ws & _last %~ (<+> (gapWidget <+> w'))) ++ ws', fit')
+                  else ((ws & _last %~ (<+> gapWidget)) ++ ws1, fit')
               else let (ws1@(w':ws'), fit) = helper2' (length gap) (i+1) post in
-                if fit then (ws ++ [cursor (withAttr gapAttr (str gap)) <+> w'] ++ ws', fit')
-                else (ws ++ [cursor (withAttr gapAttr (str gap))] ++ ws1, fit')
+                if fit then (ws ++ [gapWidget <+> w'] ++ ws', fit')
+                else (ws ++ [gapWidget] ++ ws1, fit')
       _ -> error "PANIC!"
 
 helper :: Int -> Int -> String -> ([Widget Name], Int, Bool)
@@ -167,7 +186,6 @@ helper padding w s = if words s == [] then ([str ""], padding, True) else
   if length (head (words s)) < w - padding then
     let startsWithSpace = head s == ' ' 
         s' = if startsWithSpace then " " <> replicate padding 'X' <> tail s else replicate padding 'X' ++ s
-        -- lastLetter = trace ("String: " <> s <> "\n" <> "Last letter: " <> show (last s)) last s
         lastLetter = last s
         postfix = if lastLetter == ' ' then T.pack [lastLetter] else T.empty
         ts = wrapTextToLines defaultWrapSettings w (pack s') & ix 0 %~ (if startsWithSpace then (T.pack " " `T.append`) . T.drop (padding + 1) else T.drop padding)
@@ -187,17 +205,6 @@ debugToFile :: String -> a -> a
 debugToFile s expr = unsafePerformIO $ do
   appendFile "log.txt" s
   return expr
-
--- drawSentence :: State -> Sentence -> Widget Name
--- drawSentence = drawSentence' 0
---   where
---     drawSentence' _ _ (Normal text)             = str text
---     drawSentence' i s (Perforated pre gap post) = case s ^. cardState of
---       OpenQuestionState {_gapInput = kvs, _selectedGap=j } -> str pre <+> cursor (withAttr gapAttr (str gap)) <+> drawSentence' (i+1) s post
---         where gap = M.findWithDefault "" i kvs
---               cursor :: Widget Name -> Widget Name
---               cursor = if i == j then showCursor () (Location (length gap, 0)) else id
---       _ -> error "impossible"
 
 drawCardBox :: Widget Name -> Widget Name
 drawCardBox w = C.center $
@@ -245,7 +252,7 @@ handleEvent s (VtyEvent ev) = case ev of
             else continue $ s & cardState.flipped %~ not
         _ -> continue s
     
-    OpenQuestionState {_selectedGap = i, _nGaps = n, _gapInput = kvs} ->
+    OpenQuestionState {_selectedGap = i, _nGaps = n, _gapInput = kvs, _correctGaps = cGaps} ->
       case ev of
         V.EvKey (V.KChar '\t') [] -> continue $ 
           if i < n - 1
@@ -265,12 +272,13 @@ handleEvent s (VtyEvent ev) = case ev of
         V.EvKey (V.KChar c) [] -> continue $
           s & cardState.gapInput.at i.non "" %~ (++[c])    -- should prob. use snoc list for better efficiency
         V.EvKey V.KEnter [] -> case s ^. currentCard of
-          OpenQuestion _ perforated -> if correct then next s else continue s
+          OpenQuestion _ perforated -> if correct then next s else continue s'
             where correct :: Bool
-                  correct = foldSentenceIndex sent perf sentence
                   sentence = perforatedToSentence perforated
-                  sent _ _ = True
-                  perf _ gap acc i = acc && gap == M.findWithDefault "" i kvs
+                  gaps = sentenceToGaps sentence
+
+                  s' = s & (cardState.correctGaps) %~ M.mapWithKey (\i _ -> gaps !! i == M.findWithDefault "" i kvs) & (cardState.entered) .~ True
+                  correct = M.foldr (&&) True (s' ^. (cardState.correctGaps))
                   
           _ -> error "impossible"
         V.EvKey V.KBS [] -> continue $ s & cardState.gapInput.ix i %~ backspace
@@ -294,11 +302,19 @@ hiddenAttr = attrName "hidden"
 gapAttr :: AttrName
 gapAttr = attrName "gap"
 
+incorrectGapAttr :: AttrName
+incorrectGapAttr = attrName "incorrect gap"
+
+correctGapAttr :: AttrName
+correctGapAttr = attrName "correct gap"
+
 theMap :: AttrMap
 theMap = attrMap V.defAttr
   [ (titleAttr, fg V.yellow)
   , (textboxAttr, V.defAttr)
   , (chosenOptAttr, fg V.red)
+  , (incorrectGapAttr, fg V.red `V.withStyle` V.underline)
+  , (correctGapAttr, fg V.green `V.withStyle` V.underline)
   , (hiddenAttr, fg V.black)
   , (gapAttr, V.defAttr `V.withStyle` V.underline)
   ]
