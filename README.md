@@ -6,10 +6,8 @@ An in-progress commandline utility for reviewing notes. 'Flashcards' can be writ
   - [ ] Multiple correct answers
 - [x] Fill in the gaps
 
-### TODO:
-- [ ] Spaced repetition (with Leitner system)
-- [ ] Saving paths of previously used cards and other user data with xdg user directory
+![a recording of example usage of the hascard application](./recording.gif)
 
-![a terminal application with a multiple choice question depicted on it](./scrot.png)
+<!-- ![a terminal application with a multiple choice question depicted on it](./scrot.png) -->
 
 UI built with [brick](https://github.com/jtdaugherty/brick) and parsing of cards done with [parsec](https://github.com/haskell/parsec)
