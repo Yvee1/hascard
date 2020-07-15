@@ -4,9 +4,7 @@ import Brick
 import Brick.Widgets.Border
 import Brick.Widgets.Border.Style
 import Brick.Widgets.Center
-import CardUI
 import CardSelectorUI
-import qualified Data.Text as Text
 import qualified Data.Vector as Vec
 import qualified Graphics.Vty as V
 import qualified Brick.Widgets.List as L
@@ -75,7 +73,7 @@ handleEvent l (VtyEvent e) =
     case e of
       V.EvKey (V.KChar 'c') [V.MCtrl]  -> halt l
       V.EvKey V.KEsc [] -> halt l
-      V.EvKey V.KEnter [] -> do
+      V.EvKey V.KEnter [] ->
         case L.listSelected l of
           Just 0 -> suspendAndResume $ do runCardSelectorUI
                                           return l
@@ -88,9 +86,9 @@ handleEvent l _ = continue l
 
 runMainMenuUI :: IO ()
 runMainMenuUI = do
-  let options = Vec.fromList $ [ "Start"
-                               , "Info"
-                               , "Quit" ]
+  let options = Vec.fromList [ "Start"
+                             , "Info"
+                             , "Quit" ]
 
   let initialState = L.list () options 1
   _ <- defaultMain app initialState

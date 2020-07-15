@@ -1,5 +1,5 @@
 -- {-# LANGUAGE RankNTypes #-}
-{-# LANGUAGE DataKinds, ExistentialQuantification, GADTs, KindSignatures, StandaloneDeriving #-}
+{-# LANGUAGE DataKinds, ExistentialQuantification, GADTs, KindSignatures #-}
 module Parser (parseCards) where
   
 import Text.Parsec

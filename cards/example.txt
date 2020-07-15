@@ -2,7 +2,13 @@
 intrinsically photosensitive Retinal Ganglion Cell
 
 ---
-# Layers of the eye I
+# The visual system
+The visual system consists of two parts:
+- An optical system that produces an image on the retina.
+- An image-processing system. This spends most of its resources on the fovea.
+
+---
+# Layers of the eye 1
 Light falls onto the _retina_ which is covered by the _macula_ filter which protects against UV and low wavelengths.
 
 ---
@@ -12,6 +18,13 @@ Below the retina is the _choroid_ containing blood vessels.
 ---
 # Layers of the eye 3
 The last layer is the _sclera_. It is white, except in front where it is transparent.
+
+---
+# Peak intensity of motopic vision is at a wavelength of around
+- 400 nm
+- 450 nm
+- 500 nm
+* 550 nm
 
 ---
 # Retina
@@ -43,10 +56,4 @@ L (long) corresponds roughly to the colour _red_.
 Achromatic channel = M + L
 Blue-yellow channel = M + L - S
 Red-green channel = L + S - M
-
----
-# The visual system
-The visual system consists of two parts:
-- An optical system that produces an image on the retina.
-- An image-processing system. This spends most of its resources on the fovea.
 ---

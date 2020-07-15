@@ -5,9 +5,9 @@ module CardUI (runCardUI) where
 import Brick
 import BrickHelpers
 import Lens.Micro.Platform
-import Parser
 import Types
-import Data.Char (isSeparator)
+import Data.Char (isSeparator, isSpace)
+import Data.List (dropWhileEnd)
 import Data.Map.Strict (Map)
 import Text.Wrap
 import Data.Text (pack)
@@ -90,7 +90,9 @@ drawHeader title = withAttr titleAttr $
 
 drawDescr :: String -> Widget Name
 drawDescr descr = padLeftRight 1 $
-                  strWrapWith (WrapSettings {preserveIndentation=False, breakLongWords=True}) descr
+  strWrapWith (WrapSettings {preserveIndentation=False, breakLongWords=True}) descr'
+    where
+      descr' = dropWhileEnd isSpace descr
 
 listMultipleChoice :: CorrectOption -> [IncorrectOption] -> [String]
 listMultipleChoice c = reverse . listMultipleChoice' [] 0 c
@@ -106,7 +108,7 @@ listMultipleChoice c = reverse . listMultipleChoice' [] 0 c
 drawCardUI :: State -> Widget Name
 drawCardUI s = joinBorders $ drawCardBox $ (<=> drawProgress s) $
   case (s ^. cards) !! (s ^. index) of
-    Definition title descr -> drawHeader title <=> B.hBorder <=> drawDef s descr
+    Definition title descr -> drawHeader title <=> B.hBorder <=> drawHintedDef s descr <=> str " "
                               
     MultipleChoice question correct others -> drawHeader question <=> B.hBorder <=> drawOptions s (listMultipleChoice correct others)
 
@@ -130,14 +132,18 @@ drawDef s def = case s ^. cardState of
   _ -> error "impossible: " 
 
 drawOptions :: State -> [String] -> Widget Name
-drawOptions s options = case s ^. cardState of
-  MultipleChoiceState {_selected=i, _tried=kvs}  -> vBox formattedOptions
+drawOptions s options = case (s ^. cardState, s^. currentCard) of
+  (MultipleChoiceState {_selected=i, _tried=kvs}, MultipleChoice _ (CorrectOption k _) _)  -> vBox formattedOptions
                   
              where formattedOptions :: [Widget Name]
-                   formattedOptions = [ (if chosen then withAttr chosenOptAttr else id) $ drawDescr (if i==j then "* " ++ opt else opt) |
+                   formattedOptions = [ coloring $ drawDescr (if i==j then "* " ++ opt else opt) |
                                         (j, opt) <- zip [0..] options,
-                                        let chosen = M.findWithDefault False j kvs ]
-
+                                        let chosen = M.findWithDefault False j kvs 
+                                            coloring = case (chosen, j==k) of
+                                              (False, _)    -> id
+                                              (True, False) -> withAttr incorrectOptAttr
+                                              (True, True)  -> withAttr correctOptAttr
+                                          ]
   _                                  -> error "impossible"
 
 drawPerforated :: State -> Perforated -> Widget Name
@@ -147,16 +153,16 @@ drawSentence :: State -> Sentence -> Widget Name
 drawSentence state sentence = Widget Greedy Fixed $ do
   c <- getContext
   let w = c^.availWidthL
-  render $ helper2 w state sentence
+  render $ makeSentenceWidget w state sentence
 
-helper2 :: Int -> State -> Sentence -> Widget Name
-helper2 w state = vBox . fst . helper2' 0 0
+makeSentenceWidget :: Int -> State -> Sentence -> Widget Name
+makeSentenceWidget w state = vBox . fst . makeSentenceWidget' 0 0
   where
-    helper2' :: Int -> Int -> Sentence -> ([Widget Name], Bool)
-    helper2' padding _ (Normal s) = let (ws, _, fit) = helper padding w s in (ws, fit) 
-    helper2' padding i (Perforated pre gapSolution post) = case state ^. cardState of
+    makeSentenceWidget' :: Int -> Int -> Sentence -> ([Widget Name], Bool)
+    makeSentenceWidget' padding _ (Normal s) = let (ws, _, fit) = wrapStringWithPadding padding w s in (ws, fit) 
+    makeSentenceWidget' padding i (Perforated pre gapSolution post) = case state ^. cardState of
       OpenQuestionState {_gapInput = kvs, _selectedGap=j, _entered=submitted, _correctGaps=cgs} ->
-        let (ws, n, fit') = helper padding w pre
+        let (ws, n, fit') = wrapStringWithPadding padding w pre
             gap = M.findWithDefault "" i kvs
             n' =  w - n - length gap 
 
@@ -173,17 +179,18 @@ helper2 w state = vBox . fst . helper2' 0 0
             gapWidget = cursor $ coloring (str gap) in
 
               if n' >= 0 
-                then let (ws1@(w':ws'), fit) = helper2' (w-n') (i+1) post in
+                then let (ws1@(w':ws'), fit) = makeSentenceWidget' (w-n') (i+1) post in
                   if fit then ((ws & _last %~ (<+> (gapWidget <+> w'))) ++ ws', fit')
                   else ((ws & _last %~ (<+> gapWidget)) ++ ws1, fit')
-              else let (ws1@(w':ws'), fit) = helper2' (length gap) (i+1) post in
+              else let (ws1@(w':ws'), fit) = makeSentenceWidget' (length gap) (i+1) post in
                 if fit then (ws ++ [gapWidget <+> w'] ++ ws', fit')
                 else (ws ++ [gapWidget] ++ ws1, fit')
       _ -> error "PANIC!"
 
-helper :: Int -> Int -> String -> ([Widget Name], Int, Bool)
-helper padding w s = if words s == [] then ([str ""], padding, True) else
-  if length (head (words s)) < w - padding then
+wrapStringWithPadding :: Int -> Int -> String -> ([Widget Name], Int, Bool)
+wrapStringWithPadding padding w s
+  | null (words s) = ([str ""], padding, True)
+  | otherwise = if length (head (words s)) < w - padding then
     let startsWithSpace = head s == ' ' 
         s' = if startsWithSpace then " " <> replicate padding 'X' <> tail s else replicate padding 'X' ++ s
         lastLetter = last s
@@ -217,34 +224,36 @@ handleEvent :: State -> BrickEvent Name Event -> EventM Name (Next State)
 handleEvent s (VtyEvent ev) = case ev of
   V.EvKey V.KEsc []                -> halt s
   V.EvKey (V.KChar 'c') [V.MCtrl]  -> halt s
-  V.EvKey V.KRight []              -> next s
-  V.EvKey V.KLeft  []              -> previous s
+  V.EvKey V.KRight [V.MCtrl]       -> next s
+  V.EvKey V.KLeft  [V.MCtrl]       -> previous s
   -- V.EvKey (V.KChar ' ') []         -> next s
-  ev -> case s ^. cardState of
-    MultipleChoiceState {_selected = i, _nChoices = nChoices} ->
+
+  ev -> case (s ^. cardState, s ^. currentCard) of
+    (MultipleChoiceState {_selected = i, _nChoices = nChoices, _tried = kvs}, MultipleChoice _ (CorrectOption j _) _) ->
       case ev of
         V.EvKey V.KUp [] -> continue up
         V.EvKey (V.KChar 'k') [] -> continue up
         V.EvKey V.KDown [] -> continue down 
         V.EvKey (V.KChar 'j') [] -> continue down
 
-        V.EvKey V.KEnter [] -> case s ^. currentCard of
-          MultipleChoice _ (CorrectOption j _) _ ->
-            if i == j
+        V.EvKey V.KEnter [] ->
+            if frozen
               then next s
               else continue $ s & cardState.tried %~ M.insert i True
-          _ -> error "impossible"
+
         _ -> continue s
 
-      where down = if i < nChoices - 1
+      where frozen = M.findWithDefault False j kvs
+        
+            down = if i < nChoices - 1 && not frozen
                      then s & (cardState.selected) +~ 1
                      else s
 
-            up = if i > 0
+            up = if i > 0 && not frozen
                    then s & (cardState.selected) -~ 1
                    else s
 
-    DefinitionState{_flipped = f} ->
+    (DefinitionState{_flipped = f}, _) ->
       case ev of
         V.EvKey V.KEnter [] -> 
           if f
@@ -252,7 +261,7 @@ handleEvent s (VtyEvent ev) = case ev of
             else continue $ s & cardState.flipped %~ not
         _ -> continue s
     
-    OpenQuestionState {_selectedGap = i, _nGaps = n, _gapInput = kvs, _correctGaps = cGaps} ->
+    (OpenQuestionState {_selectedGap = i, _nGaps = n, _gapInput = kvs, _correctGaps = cGaps}, OpenQuestion _ perforated) ->
       case ev of
         V.EvKey (V.KChar '\t') [] -> continue $ 
           if i < n - 1
@@ -270,21 +279,25 @@ handleEvent s (VtyEvent ev) = case ev of
             else s
 
         V.EvKey (V.KChar c) [] -> continue $
-          s & cardState.gapInput.at i.non "" %~ (++[c])    -- should prob. use snoc list for better efficiency
-        V.EvKey V.KEnter [] -> case s ^. currentCard of
-          OpenQuestion _ perforated -> if correct then next s else continue s'
+          if correct then s else s & cardState.gapInput.at i.non "" %~ (++[c])
+            where correct = M.foldr (&&) True cGaps
+
+        V.EvKey V.KEnter [] -> if correct then next s else continue s'
             where correct :: Bool
                   sentence = perforatedToSentence perforated
                   gaps = sentenceToGaps sentence
 
                   s' = s & (cardState.correctGaps) %~ M.mapWithKey (\i _ -> gaps !! i == M.findWithDefault "" i kvs) & (cardState.entered) .~ True
-                  correct = M.foldr (&&) True (s' ^. (cardState.correctGaps))
-                  
-          _ -> error "impossible"
+                  -- correct = M.foldr (&&) True (s' ^. (cardState.correctGaps))
+                  -- use above if you want to go to next card directly, if gaps were filled in correctly
+                  correct = M.foldr (&&) True cGaps
+
         V.EvKey V.KBS [] -> continue $ s & cardState.gapInput.ix i %~ backspace
           where backspace "" = ""
                 backspace xs = init xs
         _ -> continue s
+      
+    _ -> error "impossible"
 handleEvent s _ = continue s
       
 titleAttr :: AttrName
@@ -293,8 +306,11 @@ titleAttr = attrName "title"
 textboxAttr :: AttrName
 textboxAttr = attrName "textbox"
 
-chosenOptAttr :: AttrName
-chosenOptAttr = attrName "chosen option"
+incorrectOptAttr :: AttrName
+incorrectOptAttr = attrName "incorrect option"
+
+correctOptAttr :: AttrName
+correctOptAttr = attrName "correct option"
 
 hiddenAttr :: AttrName
 hiddenAttr = attrName "hidden"
@@ -312,7 +328,8 @@ theMap :: AttrMap
 theMap = attrMap V.defAttr
   [ (titleAttr, fg V.yellow)
   , (textboxAttr, V.defAttr)
-  , (chosenOptAttr, fg V.red)
+  , (incorrectOptAttr, fg V.red)
+  , (correctOptAttr, fg V.green)
   , (incorrectGapAttr, fg V.red `V.withStyle` V.underline)
   , (correctGapAttr, fg V.green `V.withStyle` V.underline)
   , (hiddenAttr, fg V.black)

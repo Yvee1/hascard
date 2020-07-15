@@ -5,14 +5,13 @@ import Brick
 import Brick.Widgets.Border
 import Brick.Widgets.Border.Style
 import Brick.Widgets.Center
-import Brick.Widgets.FileBrowser (FileInfo, fileInfoFilePath)
 import Control.Exception (displayException, try)
+import Control.Monad (unless)
 import Control.Monad.IO.Class
-import FileBrowserUI
+import Data.Functor (($>))
 import Lens.Micro.Platform
 import System.FilePath ((</>), takeBaseName)
 import Parser
-import Types
 import FileBrowserUI
 import CardUI
 import qualified System.Directory as D
@@ -119,9 +118,9 @@ handleEvent s@State{_list=l} (VtyEvent e) =
                             let fp = (s' ^. recents) !! i
                             strOrExc <- liftIO (try (readFile fp) :: IO (Either IOError String))
                             case strOrExc of
-                              Left exc -> continue (s' & exception .~ Just (displayException exc))
+                              Left exc -> continue (s' & exception ?~ displayException exc)
                               Right str -> case parseCards str of
-                                Left parseError -> continue (s' & exception .~ Just (show parseError))
+                                Left parseError -> continue (s' & exception ?~ show parseError)
                                 Right result -> suspendAndResume $ do
                                   _ <- runCardUI result               
                                   return s'
@@ -172,6 +171,4 @@ runFileBrowser = do
   (cards, fp) <- runFileBrowserUI
   addRecent fp
 
-  if length cards > 0
-    then runCardUI cards *> return ()
-    else return ()
+  unless (null cards) $ runCardUI cards $> ()
