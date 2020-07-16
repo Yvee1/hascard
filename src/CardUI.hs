@@ -8,11 +8,13 @@ import Lens.Micro.Platform
 import Types
 import Data.Char (isSeparator, isSpace)
 import Data.List (dropWhileEnd)
+import Data.List.NonEmpty (NonEmpty)
 import Data.Map.Strict (Map)
 import Text.Wrap
 import Data.Text (pack)
 import Debug.Trace (trace)
 import System.IO.Unsafe (unsafePerformIO)
+import qualified Data.List.NonEmpty as NE
 import qualified Data.Text as T
 import qualified Data.Map.Strict as M
 import qualified Brick.Widgets.Border as B
@@ -27,13 +29,18 @@ data CardState =
     DefinitionState
   { _flipped        :: Bool }
   | MultipleChoiceState
-  { _selected       :: Int
+  { _highlighted       :: Int
   , _nChoices       :: Int
   , _tried          :: Map Int Bool      -- indices of tried choices
   }
+  | MultipleAnswerState
+  { _highlighted    :: Int
+  , _selected       :: Map Int Bool
+  , _nChoices       :: Int
+  }
   | OpenQuestionState
   { _gapInput       :: Map Int String
-  , _selectedGap    :: Int
+  , _highlighted    :: Int
   , _nGaps          :: Int
   , _entered        :: Bool
   , _correctGaps    :: Map Int Bool
@@ -45,7 +52,7 @@ data State = State
   , _nCards         :: Int        -- number of cards
   , _currentCard    :: Card
   , _cardState      :: CardState
-  , _incorrectCards :: [Int]      -- list of indices of incorrect answers
+  -- , _incorrectCards :: [Int]      -- list of indices of incorrect answers
   }
 
 makeLenses ''CardState
@@ -54,16 +61,19 @@ makeLenses ''State
 defaultCardState :: Card -> CardState
 defaultCardState Definition{} = DefinitionState { _flipped = False }
 defaultCardState (MultipleChoice _ _ ics) = MultipleChoiceState 
-  { _selected = 0
+  { _highlighted = 0
   , _nChoices = length ics + 1
-  , _tried = M.fromList [(i, False) | i <- [0..length ics]]}
+  , _tried = M.fromList [(i, False) | i <- [0..length ics]] }
 defaultCardState (OpenQuestion _ perforated) = OpenQuestionState 
   { _gapInput = M.empty
-  , _selectedGap = 0
+  , _highlighted = 0
   , _nGaps = nGapsInPerforated perforated
   , _entered = False
   , _correctGaps = M.fromList [(i, False) | i <- [0..nGapsInPerforated perforated - 1]] }
-
+defaultCardState (MultipleAnswer question answers) = MultipleAnswerState 
+  { _highlighted = 0
+  , _selected = M.fromList [(i, False) | i <- [0..NE.length answers-1]]
+  , _nChoices = NE.length answers }
 
 app :: App State Event Name
 app = App 
@@ -89,31 +99,33 @@ drawHeader title = withAttr titleAttr $
                    hCenteredStrWrap title
 
 drawDescr :: String -> Widget Name
-drawDescr descr = padLeftRight 1 $
+drawDescr descr =
   strWrapWith (WrapSettings {preserveIndentation=False, breakLongWords=True}) descr'
     where
       descr' = dropWhileEnd isSpace descr
 
 listMultipleChoice :: CorrectOption -> [IncorrectOption] -> [String]
 listMultipleChoice c = reverse . listMultipleChoice' [] 0 c
-  where listMultipleChoice' opts i c@(CorrectOption j cStr) [] = 
+  where listMultipleChoice' opts i (CorrectOption j cStr) [] = 
           if i == j
             then cStr : opts
             else opts
-        listMultipleChoice' opts i c@(CorrectOption j cStr) ics@(IncorrectOption icStr : ics') = 
+        listMultipleChoice' opts i c'@(CorrectOption j cStr) ics@(IncorrectOption icStr : ics') = 
           if i == j
-            then listMultipleChoice' (cStr  : opts) (i+1) c ics
-            else listMultipleChoice' (icStr : opts) (i+1) c ics'
+            then listMultipleChoice' (cStr  : opts) (i+1) c' ics
+            else listMultipleChoice' (icStr : opts) (i+1) c' ics'
 
 drawCardUI :: State -> Widget Name
-drawCardUI s = joinBorders $ drawCardBox $ (<=> drawProgress s) $
+drawCardUI s = let p = 1 in
+  joinBorders $ drawCardBox $ (<=> drawProgress s) $
   case (s ^. cards) !! (s ^. index) of
-    Definition title descr -> drawHeader title <=> B.hBorder <=> drawHintedDef s descr <=> str " "
+    Definition title descr -> drawHeader title <=> B.hBorder <=> padLeftRight p (drawHintedDef s descr <=> str " ")
                               
-    MultipleChoice question correct others -> drawHeader question <=> B.hBorder <=> drawOptions s (listMultipleChoice correct others)
+    MultipleChoice question correct others -> drawHeader question <=> B.hBorder <=> padLeftRight p (drawChoices s (listMultipleChoice correct others) <=> str " ")
 
-    OpenQuestion title perforated -> drawHeader title <=> B.hBorder <=> padLeftRight 1 (drawPerforated s perforated <=> str " ")
+    OpenQuestion title perforated -> drawHeader title <=> B.hBorder <=> padLeftRight p (drawPerforated s perforated <=> str " ")
 
+    MultipleAnswer question options -> drawHeader question <=> B.hBorder <=> padLeftRight p (drawOptions s options <=> str " ")
 
 applyWhen :: Bool -> (a -> a) -> a -> a
 applyWhen predicate action = if predicate then action else id
@@ -131,9 +143,9 @@ drawDef s def = case s ^. cardState of
   DefinitionState {_flipped=f} -> if f then drawDescr def else drawDescr [if char == '\n' then char else ' ' | char <- def]
   _ -> error "impossible: " 
 
-drawOptions :: State -> [String] -> Widget Name
-drawOptions s options = case (s ^. cardState, s^. currentCard) of
-  (MultipleChoiceState {_selected=i, _tried=kvs}, MultipleChoice _ (CorrectOption k _) _)  -> vBox formattedOptions
+drawChoices :: State -> [String] -> Widget Name
+drawChoices s options = case (s ^. cardState, s ^. currentCard) of
+  (MultipleChoiceState {_highlighted=i, _tried=kvs}, MultipleChoice _ (CorrectOption k _) _)  -> vBox formattedOptions
                   
              where formattedOptions :: [Widget Name]
                    formattedOptions = [ coloring $ drawDescr (if i==j then "* " ++ opt else opt) |
@@ -141,10 +153,23 @@ drawOptions s options = case (s ^. cardState, s^. currentCard) of
                                         let chosen = M.findWithDefault False j kvs 
                                             coloring = case (chosen, j==k) of
                                               (False, _)    -> id
-                                              (True, False) -> withAttr incorrectOptAttr
-                                              (True, True)  -> withAttr correctOptAttr
+                                              (True, False) -> withAttr incorrectChoiceAttr
+                                              (True, True)  -> withAttr correctChoiceAttr
                                           ]
-  _                                  -> error "impossible"
+  _ -> error "impossible"
+
+drawOptions :: State -> NonEmpty Option -> Widget Name
+drawOptions s = case (s ^. cardState, s ^. currentCard) of
+  (MultipleAnswerState {_highlighted=j, _selected=kvs}, _) -> 
+    vBox . NE.toList .  NE.map drawOption . (`NE.zip` NE.fromList [0..])
+      where drawOption (Option _ text, i) = coloring (str "[") <+> coloring (highlighting (str symbol)) <+> coloring (str "] ") <+> drawDescr text
+                where symbol = if i == j || xxx then "*" else " "
+                      xxx = M.findWithDefault False i kvs
+                      highlighting = if i == j then withAttr highlightedOptAttr else id
+                      coloring = if xxx then withAttr selectedOptAttr else id
+  
+  _ -> error "hopefully this is never shown"
+
 
 drawPerforated :: State -> Perforated -> Widget Name
 drawPerforated s p = drawSentence s $ perforatedToSentence p
@@ -161,7 +186,7 @@ makeSentenceWidget w state = vBox . fst . makeSentenceWidget' 0 0
     makeSentenceWidget' :: Int -> Int -> Sentence -> ([Widget Name], Bool)
     makeSentenceWidget' padding _ (Normal s) = let (ws, _, fit) = wrapStringWithPadding padding w s in (ws, fit) 
     makeSentenceWidget' padding i (Perforated pre gapSolution post) = case state ^. cardState of
-      OpenQuestionState {_gapInput = kvs, _selectedGap=j, _entered=submitted, _correctGaps=cgs} ->
+      OpenQuestionState {_gapInput = kvs, _highlighted=j, _entered=submitted, _correctGaps=cgs} ->
         let (ws, n, fit') = wrapStringWithPadding padding w pre
             gap = M.findWithDefault "" i kvs
             n' =  w - n - length gap 
@@ -229,7 +254,15 @@ handleEvent s (VtyEvent ev) = case ev of
   -- V.EvKey (V.KChar ' ') []         -> next s
 
   ev -> case (s ^. cardState, s ^. currentCard) of
-    (MultipleChoiceState {_selected = i, _nChoices = nChoices, _tried = kvs}, MultipleChoice _ (CorrectOption j _) _) ->
+    (DefinitionState{_flipped = f}, _) ->
+      case ev of
+        V.EvKey V.KEnter [] -> 
+          if f
+            then next s 
+            else continue $ s & cardState.flipped %~ not
+        _ -> continue s
+
+    (MultipleChoiceState {_highlighted = i, _nChoices = nChoices, _tried = kvs}, MultipleChoice _ (CorrectOption j _) _) ->
       case ev of
         V.EvKey V.KUp [] -> continue up
         V.EvKey (V.KChar 'k') [] -> continue up
@@ -246,36 +279,52 @@ handleEvent s (VtyEvent ev) = case ev of
       where frozen = M.findWithDefault False j kvs
         
             down = if i < nChoices - 1 && not frozen
-                     then s & (cardState.selected) +~ 1
+                     then s & (cardState.highlighted) +~ 1
                      else s
 
             up = if i > 0 && not frozen
-                   then s & (cardState.selected) -~ 1
+                   then s & (cardState.highlighted) -~ 1
+                   else s
+    
+    (MultipleAnswerState {_highlighted = i, _nChoices = nChoices}, MultipleAnswer question options) ->
+      case ev of
+        V.EvKey V.KUp [] -> continue up
+        V.EvKey (V.KChar 'k') [] -> continue up
+        V.EvKey V.KDown [] -> continue down 
+        V.EvKey (V.KChar 'j') [] -> continue down
+
+        V.EvKey V.KEnter [] ->
+            if frozen
+              then next s
+              else continue $ s & cardState.selected %~ M.adjust not i
+
+        _ -> continue s
+
+      where frozen = False
+        
+            down = if i < nChoices - 1 && not frozen
+                     then s & (cardState.highlighted) +~ 1
+                     else s
+
+            up = if i > 0 && not frozen
+                   then s & (cardState.highlighted) -~ 1
                    else s
 
-    (DefinitionState{_flipped = f}, _) ->
-      case ev of
-        V.EvKey V.KEnter [] -> 
-          if f
-            then next s 
-            else continue $ s & cardState.flipped %~ not
-        _ -> continue s
-    
-    (OpenQuestionState {_selectedGap = i, _nGaps = n, _gapInput = kvs, _correctGaps = cGaps}, OpenQuestion _ perforated) ->
+    (OpenQuestionState {_highlighted = i, _nGaps = n, _gapInput = kvs, _correctGaps = cGaps}, OpenQuestion _ perforated) ->
       case ev of
         V.EvKey (V.KChar '\t') [] -> continue $ 
           if i < n - 1
-            then s & (cardState.selectedGap) +~ 1
-            else s & (cardState.selectedGap) .~ 0
+            then s & (cardState.highlighted) +~ 1
+            else s & (cardState.highlighted) .~ 0
         
         V.EvKey V.KRight [] -> continue $ 
           if i < n - 1
-            then s & (cardState.selectedGap) +~ 1
+            then s & (cardState.highlighted) +~ 1
             else s
 
         V.EvKey V.KLeft [] -> continue $ 
           if i > 0
-            then s & (cardState.selectedGap) -~ 1
+            then s & (cardState.highlighted) -~ 1
             else s
 
         V.EvKey (V.KChar c) [] -> continue $
@@ -306,11 +355,17 @@ titleAttr = attrName "title"
 textboxAttr :: AttrName
 textboxAttr = attrName "textbox"
 
-incorrectOptAttr :: AttrName
-incorrectOptAttr = attrName "incorrect option"
+incorrectChoiceAttr :: AttrName
+incorrectChoiceAttr = attrName "incorrect choice"
 
-correctOptAttr :: AttrName
-correctOptAttr = attrName "correct option"
+correctChoiceAttr :: AttrName
+correctChoiceAttr = attrName "correct choice"
+
+highlightedOptAttr :: AttrName
+highlightedOptAttr = attrName "highlighted option"
+
+selectedOptAttr :: AttrName
+selectedOptAttr = attrName "selected option"
 
 hiddenAttr :: AttrName
 hiddenAttr = attrName "hidden"
@@ -328,10 +383,12 @@ theMap :: AttrMap
 theMap = attrMap V.defAttr
   [ (titleAttr, fg V.yellow)
   , (textboxAttr, V.defAttr)
-  , (incorrectOptAttr, fg V.red)
-  , (correctOptAttr, fg V.green)
+  , (incorrectChoiceAttr, fg V.red)
+  , (correctChoiceAttr, fg V.green)
   , (incorrectGapAttr, fg V.red `V.withStyle` V.underline)
   , (correctGapAttr, fg V.green `V.withStyle` V.underline)
+  , (highlightedOptAttr, fg V.yellow)
+  , (selectedOptAttr, fg V.blue)
   , (hiddenAttr, fg V.black)
   , (gapAttr, V.defAttr `V.withStyle` V.underline)
   ]

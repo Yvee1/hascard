@@ -32,6 +32,7 @@ dependencies:
 - vector
 - filepath
 - microlens
+- process
 
 library:
   source-dirs: src
