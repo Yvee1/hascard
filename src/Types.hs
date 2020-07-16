@@ -1,4 +1,6 @@
 module Types where
+import Data.List.NonEmpty (NonEmpty)
+import qualified Data.List.NonEmpty as NE
 
 --                     Word   Description
 data Card = Definition String String
@@ -8,15 +10,19 @@ data Card = Definition String String
             mcCorrect    :: CorrectOption,
             mcIncorrects :: [IncorrectOption]}
           -- | MultipleAnswer String (NE.NonEmpty Answer) 
+          | MultipleAnswer {
+            maQuestion   :: String,
+            maOptions    :: NonEmpty Option }
+          
   deriving Show
 
 data Type = Incorrect | Correct
-  deriving Show
+  deriving (Show, Eq)
 data CorrectOption = CorrectOption Int String
   deriving Show
 newtype IncorrectOption = IncorrectOption String
   deriving Show
-data Answer = Answer Type String
+data Option = Option Type String
   deriving Show
 
 --                         Pre    Gap    Post

@@ -2,6 +2,7 @@
 {-# LANGUAGE DataKinds, ExistentialQuantification, GADTs, KindSignatures #-}
 module Parser (parseCards) where
   
+import qualified Data.List.NonEmpty as NE
 import Text.Parsec
 import Types
 
@@ -29,6 +30,7 @@ parseCards = parse pCards "failed when parsing cards"
 
 pCards = pCard `sepEndBy` seperator
 pCard =  uncurry3 MultipleChoice<$> try pMultChoice
+     <|> uncurry MultipleAnswer <$> try pMultAnswer
      <|> uncurry OpenQuestion <$> try pOpen
      <|> uncurry Definition <$> pDef
 
@@ -38,27 +40,34 @@ pHeader = do
   spaces
   many notEOL
 
-pDef = do
-  header <- pHeader
-  many eol
-  descr <- manyTill anyChar $ lookAhead (try seperator)
-  return (header, descr)
-
 pMultChoice = do
   header <- pHeader
   many eol
-  options <- pChoice `sepBy1` lookAhead (try annoyance)
-  let (correct, incorrects) = makeMultipleChoice options
+  choices <- pChoice `sepBy1` lookAhead (try choicePrefix)
+  let (correct, incorrects) = makeMultipleChoice choices
   return (header, correct, incorrects)
 
 pChoice = do
   kind <- oneOf "*-"
   space
-  text <- many (noneOf "*-")
+  text <- manyTill anyChar $ lookAhead (try (try choicePrefix <|> seperator))
   return (kind, text)
 
-annoyance =  string "- "
-         <|> string "* "
+choicePrefix =  string "- "
+            <|> string "* "
+
+pMultAnswer = do
+  header <- pHeader
+  many eol
+  options <- pOption `sepBy1` lookAhead (try (char '['))
+  return (header, NE.fromList options)
+
+pOption = do
+  char '['
+  kind <- oneOf "*x "
+  string "] "
+  text <- manyTill anyChar $ lookAhead (try (seperator <|> string "["))
+  return $ makeOption kind text
 
 pOpen = do
   header <- pHeader
@@ -76,18 +85,24 @@ pPerforated = do
   Perforated pre gap <$> pSentence 
   
 pGap = do
-  pre <- manyTill anyChar $ lookAhead (try annoyance2)
+  pre <- manyTill anyChar $ lookAhead (try gappedSpecialChars)
   char '_'
-  gap <- manyTill (noneOf "_") $ lookAhead (try annoyance2)
+  gap <- manyTill (noneOf "_") $ lookAhead (try gappedSpecialChars)
   char '_'
   return (pre, gap)
 
-annoyance2 =  seperator
-          <|> string "_"
+gappedSpecialChars =  seperator
+                  <|> string "_"
 
 pNormal = do
-  text <- manyTill (noneOf "_") $ lookAhead (try annoyance2)
+  text <- manyTill (noneOf "_") $ lookAhead (try gappedSpecialChars)
   return (Normal text)
+
+pDef = do
+  header <- pHeader
+  many eol
+  descr <- manyTill anyChar $ lookAhead (try seperator)
+  return (header, descr)
 
 eol =  try (string "\n\r")
     <|> try (string "\r\n")
@@ -107,3 +122,8 @@ makeMultipleChoice options = makeMultipleChoice' [] [] 0 options
     makeMultipleChoice' _ _ _ [] = error ("multiple choice had multiple correct answers: \n" ++ show options)
     makeMultipleChoice' cs ics i (('-', text) : opts) = makeMultipleChoice' cs (IncorrectOption text : ics) (i+1) opts
     makeMultipleChoice' cs ics i (('*', text) : opts) = makeMultipleChoice' (CorrectOption i text : cs) ics (i+1) opts
+
+makeOption :: Char -> String -> Option
+makeOption kind text
+  | kind `elem` "*x" = Option Correct text
+  | otherwise        = Option Incorrect text
