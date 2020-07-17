@@ -1,5 +1,5 @@
 {-# OPTIONS_GHC -Wall #-}
-{-# LANGUAGE OverloadedStrings, TemplateHaskell #-}
+{-# LANGUAGE OverloadedStrings, TemplateHaskell, TupleSections #-}
 
 module FileBrowserUI (runFileBrowserUI) where
 
@@ -10,7 +10,6 @@ import Types
 import Parser
 import Control.Exception (displayException, try)
 import Control.Monad.IO.Class
-import Data.Maybe (fromJust)
 import Brick.Widgets.Border
 import Brick.Widgets.Center
 import Brick.Widgets.List
@@ -99,24 +98,24 @@ handleEvent s@State{_fb=b} (VtyEvent ev) =
                         [] -> continue s'
                         [fileInfo] -> do
                           let fp = fileInfoFilePath fileInfo
-                          strOrExc <- liftIO (try (readFile fp) :: IO (Either IOError String))
-                          case strOrExc of
-                            Left exc -> continue (s' & exception .~ Just (displayException exc))
-                            Right str -> case parseCards str of
-                              Left parseError -> continue (s' & exception .~ Just (show parseError))
-                              Right result -> halt (s' & cards .~ result & filePath .~ Just fp)
+                          fileOrExc <- liftIO (try (readFile fp) :: IO (Either IOError String))
+                          case fileOrExc of
+                            Left exc -> continue (s' & exception ?~ displayException exc)
+                            Right file -> case parseCards file of
+                              Left parseError -> continue (s' & exception ?~ show parseError)
+                              Right result -> halt (s' & cards .~ result & filePath ?~ fp)
                         _ -> halt s'
 
                 _ -> continue s'
 handleEvent s _ = continue s
 
-runFileBrowserUI :: IO ([Card], FilePath)
+runFileBrowserUI :: IO (Maybe ([Card], FilePath))
 runFileBrowserUI = do
   browser <- newFileBrowser selectNonDirectories () Nothing
   let filteredBrowser = setFileBrowserEntryFilter (Just (fileExtensionMatch' "txt")) browser
   s <- defaultMain app (State filteredBrowser Nothing [] Nothing)
-  let fp = fromJust $ s ^. filePath
-  return (s ^. cards, fp)
+  let mfp = s ^. filePath
+  return $ fmap (s ^. cards,) mfp
 
 fileExtensionMatch' :: String -> FileInfo -> Bool
 fileExtensionMatch' ext i = case fileInfoFileType i of

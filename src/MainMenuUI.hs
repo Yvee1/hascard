@@ -6,6 +6,9 @@ import Brick.Widgets.Border
 import Brick.Widgets.Border.Style
 import Brick.Widgets.Center
 import CardSelectorUI
+import Data.Functor (($>))
+import InfoUI
+import SettingsUI
 import qualified Data.Vector as Vec
 import qualified Graphics.Vty as V
 import qualified Brick.Widgets.List as L
@@ -73,10 +76,9 @@ handleEvent l (VtyEvent e) =
       V.EvKey V.KEsc [] -> halt l
       V.EvKey V.KEnter [] ->
         case L.listSelected l of
-          Just 0 -> suspendAndResume $ do runCardSelectorUI
-                                          return l
-          Just 1 -> undefined
-          Just 2 -> undefined
+          Just 0 -> suspendAndResume $ runCardSelectorUI $> l
+          Just 1 -> suspendAndResume $ runInfoUI $> l
+          Just 2 -> suspendAndResume $ runSettingsUI $> l
           Just 3 -> halt l
           _ -> undefined
 

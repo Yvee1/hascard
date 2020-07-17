@@ -13,6 +13,7 @@ import Data.Map.Strict (Map)
 import Text.Wrap
 import Data.Text (pack)
 import Debug.Trace (trace)
+import SettingsUI (getShowHints, getShowControls)
 import System.IO.Unsafe (unsafePerformIO)
 import qualified Data.List.NonEmpty as NE
 import qualified Data.Text as T
@@ -53,6 +54,8 @@ data State = State
   , _nCards         :: Int        -- number of cards
   , _currentCard    :: Card
   , _cardState      :: CardState
+  , _showHints      :: Bool
+  , _showControls   :: Bool
   -- , _incorrectCards :: [Int]      -- list of indices of incorrect answers
   }
 
@@ -87,10 +90,15 @@ app = App
   }
 
 drawUI :: State -> [Widget Name]
-drawUI s =  [drawCardUI s <=> drawInfo]
+drawUI s =  [drawCardUI s <=> drawInfo s]
 
-drawInfo :: Widget Name
-drawInfo = str "ESC: quit"
+drawInfo :: State -> Widget Name
+drawInfo s = if not (s ^. showControls) then emptyWidget else
+  strWrap . ("ESC: quit" <>) $ case s ^. cardState of
+    DefinitionState {}     -> ", ENTER: flip card / continue"
+    MultipleChoiceState {} -> ", ENTER: confirm answer / continue"
+    MultipleAnswerState {} -> ", ENTER: select / continue, c: confirm selection"
+    OpenQuestionState {}   -> ", LEFT/RIGHT/TAB: navigate gaps, ENTER: confirm answer / continue"
 
 drawProgress :: State -> Widget Name
 drawProgress s = C.hCenter $ str (show (s^.index + 1) ++ "/" ++ show (s^.nCards))
@@ -100,9 +108,11 @@ drawHeader title = withAttr titleAttr $
                    padLeftRight 1 $
                    hCenteredStrWrap title
 
+wrapSettings = WrapSettings {preserveIndentation=False, breakLongWords=True}
+
 drawDescr :: String -> Widget Name
 drawDescr descr =
-  strWrapWith (WrapSettings {preserveIndentation=False, breakLongWords=True}) descr'
+  strWrapWith wrapSettings descr'
     where
       descr' = dropWhileEnd isSpace descr
 
@@ -121,7 +131,7 @@ drawCardUI :: State -> Widget Name
 drawCardUI s = let p = 1 in
   joinBorders $ drawCardBox $ (<=> drawProgress s) $
   case (s ^. cards) !! (s ^. index) of
-    Definition title descr -> drawHeader title <=> B.hBorder <=> padLeftRight p (drawHintedDef s descr <=> str " ")
+    Definition title descr -> drawHeader title <=> B.hBorder <=> padLeftRight p (drawDef s descr <=> str " ")
                               
     MultipleChoice question correct others -> drawHeader question <=> B.hBorder <=> padLeftRight p (drawChoices s (listMultipleChoice correct others) <=> str " ")
 
@@ -135,14 +145,23 @@ applyWhen predicate action = if predicate then action else id
 applyUnless :: Bool -> (a -> a) -> a -> a
 applyUnless p = applyWhen (not p)
 
+drawDef :: State -> String -> Widget Name
+drawDef s def = if s ^. showHints then drawHintedDef s def else drawNormalDef s def
+
 drawHintedDef :: State -> String -> Widget Name
 drawHintedDef s def = case s ^. cardState of
   DefinitionState {_flipped=f} -> if f then drawDescr def else drawDescr [if isSeparator char || char == '\n' then char else '_' | char <- def]
   _ -> error "impossible: " 
 
-drawDef:: State -> String -> Widget Name
-drawDef s def = case s ^. cardState of
-  DefinitionState {_flipped=f} -> if f then drawDescr def else drawDescr [if char == '\n' then char else ' ' | char <- def]
+drawNormalDef:: State -> String -> Widget Name
+drawNormalDef s def = case s ^. cardState of
+  DefinitionState {_flipped=f} -> if f
+    then drawDescr def
+    else Widget Greedy Fixed $ do
+      c <- getContext
+      let w = c^.availWidthL
+      let def' = dropWhileEnd isSpace def
+      render . vBox $ [str " " | _ <- wrapTextToLines wrapSettings w (pack def')]
   _ -> error "impossible: " 
 
 drawChoices :: State -> [String] -> Widget Name
@@ -227,7 +246,7 @@ wrapStringWithPadding padding w s
         s' = if startsWithSpace then " " <> replicate padding 'X' <> tail s else replicate padding 'X' ++ s
         lastLetter = last s
         postfix = if lastLetter == ' ' then T.pack [lastLetter] else T.empty
-        ts = wrapTextToLines defaultWrapSettings w (pack s') & ix 0 %~ (if startsWithSpace then (T.pack " " `T.append`) . T.drop (padding + 1) else T.drop padding)
+        ts = wrapTextToLines wrapSettings w (pack s') & ix 0 %~ (if startsWithSpace then (T.pack " " `T.append`) . T.drop (padding + 1) else T.drop padding)
         ts' = ts & _last %~ (`T.append` postfix)
         padding' = T.length (last ts') + (if length ts' == 1 then 1 else 0) * padding in
           (map txt (filter (/=T.empty) ts'), padding', True)
@@ -236,7 +255,7 @@ wrapStringWithPadding padding w s
         (x: xs) = s
         s' = if x == ' ' then xs else s
         postfix = if lastLetter == ' ' then T.pack [lastLetter] else T.empty
-        ts = wrapTextToLines defaultWrapSettings w (pack s')
+        ts = wrapTextToLines wrapSettings w (pack s')
         ts' = ts & _last %~ (`T.append` postfix) in
     (map txt (filter (/=T.empty) ts'), T.length (last ts'), False)
 
@@ -413,11 +432,16 @@ theMap = attrMap V.defAttr
 
 runCardUI :: [Card] -> IO State
 runCardUI cards = do
+  hints <- getShowHints
+  controls <- getShowControls
+
   let initialState = State { _cards = cards
                            , _index = 0
                            , _currentCard = head cards
                            , _cardState = defaultCardState (head cards)
-                           , _nCards = length cards }
+                           , _nCards = length cards
+                           , _showHints = hints
+                           , _showControls = controls }
   defaultMain app initialState
 
 next :: State -> EventM Name (Next State)
