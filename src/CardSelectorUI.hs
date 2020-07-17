@@ -20,8 +20,6 @@ import qualified Data.Vector as Vec
 import qualified Graphics.Vty as V
 import qualified Brick.Widgets.List as L
 
------------------------ <Basic copy paste> --------------------------
-
 type Event = ()
 type Name = ()
 data State = State
@@ -43,7 +41,7 @@ app = App
 
 drawUI :: State -> [Widget Name]
 drawUI s = 
-  [ drawMenu s <=> drawException s]
+  [ drawMenu s <=> drawException s ]
 
 title :: Widget Name
 title = withAttr titleAttr $ hCenteredStrWrap "Select a deck of flashcards"
@@ -54,16 +52,13 @@ drawMenu s =
   center $ 
   withBorderStyle unicodeRounded $
   border $
-  -- hLimit 21 $
   hLimitPercent 60 $
   title <=>
   hBorder <=>
   hCenter (drawList s)
 
 drawList :: State -> Widget Name
-drawList s = 
-            --  hLimit 23 $
-             vLimit 6  $
+drawList s = vLimit 6  $
              L.renderListWithIndex (drawListElement l) True l
               where l = s ^. list
 
@@ -120,13 +115,11 @@ handleEvent s@State{_list=l} (VtyEvent e) =
                               Right str -> case parseCards str of
                                 Left parseError -> continue (s' & exception ?~ show parseError)
                                 Right result -> suspendAndResume $ do
-                                  _ <- runCardUI result               
-                                  return s'
+                                  _ <- runCardUI result
+                                  return (s' & exception .~ Nothing)
                     _ -> continue s'
 
 handleEvent l _ = continue l
-
------------------------ </Basic copy paste> --------------------------
 
 runCardSelectorUI :: IO ()
 runCardSelectorUI = do
@@ -166,7 +159,5 @@ getRecentsFile = do
 
 runFileBrowser :: IO ()
 runFileBrowser = do
-  (cards, fp) <- runFileBrowserUI
-  addRecent fp
-
-  unless (null cards) $ runCardUI cards $> ()
+  result <- runFileBrowserUI
+  maybe (pure ()) (\(cards, fp) -> addRecent fp *> runCardUI cards $> ()) result
