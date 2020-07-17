@@ -3,7 +3,7 @@ An in-progress commandline utility for reviewing notes. 'Flashcards' can be writ
 - [x] Simple flashcard
 - Multiple choice question
   - [x] Single correct answer
-  - [ ] Multiple correct answers
+  - [x] Multiple correct answers
 - [x] Fill in the gaps
 
 ![a recording of example usage of the hascard application](./recording.gif)
