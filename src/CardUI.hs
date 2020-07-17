@@ -29,7 +29,7 @@ data CardState =
     DefinitionState
   { _flipped        :: Bool }
   | MultipleChoiceState
-  { _highlighted       :: Int
+  { _highlighted    :: Int
   , _nChoices       :: Int
   , _tried          :: Map Int Bool      -- indices of tried choices
   }
@@ -37,6 +37,7 @@ data CardState =
   { _highlighted    :: Int
   , _selected       :: Map Int Bool
   , _nChoices       :: Int
+  , _entered        :: Bool
   }
   | OpenQuestionState
   { _gapInput       :: Map Int String
@@ -73,6 +74,7 @@ defaultCardState (OpenQuestion _ perforated) = OpenQuestionState
 defaultCardState (MultipleAnswer question answers) = MultipleAnswerState 
   { _highlighted = 0
   , _selected = M.fromList [(i, False) | i <- [0..NE.length answers-1]]
+  , _entered = False
   , _nChoices = NE.length answers }
 
 app :: App State Event Name
@@ -160,14 +162,19 @@ drawChoices s options = case (s ^. cardState, s ^. currentCard) of
 
 drawOptions :: State -> NonEmpty Option -> Widget Name
 drawOptions s = case (s ^. cardState, s ^. currentCard) of
-  (MultipleAnswerState {_highlighted=j, _selected=kvs}, _) -> 
+  (MultipleAnswerState {_highlighted=j, _selected=kvs, _entered=submitted}, _) -> 
     vBox . NE.toList .  NE.map drawOption . (`NE.zip` NE.fromList [0..])
-      where drawOption (Option _ text, i) = coloring (str "[") <+> coloring (highlighting (str symbol)) <+> coloring (str "] ") <+> drawDescr text
-                where symbol = if i == j || xxx then "*" else " "
-                      xxx = M.findWithDefault False i kvs
-                      highlighting = if i == j then withAttr highlightedOptAttr else id
-                      coloring = if xxx then withAttr selectedOptAttr else id
-  
+      where drawOption (Option kind text, i) = coloring (str "[") <+> coloring (highlighting (str symbol)) <+> coloring (str "] ") <+> drawDescr text
+                where symbol = if (i == j && not submitted) || enabled then "*" else " "
+                      enabled = M.findWithDefault False i kvs
+                      highlighting = if i == j && not submitted then withAttr highlightedOptAttr else id
+                      coloring = case (submitted, enabled, kind) of
+                                   (True, True, Correct) -> withAttr correctOptAttr
+                                   (True, False, Incorrect) -> withAttr correctOptAttr
+                                   (True, _, _) -> withAttr incorrectOptAttr
+                                   (False, True, _) -> withAttr selectedOptAttr
+                                   _ -> id
+
   _ -> error "hopefully this is never shown"
 
 
@@ -286,12 +293,14 @@ handleEvent s (VtyEvent ev) = case ev of
                    then s & (cardState.highlighted) -~ 1
                    else s
     
-    (MultipleAnswerState {_highlighted = i, _nChoices = nChoices}, MultipleAnswer question options) ->
+    (MultipleAnswerState {_highlighted = i, _nChoices = nChoices, _entered = submitted}, MultipleAnswer question options) ->
       case ev of
         V.EvKey V.KUp [] -> continue up
         V.EvKey (V.KChar 'k') [] -> continue up
         V.EvKey V.KDown [] -> continue down 
         V.EvKey (V.KChar 'j') [] -> continue down
+
+        V.EvKey (V.KChar 'c') [] -> continue $ s & (cardState.entered) .~ True
 
         V.EvKey V.KEnter [] ->
             if frozen
@@ -300,7 +309,8 @@ handleEvent s (VtyEvent ev) = case ev of
 
         _ -> continue s
 
-      where frozen = False
+
+      where frozen = submitted
         
             down = if i < nChoices - 1 && not frozen
                      then s & (cardState.highlighted) +~ 1
@@ -367,6 +377,12 @@ highlightedOptAttr = attrName "highlighted option"
 selectedOptAttr :: AttrName
 selectedOptAttr = attrName "selected option"
 
+correctOptAttr :: AttrName
+correctOptAttr = attrName "correct option"
+
+incorrectOptAttr :: AttrName
+incorrectOptAttr = attrName "incorrect option"
+
 hiddenAttr :: AttrName
 hiddenAttr = attrName "hidden"
 
@@ -389,6 +405,8 @@ theMap = attrMap V.defAttr
   , (correctGapAttr, fg V.green `V.withStyle` V.underline)
   , (highlightedOptAttr, fg V.yellow)
   , (selectedOptAttr, fg V.blue)
+  , (incorrectOptAttr, fg V.red)
+  , (correctOptAttr, fg V.green)
   , (hiddenAttr, fg V.black)
   , (gapAttr, V.defAttr `V.withStyle` V.underline)
   ]
