@@ -2,6 +2,7 @@
 module CardSelectorUI (runCardSelectorUI, getRecents, getRecentsFile, addRecent) where
 
 import Brick
+import BrickHelpers
 import Brick.Widgets.Border
 import Brick.Widgets.Border.Style
 import Brick.Widgets.Center
@@ -45,7 +46,7 @@ drawUI s =
   [ drawMenu s <=> drawException s]
 
 title :: Widget Name
-title = withAttr titleAttr $ str "Select a deck of flashcards"
+title = withAttr titleAttr $ hCenteredStrWrap "Select a deck of flashcards"
 
 drawMenu :: State -> Widget Name
 drawMenu s = 
@@ -55,22 +56,19 @@ drawMenu s =
   border $
   -- hLimit 21 $
   hLimitPercent 60 $
-  hCenter title <=>
+  title <=>
   hBorder <=>
   hCenter (drawList s)
 
 drawList :: State -> Widget Name
-drawList s = hLimit 23 $
-             vLimit 5  $
+drawList s = 
+            --  hLimit 23 $
+             vLimit 6  $
              L.renderListWithIndex (drawListElement l) True l
               where l = s ^. list
 
 drawListElement :: L.List Name String -> Int -> Bool -> String -> Widget Name
-drawListElement l i selected text = 
-  hCenter $
-  wAttr1 $
-  wAttr2 $
-  str text
+drawListElement l i selected = hCenteredStrWrapWithAttr (wAttr1 . wAttr2)
   where wAttr1 = if selected then withDefAttr selectedAttr else id
         wAttr2 = if i == length l - 1 then withAttr lastElementAttr else id
 

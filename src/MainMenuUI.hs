@@ -1,6 +1,7 @@
 module MainMenuUI (runMainMenuUI) where
 
 import Brick
+import BrickHelpers
 import Brick.Widgets.Border
 import Brick.Widgets.Border.Style
 import Brick.Widgets.Center
@@ -40,20 +41,17 @@ drawMenu s =
   border $
   -- hLimit 21 $
   hLimitPercent 60 $
+  hLimit 40 $
   hCenter title <=>
   hBorder <=>
-  hCenter (drawList s)
+  drawList s
 
 drawList :: State -> Widget Name
-drawList s = hLimit 11 $
-             vLimit 3  $
+drawList s = vLimit 4 $
              L.renderList drawListElement True s
 
 drawListElement :: Bool -> String -> Widget Name
-drawListElement selected text = 
-  hCenter $
-  attr $
-  str text
+drawListElement selected = hCenteredStrWrapWithAttr attr
   where attr = if selected then withAttr selectedAttr else id
 
 titleAttr :: AttrName
@@ -78,7 +76,8 @@ handleEvent l (VtyEvent e) =
           Just 0 -> suspendAndResume $ do runCardSelectorUI
                                           return l
           Just 1 -> undefined
-          Just 2 -> halt l
+          Just 2 -> undefined
+          Just 3 -> halt l
           _ -> undefined
 
       ev -> continue =<< L.handleListEventVi L.handleListEvent ev l
@@ -86,8 +85,9 @@ handleEvent l _ = continue l
 
 runMainMenuUI :: IO ()
 runMainMenuUI = do
-  let options = Vec.fromList [ "Start"
+  let options = Vec.fromList [ "Select"
                              , "Info"
+                             , "Settings"
                              , "Quit" ]
 
   let initialState = L.list () options 1

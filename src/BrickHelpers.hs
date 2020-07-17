@@ -5,12 +5,12 @@ import Brick.Widgets.Center
 import Data.Text (pack)
 import Lens.Micro
 
--- hCenteredStrWrap :: String -> Widget ()
--- hCenteredStrWrap = myStrWrap' 
-
 hCenteredStrWrap :: String -> Widget n
-hCenteredStrWrap p = Widget Greedy Fixed $ do
+hCenteredStrWrap = hCenteredStrWrapWithAttr id
+
+hCenteredStrWrapWithAttr :: (Widget n -> Widget n) -> String -> Widget n
+hCenteredStrWrapWithAttr attr p = Widget Greedy Fixed $ do
   c <- getContext
   let w = c^.availWidthL
-  let result = vBox $ map (hCenter . txt) $ wrapTextToLines defaultWrapSettings w (pack p)
+  let result = vBox $ map (hCenter . attr . txt) $ wrapTextToLines (WrapSettings {preserveIndentation=False, breakLongWords=True}) w (pack p)
   render result
