@@ -3,11 +3,13 @@ module Main where
 import Lib (runBrickFlashcards)
 import CardUI
 import Control.Exception (displayException, try)
+import Control.Monad (void, when)
 import Data.Functor (($>))
 import Data.Version (showVersion)
 import Paths_hascard (version)
 import Parser
 import Options.Applicative
+import SettingsUI
 import System.Process (runCommand)
 
 data Opts = Opts
@@ -17,7 +19,8 @@ data Opts = Opts
 
 main :: IO ()
 main = do
-  _ <- runCommand "echo -n \\\\e[5 q"
+  useEscapeCode <- getUseEscapeCode
+  when useEscapeCode $ void (runCommand "echo -n \\\\e[5 q")
   
   options <- execParser optsWithHelp
   if optVersion options

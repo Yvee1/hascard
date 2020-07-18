@@ -1,6 +1,6 @@
-module SettingsUI (runSettingsUI, getShowHints, getShowControls) where
+module SettingsUI (runSettingsUI, getShowHints, getShowControls, getUseEscapeCode) where
 
-import Brick
+import Brick hiding (mergeWithDefault)
 import BrickHelpers
 import Brick.Widgets.Border
 import Brick.Widgets.Border.Style
@@ -69,7 +69,8 @@ drawSettings :: State -> Widget Name
 drawSettings s = vBox $ map (drawSetting s) (zip [0..] descriptions)
   where descriptions = map (++": ") 
           [ "Draw hints using underscores for definition cards"
-          , "Show controls at the bottom of screen" ]
+          , "Show controls at the bottom of screen"
+          , "Use the '-n \\e[5 q' escape code to change the cursor to a blinking line on start" ]
 
 drawSetting :: State -> (Int, String) -> Widget Name
 drawSetting (selected, settings) (i, text) =
@@ -87,9 +88,18 @@ getSettings :: IO Settings
 getSettings = do
   sf <- getSettingsFile
   exists <- D.doesFileExist sf
-  if exists
-    then parseSettings <$> readFile sf
-    else return defaultSettings
+  if exists 
+    then do
+      settings <- parseSettings <$> readFile sf
+      if M.size settings == M.size defaultSettings
+        then return settings
+        else let settings' = settings `mergeWithDefault` defaultSettings in
+          setSettings settings' $> settings'
+
+  else return defaultSettings
+
+mergeWithDefault :: Settings -> Settings -> Settings
+mergeWithDefault = flip M.union
 
 getShowHints :: IO Bool
 getShowHints = do
@@ -101,6 +111,11 @@ getShowControls = do
   settings <- getSettings
   return $ settings ! 1
 
+getUseEscapeCode :: IO Bool
+getUseEscapeCode = do
+  settings <- getSettings
+  return $ settings ! 2
+
 parseSettings :: String -> Settings
 parseSettings = read
 
@@ -111,7 +126,7 @@ getSettingsFile = do
   return (xdg </> "settings")
 
 defaultSettings :: Settings
-defaultSettings = M.fromList [(0, True), (1, True)]
+defaultSettings = M.fromList [(0, False), (1, True), (2, False)]
 
 setSettings :: Settings -> IO ()
 setSettings settings = do
