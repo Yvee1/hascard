@@ -87,11 +87,12 @@ pPerforated = do
 pGap = do
   pre <- manyTill anyChar $ lookAhead (try gappedSpecialChars)
   char '_'
-  gap <- manyTill (noneOf "_") $ lookAhead (try gappedSpecialChars)
+  gaps <- manyTill (noneOf "_|") (lookAhead (try gappedSpecialChars)) `sepBy1` string "|"
   char '_'
-  return (pre, gap)
+  return (pre, NE.fromList gaps)
 
 gappedSpecialChars =  seperator
+                  <|> string "|"
                   <|> string "_"
 
 pNormal = do

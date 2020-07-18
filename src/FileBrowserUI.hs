@@ -55,9 +55,6 @@ theMap = attrMap V.defAttr
     , (errorAttr, fg V.red)
     ]
 
--- drawUI :: FileBrowser Name -> [Widget Name]
--- drawUI b = [renderFileBrowser True b]
-
 drawUI :: State -> [Widget Name]
 drawUI State{_fb=b, _exception=exc} = [center $ ui <=> help]
     where
@@ -77,10 +74,7 @@ drawUI State{_fb=b, _exception=exc} = [center $ ui <=> help]
                     , hCenter $ txt "Esc: quit"
                     ]
 
-handleEvent :: State -> BrickEvent Name Event -> EventM Name (Next (State))
--- handleEvent s (VtyEvent (V.EvKey V.KEsc [])) = halt s
--- handleEvent s (VtyEvent ev) = do fb'<- handleFileBrowserEvent ev (s ^. fb)
---                                  continue $ s & fb .~ fb'
+handleEvent :: State -> BrickEvent Name Event -> EventM Name (Next State)
 handleEvent s@State{_fb=b} (VtyEvent ev) =
     case ev of
         V.EvKey V.KEsc [] | not (fileBrowserIsSearching b) ->

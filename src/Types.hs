@@ -25,8 +25,8 @@ newtype IncorrectOption = IncorrectOption String
 data Option = Option Type String
   deriving Show
 
---                         Pre    Gap    Post
-data Sentence = Perforated String String Sentence
+--                         Pre    Gap               Post
+data Sentence = Perforated String (NonEmpty String) Sentence
               | Normal String
   deriving Show
 
@@ -35,17 +35,17 @@ nGapsInSentence = nGapsInSentence' 0
 nGapsInSentence' acc (Normal s) = acc
 nGapsInSentence' acc (Perforated pre gap post) = nGapsInSentence' (1+acc) post
 
-foldSentence :: (String -> a) -> (String -> String -> a -> a) -> Sentence -> a
+foldSentence :: (String -> a) -> (String -> NonEmpty String -> a -> a) -> Sentence -> a
 foldSentence norm perf = f where
   f (Normal text) = norm text
   f (Perforated pre gap sent) = perf pre gap (f sent)
 
-foldSentenceIndex :: (String -> Int -> a) -> (String -> String -> a -> Int -> a) -> Sentence -> a
+foldSentenceIndex :: (String -> Int -> a) -> (String -> NonEmpty String -> a -> Int -> a) -> Sentence -> a
 foldSentenceIndex norm perf = f 0 where
   f i (Normal text) = norm text i
   f i (Perforated pre gap sent) = perf pre gap (f (i+1) sent) i
 
-data Perforated = P String String Sentence
+data Perforated = P String (NonEmpty String) Sentence
   deriving Show
 
 perforatedToSentence :: Perforated -> Sentence
@@ -54,5 +54,5 @@ perforatedToSentence (P pre gap sentence) = Perforated pre gap sentence
 nGapsInPerforated :: Perforated -> Int
 nGapsInPerforated = nGapsInSentence . perforatedToSentence
 
-sentenceToGaps :: Sentence -> [String]
+sentenceToGaps :: Sentence -> [NonEmpty String]
 sentenceToGaps = foldSentence (const []) (\_ gap acc -> gap : acc)

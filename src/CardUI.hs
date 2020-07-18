@@ -365,7 +365,7 @@ handleEvent s (VtyEvent ev) = case ev of
                   sentence = perforatedToSentence perforated
                   gaps = sentenceToGaps sentence
 
-                  s' = s & (cardState.correctGaps) %~ M.mapWithKey (\i _ -> gaps !! i == M.findWithDefault "" i kvs) & (cardState.entered) .~ True
+                  s' = s & (cardState.correctGaps) %~ M.mapWithKey (\i _ -> M.findWithDefault "" i kvs `elem` gaps !! i)  & (cardState.entered) .~ True
                   -- correct = M.foldr (&&) True (s' ^. (cardState.correctGaps))
                   -- use above if you want to go to next card directly, if gaps were filled in correctly
                   correct = M.foldr (&&) True cGaps
