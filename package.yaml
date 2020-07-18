@@ -33,6 +33,7 @@ dependencies:
 - filepath
 - microlens
 - process
+- optparse-applicative
 
 library:
   source-dirs: src

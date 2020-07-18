@@ -48,8 +48,11 @@ handleEvent s@(i, settings) (VtyEvent e) =
       V.EvKey V.KEnter [] -> continue (i, settings')
         where settings' = M.adjust not i settings
       V.EvKey V.KUp [] -> continue (max 0 (i-1), settings)
+      V.EvKey (V.KChar 'k') [] -> continue (max 0 (i-1), settings)
       V.EvKey V.KDown [] -> continue (min (M.size settings-1) (i+1), settings)
+      V.EvKey (V.KChar 'j') [] -> continue (min (M.size settings-1) (i+1), settings)
       _ -> continue s
+handleEvent s _ = continue s
 
 titleAttr :: AttrName
 titleAttr = attrName "title"
@@ -70,8 +73,8 @@ drawSettings s = vBox $ map (drawSetting s) (zip [0..] descriptions)
 
 drawSetting :: State -> (Int, String) -> Widget Name
 drawSetting (selected, settings) (i, text) =
-  strWrap text <+> underline (str word)
-  where word = if settings ! i then "Yes" else "No"
+  strWrap text <+> str " " <+> word
+  where word = if settings ! i then underline (str "Yes") else underline (str "No") <+> str " "
         underline = if i == selected then withAttr selectedAttr else id
 
 runSettingsUI :: IO ()
