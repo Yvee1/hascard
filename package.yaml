@@ -11,13 +11,13 @@ extra-source-files:
 - ChangeLog.md
 
 # Metadata used when publishing your package
-synopsis:            Hascard is a text-based user interface for reviewing notes with the use of 'flashcards', which are written in markdown-like syntax.
+synopsis:            A TUI for reviewing notes using 'flashcards' written with markdown-like syntax.
 category:            Application
 
 # To avoid duplicated efforts in documentation and dealing with the
 # complications of embedding Haddock markup inside cabal files, it is
 # common to point users to the README.md file.
-description:         Please see the README on GitHub at <https://github.com/Yvee1/hascard#readme>
+description:         Hascard is a text-based user interface for reviewing notes using 'flashcards'. Cards are written in markdown-like syntax. Please see the README file on GitHub at <https://github.com/Yvee1/hascard#readme> for more information.
 
 dependencies:
 - base >= 4.7 && < 5
