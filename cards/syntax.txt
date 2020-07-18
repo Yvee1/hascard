@@ -4,17 +4,17 @@ Explanation or definition of this word, or the answer to the question.
 ---
 
 # Multiple choice question, (only one answer is right)
-- Option 1
-* Option 2 (this is the correct answer)
-- Option 3
-- Option 4
+- Choice 1
+* Choice 2 (this is the correct answer)
+- Choice 3
+- Choice 4
 
 ---
 
-# Multiple choice question, (multiple possible answers)
-[ ] Option 1
+# Multiple answer question
+[*] Option 1 (this is a correct answer)
 [ ] Option 2
-[x] Option 3 (this is the correct answer)
+[*] Option 3 (this is a correct answer)
 [ ] Option 4
 
 ---

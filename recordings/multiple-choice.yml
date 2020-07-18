@@ -1,0 +1,181 @@
+# The configurations that used for the recording, feel free to edit them
+config:
+
+  # Specify a command to be executed
+  # like `/bin/bash -l`, `ls`, or any other commands
+  # the default is bash for Linux
+  # or powershell.exe for Windows
+  command: zsh
+  
+  # Specify the current working directory path
+  # the default is the current working directory path
+  cwd: /media/steven/shared/Documents/Coding/Haskell/hascard
+  
+  # Export additional ENV variables
+  env:
+    recording: true
+  
+  # Explicitly set the number of columns
+  # or use `auto` to take the current
+  # number of columns of your shell
+  cols: 80
+  
+  # Explicitly set the number of rows
+  # or use `auto` to take the current
+  # number of rows of your shell
+  rows: 22
+  
+  # Amount of times to repeat GIF
+  # If value is -1, play once
+  # If value is 0, loop indefinitely
+  # If value is a positive number, loop n times
+  repeat: 0
+  
+  # Quality
+  # 1 - 100
+  quality: 100
+  
+  # Delay between frames in ms
+  # If the value is `auto` use the actual recording delays
+  frameDelay: auto
+  
+  # Maximum delay between frames in ms
+  # Ignored if the `frameDelay` isn't set to `auto`
+  # Set to `auto` to prevent limiting the max idle time
+  maxIdleTime: 2000
+  
+  # The surrounding frame box
+  # The `type` can be null, window, floating, or solid`
+  # To hide the title use the value null
+  # Don't forget to add a backgroundColor style with a null as type
+  frameBox:
+    type: solid
+    title: null
+    style:
+      border: 0px black solid
+      # boxShadow: none
+      # margin: 0px
+  
+  # Add a watermark image to the rendered gif
+  # You need to specify an absolute path for
+  # the image on your machine or a URL, and you can also
+  # add your own CSS styles
+  watermark:
+    imagePath: null
+    style:
+      position: absolute
+      right: 15px
+      bottom: 15px
+      width: 100px
+      opacity: 0.9
+  
+  # Cursor style can be one of
+  # `block`, `underline`, or `bar`
+  cursorStyle: bar
+  
+  # Font family
+  # You can use any font that is installed on your machine
+  # in CSS-like syntax
+  fontFamily: "Iosevka"
+  
+  # The size of the font
+  fontSize: 24
+  
+  # The height of lines
+  lineHeight: 0.92
+  
+  # The spacing between letters
+  letterSpacing: 0
+  
+  # Theme
+  theme:
+    background: "transparent"
+    foreground: "#afafaf"
+    cursor: "#c7c7c7"
+    black: "#232628"
+    red: "#fc4384"
+    green: "#b3e33b"
+    yellow: "#ffa727"
+    blue: "#75dff2"
+    magenta: "#ae89fe"
+    cyan: "#708387"
+    white: "#d5d5d0"
+    brightBlack: "#626566"
+    brightRed: "#ff7fac"
+    brightGreen: "#c8ed71"
+    brightYellow: "#ebdf86"
+    brightBlue: "#75dff2"
+    brightMagenta: "#ae89fe"
+    brightCyan: "#b1c6ca"
+    brightWhite: "#f9f9f4"
+  
+# Records, feel free to edit them
+records:
+  # - delay: 828
+  #   content: "\e[1m\e[7m%\e[27m\e[1m\e[0m                                                                               \r \r\e]2;..skell/hascard\a"
+  # - delay: 35
+  #   content: "\r\e[0m\e[27m\e[24m\e[J\e[01;32m➜  \e[36mhascard\e[00m \e[01;34mgit:(\e[31mmaster\e[34m) \e[33m✗\e[00m \e[K\e[?1h\e=\e[?2004h"
+  # - delay: 581
+  #   content: "h\e[90mascard\e[39m\b\b\b\b\b\b"
+  # - delay: 107
+  #   content: "\bh\e[39ma"
+  # - delay: 64
+  #   content: "\e[39ms"
+  # - delay: 187
+  #   content: "\e[39mc"
+  # - delay: 110
+  #   content: "\e[39ma"
+  # - delay: 109
+  #   content: "\e[39mr"
+  # - delay: 82
+  #   content: "\e[39md"
+  # - delay: 141
+  #   content: "\e[?1l\e>\e[?2004l\r\r\n\e]2;hascard\a"
+  # - delay: 12
+  #   content: "\e[5 q\e[?1049h\e[22;0;0t\e[H\e[2J"
+  # - delay: 13
+  #   content: "\e[?25l\e[1;1H\e(B\e[m                                                                                \e[2;1H\e(B\e[m                                                                                \e[3;1H\e(B\e[m                                                                                \e[4;1H\e(B\e[m                                                                                \e[5;1H\e(B\e[m                                                                                \e[6;1H\e(B\e[m                                                                                \e[7;1H\e(B\e[m                   ╭────────────────────────────────────────╮                   \e[8;1H\e(B\e[m                   │         \e[33m┬ ┬┌─┐┌─┐┌─┐┌─┐┬─┐┌┬┐\e(B\e[m          │                   \e[9;1H\e(B\e[m                   │         \e[33m├─┤├─┤└─┐│  ├─┤├┬┘ ││\e(B\e[m          │                   \e[10;1H\e(B\e[m                   │         \e[33m┴ ┴┴ ┴└─┘└─┘┴ ┴┴└──┴┘\e(B\e[m          │                   \e[11;1H\e(B\e[m                   ├────────────────────────────────────────┤                   \e[12;1H\e(B\e[m                   │                 \e[4m\e[37mSelect\e(B\e[m                 │                   \e[13;1H\e(B\e[m                   │                  Info                  │                   \e[14;1H\e(B\e[m                   │                Settings                │                   \e[15;1H\e(B\e[m                   │                  Quit                  │                   \e[16;1H\e(B\e[m                   ╰────────────────────────────────────────╯                   \e[17;1H\e(B\e[m                                                                                \e[18;1H\e(B\e[m                                                                                \e[19;1H\e(B\e[m                                                                                \e[20;1H\e(B\e[m                                                                                \e[21;1H\e(B\e[m                                                                                \e[22;1H\e(B\e[m                                                                                "
+  # - delay: 797
+  #   content: "\e[?1049l\e[23;0;0t\e[?12l\e[?25h\e(B\e[m\e[?12l\e[?25h\e[?1049h\e[22;0;0t\e[H\e[2J"
+  # - delay: 14
+  #   content: "\e[?25l\e[1;1H\e(B\e[m                                                                                \e[2;1H\e(B\e[m                                                                                \e[3;1H\e(B\e[m                                                                                \e[4;1H\e(B\e[m                                                                                \e[5;1H\e(B\e[m                                                                                \e[6;1H\e(B\e[m                                                                                \e[7;1H\e(B\e[m               ╭───────────────────────────────────────────────╮                \e[8;1H\e(B\e[m               │\e[33m          Select a deck of flashcards          \e(B\e[m│                \e[9;1H\e(B\e[m               ├───────────────────────────────────────────────┤                \e[10;1H\e(B\e[m               │                    \e[4m\e[37mexample\e(B\e[m                    │                \e[11;1H\e(B\e[m               │                     test                      │                \e[12;1H\e(B\e[m               │                   analysis3                   │                \e[13;1H\e(B\e[m               │                    syntax                     │                \e[14;1H\e(B\e[m               │            \e[34mSelect file from system\e(B\e[m            │                \e[15;1H\e(B\e[m               │                                               │                \e[16;1H\e(B\e[m               ╰───────────────────────────────────────────────╯                \e[17;1H\e(B\e[m                                                                                \e[18;1H\e(B\e[m                                                                                \e[19;1H\e(B\e[m                                                                                \e[20;1H\e(B\e[m                                                                                \e[21;1H\e(B\e[m                                                                                \e[22;1H\e(B\e[m                                                                                "
+  # - delay: 1242
+  #   content: "\e[?25l\e[10;1H\e(B\e[m               │                    example                    │                \e[11;1H\e(B\e[m               │                     \e[4m\e[37mtest\e(B\e[m                      │                "
+  # - delay: 162
+  #   content: "\e[?25l\e[11;1H\e(B\e[m               │                     test                      │                \e[12;1H\e(B\e[m               │                   \e[4m\e[37manalysis3\e(B\e[m                   │                "
+  # - delay: 157
+  #   content: "\e[?25l\e[12;1H\e(B\e[m               │                   analysis3                   │                \e[13;1H\e(B\e[m               │                    \e[4m\e[37msyntax\e(B\e[m                     │                "
+  # - delay: 200
+  #   content: "\e[?1049l\e[23;0;0t\e[?12l\e[?25h\e(B\e[m\e[?12l\e[?25h\e[?1049h\e[22;0;0t\e[H\e[2J\e[?25l\e[1;1H\e(B\e[m                                                                                \e[2;1H\e(B\e[m                                                                                \e[3;1H\e(B\e[m                                                                                \e[4;1H\e(B\e[m                                                                                \e[5;1H\e(B\e[m                                                                                \e[6;1H\e(B\e[m                                                                                \e[7;1H\e(B\e[m                                                                                \e[8;1H\e(B\e[m               ╭───────────────────────────────────────────────╮                \e[9;1H\e(B\e[m               │\e[33m               Word or question                \e(B\e[m│                \e[10;1H\e(B\e[m               ├───────────────────────────────────────────────┤                \e[11;1H\e(B\e[m               │                                               │                \e[12;1H\e(B\e[m               │                                               │                \e[13;1H\e(B\e[m               │                                               │                \e[14;1H\e(B\e[m               │                      1/4                      │                \e[15;1H\e(B\e[m               ╰───────────────────────────────────────────────╯                \e[16;1H\e(B\e[m                                                                                \e[17;1H\e(B\e[m                                                                                \e[18;1H\e(B\e[m                                                                                \e[19;1H\e(B\e[m                                                                                \e[20;1H\e(B\e[m                                                                                \e[21;1H\e(B\e[m                                                                                \e[22;1H\e(B\e[m                                                                                "
+  # - delay: 1706
+  #   content: "\e[?25l\e[11;1H\e(B\e[m               │ Explanation or definition of this word, or    │                \e[12;1H\e(B\e[m               │ the answer to the question.                   │                \e[13;1H\e(B\e[m               │                                               │                "
+  - delay: 606
+    content: "\e[?25l\e[6;1H\e(B\e[m               ╭───────────────────────────────────────────────╮                \e[7;1H\e(B\e[m               │\e[33m Multiple choice question, (only one answer is \e(B\e[m│                \e[8;1H\e(B\e[m               │\e[33m                    right)                     \e(B\e[m│                \e[9;1H\e(B\e[m               ├───────────────────────────────────────────────┤                \e[10;1H\e(B\e[m               │ \e[33m* \e(B\e[mChoice 1                                    │                \e[11;1H\e(B\e[m               │   Choice 2 (this is the correct answer)       │                \e[12;1H\e(B\e[m               │   Choice 3                                    │                \e[13;1H\e(B\e[m               │   Choice 4                                    │                \e[14;1H\e(B\e[m               │                                               │                \e[15;1H\e(B\e[m               │                      2/4                      │                \e[16;1H\e(B\e[m               ╰───────────────────────────────────────────────╯                "
+  - delay: 996
+    content: "\e[?25l\e[10;1H\e(B\e[m               │   Choice 1                                    │                \e[11;1H\e(B\e[m               │ \e[33m* \e(B\e[mChoice 2 (this is the correct answer)       │                "
+  - delay: 194
+    content: "\e[?25l\e[11;1H\e(B\e[m               │   Choice 2 (this is the correct answer)       │                \e[12;1H\e(B\e[m               │ \e[33m* \e(B\e[mChoice 3                                    │                "
+  - delay: 714
+    content: "\e[?25l\e[12;1H\e(B\e[m               │ \e[33m* \e[31mChoice 3                                   \e(B\e[m │                "
+  - delay: 990
+    content: "\e[?25l\e[11;1H\e(B\e[m               │ \e[33m* \e(B\e[mChoice 2 (this is the correct answer)       │                \e[12;1H\e(B\e[m               │   \e[31mChoice 3                                   \e(B\e[m │                "
+  - delay: 944
+    content: "\e[?25l\e[11;1H\e(B\e[m               │ \e[33m* \e[32mChoice 2 (this is the correct answer)      \e(B\e[m │                "
+  # - delay: 1308
+  #   content: "\e[?25l\e[6;1H\e(B\e[m                                                                                \e[7;1H\e(B\e[m               ╭───────────────────────────────────────────────╮                \e[8;1H\e(B\e[m               │\e[33m           Multiple answer question            \e(B\e[m│                \e[10;1H\e(B\e[m               │[\e[33m*\e(B\e[m] Choice 1 (this is a correct answer)        │                \e[11;1H\e(B\e[m               │[ ] Choice 2                                   │                \e[12;1H\e(B\e[m               │[ ] Choice 3 (this is a correct answer)        │                \e[13;1H\e(B\e[m               │[ ] Choice 4                                   │                \e[14;1H\e(B\e[m               │                                               │                \e[15;1H\e(B\e[m               │                      3/4                      │                "
+  # - delay: 1942
+  #   content: "\e[?1049l\e[23;0;0t\e[?12l\e[?25h\e(B\e[m\e[?12l\e[?25h\e[?1049h\e[22;0;0t\e[H\e[2J"
+  # - delay: 5
+  #   content: "\e[?25l\e[1;1H\e(B\e[m                                                                                \e[2;1H\e(B\e[m                                                                                \e[3;1H\e(B\e[m                                                                                \e[4;1H\e(B\e[m                                                                                \e[5;1H\e(B\e[m                                                                                \e[6;1H\e(B\e[m                                                                                \e[7;1H\e(B\e[m               ╭───────────────────────────────────────────────╮                \e[8;1H\e(B\e[m               │\e[33m          Select a deck of flashcards          \e(B\e[m│                \e[9;1H\e(B\e[m               ├───────────────────────────────────────────────┤                \e[10;1H\e(B\e[m               │                    example                    │                \e[11;1H\e(B\e[m               │                     test                      │                \e[12;1H\e(B\e[m               │                   analysis3                   │                \e[13;1H\e(B\e[m               │                    \e[4m\e[37msyntax\e(B\e[m                     │                \e[14;1H\e(B\e[m               │            \e[34mSelect file from system\e(B\e[m            │                \e[15;1H\e(B\e[m               │                                               │                \e[16;1H\e(B\e[m               ╰───────────────────────────────────────────────╯                \e[17;1H\e(B\e[m                                                                                \e[18;1H\e(B\e[m                                                                                \e[19;1H\e(B\e[m                                                                                \e[20;1H\e(B\e[m                                                                                \e[21;1H\e(B\e[m                                                                                \e[22;1H\e(B\e[m                                                                                "
+  # - delay: 320
+  #   content: "\e[?1049l\e[23;0;0t\e[?12l\e[?25h\e(B\e[m\e[?12l\e[?25h\e[?1049h\e[22;0;0t\e[H\e[2J"
+  # - delay: 11
+  #   content: "\e[?25l\e[1;1H\e(B\e[m                                                                                \e[2;1H\e(B\e[m                                                                                \e[3;1H\e(B\e[m                                                                                \e[4;1H\e(B\e[m                                                                                \e[5;1H\e(B\e[m                                                                                \e[6;1H\e(B\e[m                                                                                \e[7;1H\e(B\e[m                   ╭────────────────────────────────────────╮                   \e[8;1H\e(B\e[m                   │         \e[33m┬ ┬┌─┐┌─┐┌─┐┌─┐┬─┐┌┬┐\e(B\e[m          │                   \e[9;1H\e(B\e[m                   │         \e[33m├─┤├─┤└─┐│  ├─┤├┬┘ ││\e(B\e[m          │                   \e[10;1H\e(B\e[m                   │         \e[33m┴ ┴┴ ┴└─┘└─┘┴ ┴┴└──┴┘\e(B\e[m          │                   \e[11;1H\e(B\e[m                   ├────────────────────────────────────────┤                   \e[12;1H\e(B\e[m                   │                 \e[4m\e[37mSelect\e(B\e[m                 │                   \e[13;1H\e(B\e[m                   │                  Info                  │                   \e[14;1H\e(B\e[m                   │                Settings                │                   \e[15;1H\e(B\e[m                   │                  Quit                  │                   \e[16;1H\e(B\e[m                   ╰────────────────────────────────────────╯                   \e[17;1H\e(B\e[m                                                                                \e[18;1H\e(B\e[m                                                                                \e[19;1H\e(B\e[m                                                                                \e[20;1H\e(B\e[m                                                                                \e[21;1H\e(B\e[m                                                                                \e[22;1H\e(B\e[m                                                                                "
+  # - delay: 512
+  #   content: "\e[?1049l\e[23;0;0t\e[?12l\e[?25h\e(B\e[m\e[?12l\e[?25h"
+  # - delay: 11
+  #   content: "\e[1m\e[7m%\e[27m\e[1m\e[0m                                                                               \r \r\e]2;..skell/hascard\a"
+  # - delay: 59
+  #   content: "\r\e[0m\e[27m\e[24m\e[J\e[01;32m➜  \e[36mhascard\e[00m \e[01;34mgit:(\e[31mmaster\e[34m) \e[33m✗\e[00m \e[K\e[?1h\e=\e[?2004h"
+  # - delay: 317
+  #   content: "\e[?2004l\r\r\n"

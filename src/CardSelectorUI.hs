@@ -70,7 +70,7 @@ drawListElement l i selected = hCenteredStrWrapWithAttr (wAttr1 . wAttr2)
 drawException :: State -> Widget Name
 drawException s = case s ^. exception of
   Nothing -> emptyWidget
-  Just s  -> withAttr exceptionAttr $ str s
+  Just s  -> withAttr exceptionAttr $ strWrap s
 
 titleAttr :: AttrName
 titleAttr = attrName "title"

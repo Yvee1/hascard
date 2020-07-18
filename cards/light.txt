@@ -2,14 +2,25 @@
 intrinsically photosensitive Retinal Ganglion Cell
 
 ---
-# The visual system
-The visual system consists of two parts:
-- An optical system that produces an image on the retina.
-- An image-processing system. This spends most of its resources on the fovea.
+# Peak intensity of motopic vision is at a wavelength of around
+- 400 nm
+- 450 nm
+- 500 nm
+* 550 nm
 
 ---
 # Layers of the eye 1
 Light falls onto the _retina_ which is covered by the _macula_ filter which protects against UV and low wavelengths.
+
+---
+# LGN
+_lateral geniculate nuclei_
+
+---
+# Check the elements that are part of the primary visual path
+[*] Optic nerve
+[ ] RHP axis
+[*] LGN
 
 ---
 # Layers of the eye 2
@@ -20,23 +31,18 @@ Below the retina is the _choroid_ containing blood vessels.
 The last layer is the _sclera_. It is white, except in front where it is transparent.
 
 ---
-# Peak intensity of motopic vision is at a wavelength of around
-- 400 nm
-- 450 nm
-- 500 nm
-* 550 nm
+# Choroid
+The choroid seperates from the sclera and becomes the _ciliary body_, and then the _iris_.
 
 ---
 # Retina
 Part of the eye that turns _light_ into _electrical neural impulses_.
 
 ---
-# Choroid
-The choroid seperates from sclera and becomes the _ciliary body_, and then the _iris_.
-
----
-# LGN
-_lateral geniculate nuclei_
+# The visual system
+The visual system consists of two parts:
+- An optical system that produces an image on the retina.
+- An image-processing system. This spends most of its resources on the fovea.
 
 ---
 # LGN 6 layers
