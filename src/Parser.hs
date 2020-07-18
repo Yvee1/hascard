@@ -28,7 +28,7 @@ uncurry3 f (a, b, c) = f a b c
 parseCards :: String -> Either ParseError [Card]
 parseCards = parse pCards "failed when parsing cards"
 
-pCards = pCard `sepEndBy` seperator
+pCards = pCard `sepEndBy1` seperator
 pCard =  uncurry3 MultipleChoice<$> try pMultChoice
      <|> uncurry MultipleAnswer <$> try pMultAnswer
      <|> uncurry OpenQuestion <$> try pOpen

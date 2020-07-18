@@ -64,14 +64,14 @@ drawUI State{_fb=b, _exception=exc} = [center $ ui <=> help]
              borderWithLabel (txt "Choose a file") $
              renderFileBrowser True b
         help = padTop (Pad 1) $
-               vBox [ case exc of
-                          Nothing -> emptyWidget
-                          Just e -> hCenter $ withDefAttr errorAttr $
-                                    str e
-                    , hCenter $ txt "Up/Down: select"
+               vBox [ hCenter $ txt "Up/Down: select"
                     , hCenter $ txt "/: search, Ctrl-C or Esc: cancel search"
                     , hCenter $ txt "Enter: change directory or select file"
                     , hCenter $ txt "Esc: quit"
+                    , case exc of
+                          Nothing -> emptyWidget
+                          Just e -> hCenter $ withDefAttr errorAttr $
+                                    str e
                     ]
 
 handleEvent :: State -> BrickEvent Name Event -> EventM Name (Next State)
@@ -96,7 +96,7 @@ handleEvent s@State{_fb=b} (VtyEvent ev) =
                           case fileOrExc of
                             Left exc -> continue (s' & exception ?~ displayException exc)
                             Right file -> case parseCards file of
-                              Left parseError -> continue (s' & exception ?~ show parseError)
+                              Left parseError -> continue (s & exception ?~ show parseError)
                               Right result -> halt (s' & cards .~ result & filePath ?~ fp)
                         _ -> halt s'
 
