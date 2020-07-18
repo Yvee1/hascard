@@ -1,7 +1,6 @@
 module Main where
 
-import Lib (runBrickFlashcards)
-import CardUI
+import UI
 import Control.Exception (displayException, try)
 import Control.Monad (void, when)
 import Data.Functor (($>))
@@ -9,7 +8,6 @@ import Data.Version (showVersion)
 import Paths_hascard (version)
 import Parser
 import Options.Applicative
-import SettingsUI
 import System.Process (runCommand)
 
 data Opts = Opts
@@ -44,4 +42,4 @@ run (Just file) = do
     Left exc -> putStr (displayException exc)
     Right str -> case parseCards str of
       Left parseError -> print parseError
-      Right result -> runCardUI result $> ()
+      Right result -> runCardsUI result $> ()

@@ -6,23 +6,6 @@ import qualified Data.List.NonEmpty as NE
 import Text.Parsec
 import Types
 
-example = "# ipRGC\n\
-\intrinsically photosensitive Retinal Ganglion Cell\n\
-\\n\
-\---\n\
-\# Retina\n\
-\Part of the eye that turns light into electrical neural impulses.\n\
-\\n\
-\---\n\
-\\n\
-\# Multiple choice question, (only one answer is right)\n\
-\- Option 1\n\
-\* Option 2 (this is the correct answer)\n\
-\- Option 3\n\
-\- Option 4\n\
-\\n\
-\---"
-
 uncurry3 f (a, b, c) = f a b c
 
 parseCards :: String -> Either ParseError [Card]

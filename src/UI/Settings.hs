@@ -1,7 +1,6 @@
-module SettingsUI (runSettingsUI, getShowHints, getShowControls, getUseEscapeCode) where
+module UI.Settings (runSettingsUI, getShowHints, getShowControls, getUseEscapeCode) where
 
 import Brick hiding (mergeWithDefault)
-import BrickHelpers
 import Brick.Widgets.Border
 import Brick.Widgets.Border.Style
 import Brick.Widgets.Center
@@ -9,6 +8,7 @@ import Control.Monad (void)
 import Data.Functor (($>))
 import Data.Map.Strict (Map, (!))
 import System.FilePath ((</>))
+import UI.BrickHelpers
 import qualified Data.Map.Strict as M
 import qualified Graphics.Vty as V
 import qualified System.Directory as D

@@ -1,14 +1,14 @@
-module MainMenuUI (runMainMenuUI) where
+module UI.MainMenu (runMainMenuUI) where
 
 import Brick
-import BrickHelpers
 import Brick.Widgets.Border
 import Brick.Widgets.Border.Style
 import Brick.Widgets.Center
-import CardSelectorUI
 import Data.Functor (($>))
-import InfoUI
-import SettingsUI
+import UI.BrickHelpers
+import UI.CardSelector
+import UI.Info
+import UI.Settings
 import qualified Data.Vector as Vec
 import qualified Graphics.Vty as V
 import qualified Brick.Widgets.List as L
@@ -42,8 +42,6 @@ drawMenu s =
   center $ 
   withBorderStyle unicodeRounded $
   border $
-  -- hLimit 21 $
-  hLimitPercent 60 $
   hLimit 40 $
   hCenter title <=>
   hBorder <=>

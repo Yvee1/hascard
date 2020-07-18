@@ -1,8 +1,7 @@
 {-# LANGUAGE TemplateHaskell #-}
-module CardSelectorUI (runCardSelectorUI, getRecents, getRecentsFile, addRecent) where
+module UI.CardSelector (runCardSelectorUI, getRecents, getRecentsFile, addRecent) where
 
 import Brick
-import BrickHelpers
 import Brick.Widgets.Border
 import Brick.Widgets.Border.Style
 import Brick.Widgets.Center
@@ -13,8 +12,9 @@ import Data.Functor (($>))
 import Lens.Micro.Platform
 import System.FilePath ((</>), takeBaseName)
 import Parser
-import FileBrowserUI
-import CardUI
+import UI.BrickHelpers
+import UI.FileBrowser (runFileBrowserUI)
+import UI.Cards (runCardsUI)
 import qualified System.Directory as D
 import qualified Data.Vector as Vec
 import qualified Graphics.Vty as V
@@ -115,7 +115,7 @@ handleEvent s@State{_list=l} (VtyEvent e) =
                               Right str -> case parseCards str of
                                 Left parseError -> continue (s' & exception ?~ show parseError)
                                 Right result -> suspendAndResume $ do
-                                  _ <- runCardUI result
+                                  _ <- runCardsUI result
                                   return (s' & exception .~ Nothing)
                     _ -> continue s'
 
@@ -126,8 +126,6 @@ runCardSelectorUI = do
   recents <- getRecents
   let prettyRecents = map takeBaseName recents
   let options = Vec.fromList (prettyRecents ++ ["Select file from system"])
-
-  --                                   listItemHeight
   let initialState = State (L.list () options 1) Nothing recents
   _ <- defaultMain app initialState
   return () 
@@ -160,4 +158,4 @@ getRecentsFile = do
 runFileBrowser :: IO ()
 runFileBrowser = do
   result <- runFileBrowserUI
-  maybe (pure ()) (\(cards, fp) -> addRecent fp *> runCardUI cards $> ()) result
+  maybe (pure ()) (\(cards, fp) -> addRecent fp *> runCardsUI cards $> ()) result

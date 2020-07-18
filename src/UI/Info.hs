@@ -1,4 +1,4 @@
-module InfoUI (runInfoUI) where
+module UI.Info (runInfoUI) where
 
 import Brick
 import Brick.Widgets.Border
@@ -26,7 +26,6 @@ ui =
   center $ 
   withBorderStyle unicodeRounded $
   border $
-  hLimitPercent 60 $
   hLimit 40 $
   hCenter (withAttr titleAttr (str "Info")) <=>
   hBorder <=>

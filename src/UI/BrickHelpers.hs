@@ -1,4 +1,4 @@
-module BrickHelpers where
+module UI.BrickHelpers where
 import Text.Wrap
 import Brick
 import Brick.Widgets.Center

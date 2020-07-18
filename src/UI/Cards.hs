@@ -1,9 +1,8 @@
 {-# OPTIONS_GHC -Wall #-}
 {-# LANGUAGE TemplateHaskell #-}
-module CardUI (runCardUI) where
+module UI.Cards (runCardsUI) where
 
 import Brick
-import BrickHelpers
 import Lens.Micro.Platform
 import Types
 import Data.Char (isSeparator, isSpace)
@@ -12,8 +11,9 @@ import Data.List.NonEmpty (NonEmpty)
 import Data.Map.Strict (Map)
 import Text.Wrap
 import Data.Text (pack)
-import SettingsUI (getShowHints, getShowControls)
-import System.IO.Unsafe (unsafePerformIO)
+import UI.BrickHelpers
+import UI.Settings (getShowHints, getShowControls)
+-- import System.IO.Unsafe (unsafePerformIO)
 import qualified Data.List.NonEmpty as NE
 import qualified Data.Text as T
 import qualified Data.Map.Strict as M
@@ -73,7 +73,7 @@ defaultCardState (OpenQuestion _ perforated) = OpenQuestionState
   , _nGaps = nGapsInPerforated perforated
   , _entered = False
   , _correctGaps = M.fromList [(i, False) | i <- [0..nGapsInPerforated perforated - 1]] }
-defaultCardState (MultipleAnswer question answers) = MultipleAnswerState 
+defaultCardState (MultipleAnswer _ answers) = MultipleAnswerState 
   { _highlighted = 0
   , _selected = M.fromList [(i, False) | i <- [0..NE.length answers-1]]
   , _entered = False
@@ -254,10 +254,10 @@ wrapStringWithPadding padding w s
         ts' = ts & _last %~ (`T.append` postfix) in
     (map txt (filter (/=T.empty) ts'), T.length (last ts'), False)
 
-debugToFile :: String -> a -> a
-debugToFile s expr = unsafePerformIO $ do
-  appendFile "log.txt" s
-  return expr
+-- debugToFile :: String -> a -> a
+-- debugToFile s expr = unsafePerformIO $ do
+--   appendFile "log.txt" s
+--   return expr
 
 drawCardBox :: Widget Name -> Widget Name
 drawCardBox w = C.center $
@@ -272,7 +272,6 @@ handleEvent s (VtyEvent e) = case e of
   V.EvKey (V.KChar 'c') [V.MCtrl]  -> halt s
   V.EvKey V.KRight [V.MCtrl]       -> next s
   V.EvKey V.KLeft  [V.MCtrl]       -> previous s
-  -- V.EvKey (V.KChar ' ') []         -> next s
 
   ev -> case (s ^. cardState, s ^. currentCard) of
     (DefinitionState{_flipped = f}, _) ->
@@ -426,8 +425,8 @@ theMap = attrMap V.defAttr
   , (gapAttr, V.defAttr `V.withStyle` V.underline)
   ]
 
-runCardUI :: [Card] -> IO State
-runCardUI deck = do
+runCardsUI :: [Card] -> IO State
+runCardsUI deck = do
   hints <- getShowHints
   controls <- getShowControls
 

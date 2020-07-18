@@ -1,7 +1,7 @@
 {-# OPTIONS_GHC -Wall #-}
 {-# LANGUAGE OverloadedStrings, TemplateHaskell, TupleSections #-}
 
-module FileBrowserUI (runFileBrowserUI) where
+module UI.FileBrowser (runFileBrowserUI) where
 
 import Brick
 import Data.List
