@@ -32,9 +32,9 @@ For any closed surface in D, the domain enclosed by S is completely in D. Exs: s
 ---
 
 # Second derivative test
-f_xx * f_yy - f_xy^2 > 0 && f_xx > 0 => local min
-f_xx * f_yy - f_xy^2 > 0 && f_xx < 0 => local max
-f_xx * f_yy - f_xy^2 < 0 => saddle point
+f\_xx * f\_yy - f\_xy^2 > 0 && f\_xx > 0 => local min
+f\_xx * f\_yy - f\_xy^2 > 0 && f\_xx < 0 => local max
+f\_xx * f\_yy - f\_xy^2 < 0 => saddle point
 
 ---
 

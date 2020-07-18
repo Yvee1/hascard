@@ -83,9 +83,12 @@ pSentence =  try pPerforated
 pPerforated = do
   (pre, gap) <- pGap
   Perforated pre gap <$> pSentence 
-  
+
+chars = escaped <|> anyChar
+escaped = char '\\' >> char '_'
+
 pGap = do
-  pre <- manyTill anyChar $ lookAhead (try gappedSpecialChars)
+  pre <- manyTill chars $ lookAhead (try gappedSpecialChars)
   char '_'
   gaps <- manyTill (noneOf "_|") (lookAhead (try gappedSpecialChars)) `sepBy1` string "|"
   char '_'
@@ -102,7 +105,7 @@ pNormal = do
 pDef = do
   header <- pHeader
   many eol
-  descr <- manyTill anyChar $ lookAhead (try seperator)
+  descr <- manyTill chars $ lookAhead (try seperator)
   return (header, descr)
 
 eol =  try (string "\n\r")
@@ -123,6 +126,7 @@ makeMultipleChoice options = makeMultipleChoice' [] [] 0 options
     makeMultipleChoice' _ _ _ [] = error ("multiple choice had multiple correct answers: \n" ++ show options)
     makeMultipleChoice' cs ics i (('-', text) : opts) = makeMultipleChoice' cs (IncorrectOption text : ics) (i+1) opts
     makeMultipleChoice' cs ics i (('*', text) : opts) = makeMultipleChoice' (CorrectOption i text : cs) ics (i+1) opts
+    makeMultipleChoice' _  _   _ _ = error "impossible"
 
 makeOption :: Char -> String -> Option
 makeOption kind text
