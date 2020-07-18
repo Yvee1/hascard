@@ -4,18 +4,30 @@ import Lib (runBrickFlashcards)
 import CardUI
 import Control.Exception (displayException, try)
 import Data.Functor (($>))
+import Data.Version (showVersion)
+import Paths_hascard (version)
 import Parser
 import Options.Applicative
 import System.Process (runCommand)
+
+data Opts = Opts
+  { optFile    :: Maybe String
+  , optVersion :: Bool
+  }
 
 main :: IO ()
 main = do
   _ <- runCommand "echo -n \\\\e[5 q"
   
-  run =<< execParser optsWithHelp
+  options <- execParser optsWithHelp
+  if optVersion options
+    then putStrLn (showVersion version)
+    else run $ optFile options
 
-opts :: Parser (Maybe String)
-opts = optional $ argument str (metavar "FILE" <> help "File containing flashcards")
+opts :: Parser Opts
+opts = Opts
+  <$> optional (argument str (metavar "FILE" <> help "File containing flashcards"))
+  <*> switch (long "version" <> short 'v' <> help "Show version number")
 
 optsWithHelp = info (opts <**> helper) $
               fullDesc <> progDesc "Run the normal application without argument, or run it directly on a deck of flashcards by providing a file."

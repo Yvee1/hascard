@@ -39,7 +39,7 @@ library:
   source-dirs: src
 
 executables:
-  hascard-exe:
+  hascard:
     main:                Main.hs
     source-dirs:         app
     ghc-options:
