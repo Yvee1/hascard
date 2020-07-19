@@ -8,6 +8,7 @@ import Control.Monad (void)
 import Data.Functor (($>))
 import Data.Map.Strict (Map, (!))
 import System.FilePath ((</>))
+import System.Environment (lookupEnv)
 import UI.BrickHelpers
 import qualified Data.Map.Strict as M
 import qualified Graphics.Vty as V
@@ -121,9 +122,15 @@ parseSettings = read
 
 getSettingsFile :: IO FilePath
 getSettingsFile = do
+  maybeSnap <- lookupEnv "SNAP_USER_DATA"
   xdg <- D.getXdgDirectory D.XdgConfig "hascard"
-  D.createDirectoryIfMissing True xdg
-  return (xdg </> "settings")
+
+  let dir = case maybeSnap of
+                Just path | not (null path) -> path
+                          | otherwise       -> xdg
+                Nothing                     -> xdg
+  D.createDirectoryIfMissing True dir
+  return (dir </> "settings")
 
 defaultSettings :: Settings
 defaultSettings = M.fromList [(0, False), (1, True), (2, False)]

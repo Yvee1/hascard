@@ -1,3 +1,5 @@
 .stack-work/
 hascard.cabal
 *~
+*.snap
+images/

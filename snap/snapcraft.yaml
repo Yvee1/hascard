@@ -1,0 +1,43 @@
+name: hascard # you probably want to 'snapcraft register <name>'
+base: core18 # the base snap is the execution environment for this snap
+# version: '0.1.0.0' # just for humans, typically '1.2+git' or '1.3.2'
+adopt-info: hascard
+summary: A TUI for reviewing notes using 'flashcards' written with markdown-like syntax # 79 char long summary
+description: |
+  Hascard is a text-based user interface for reviewing notes using 'flashcards'.
+  Cards are written in markdown-like syntax. Please see the README file on
+  GitHub at <https://github.com/Yvee1/hascard#readme> for more information.
+
+grade: stable # must be 'stable' to release into candidate/stable channels
+confinement: strict # use 'strict' once you have the right plugs and slots
+
+apps:
+  hascard:
+    command: bin/hascard
+    plugs:
+      - home
+
+parts:
+  hascard:
+    # See 'snapcraft plugins'
+    plugin: nil
+    source: .
+    override-pull: |
+      snapcraftctl pull
+      snapcraftctl set-version "$(grep version package.yaml | awk '{ print $NF }')"
+    override-build: |
+      if [ ! -x "$(command -v stack)" ]; then
+        curl -sSL https://get.haskellstack.org/ | sh
+      fi
+      stack build --copy-bins
+    organize:
+      /root/.local/bin/hascard: bin/hascard
+    stage-packages:
+      - ncurses-term
+      - libncurses5-dev
+      - libncursesw5-dev
+    build-packages:
+      - curl
+      - ncurses-term
+      - libncurses5-dev
+      - libncursesw5-dev

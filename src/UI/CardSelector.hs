@@ -11,6 +11,7 @@ import Control.Monad.IO.Class
 import Data.Functor (($>))
 import Lens.Micro.Platform
 import System.FilePath ((</>), takeBaseName)
+import System.Environment (lookupEnv)
 import Parser
 import UI.BrickHelpers
 import UI.FileBrowser (runFileBrowserUI)
@@ -151,9 +152,16 @@ addRecent s = do
 
 getRecentsFile :: IO FilePath
 getRecentsFile = do
-  xdg <- D.getXdgDirectory D.XdgData "hascard"
-  D.createDirectoryIfMissing True xdg
-  return (xdg </> "recents")
+  maybeSnap <- lookupEnv "SNAP_USER_DATA"
+  xdg <- D.getXdgDirectory D.XdgConfig "hascard"
+
+  let dir = case maybeSnap of
+                Just path | not (null path) -> path
+                          | otherwise       -> xdg
+                Nothing                     -> xdg
+  D.createDirectoryIfMissing True dir
+
+  return (dir </> "recents")
 
 runFileBrowser :: IO ()
 runFileBrowser = do
