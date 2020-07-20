@@ -116,7 +116,7 @@ handleEvent s@State{_list=l} (VtyEvent e) =
                               Right file -> case parseCards file of
                                 Left parseError -> continue (s' & exception ?~ show parseError)
                                 Right result -> suspendAndResume $ do
-                                  s'' <- addRecent s' fp
+                                  s'' <- addRecentInternal s' fp
                                   _ <- runCardsUI result
                                   return (s'' & exception .~ Nothing)
                     _ -> continue s'
@@ -143,16 +143,19 @@ getRecents = do
 maxRecents :: Int
 maxRecents = 5
 
-addRecent :: State -> FilePath -> IO State
-addRecent s fp = do
+addRecent :: FilePath -> IO ()
+addRecent fp = do
   rs <- getRecents
   let rs'  = fp `S.insert` rs 
-      rs'' =
-               if S.size rs' <= maxRecents
-                then rs'
-                else S.removeLast rs'
-  
-  writeRecents rs'' *> refreshRecents s
+      rs'' = if S.size rs' <= maxRecents
+              then rs'
+              else S.removeLast rs'
+  writeRecents rs''
+
+addRecentInternal :: State -> FilePath -> IO State
+addRecentInternal s fp = do
+  addRecent fp
+  refreshRecents s
 
 writeRecents :: Stack FilePath -> IO ()
 writeRecents stack = do
@@ -221,4 +224,4 @@ refreshRecents s = do
 runFileBrowser :: State -> IO State
 runFileBrowser s = do
   result <- runFileBrowserUI
-  maybe (return s) (\(cards, fp) -> addRecent s fp <* runCardsUI cards) result
+  maybe (return s) (\(cards, fp) -> addRecentInternal s fp <* runCardsUI cards) result
