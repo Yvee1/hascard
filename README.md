@@ -16,12 +16,12 @@ The binary used on my system is available under [releases](https://github.com/Yv
 Hascard is also on [snapcraft](https://snapcraft.io/hascard). Installation instructions are on that site. If you already have snap installed you can just install hascard via `sudo snap install hascard`. By default snap applications are isolated from the system and run in a sandbox. This means that hascard does not have permission to read or write any files on the system aside from those under `%HOME/snap/hascard`. To be able to read cards also in other directories under the home directory, hascard makes use of the `home` interface which might need to be enabled manually using `sudo snap connect hascard:home :home`.
 
 ### Install from source
-Another option is to build hascard and install it from source. For this you need stack (installation instructions are [here](https://docs.haskellstack.org/en/stable/README/#how-to-install)). Then for example clone this repository somewhere and issue `stack install`:
+Another option is to build hascard and install it from source. For this you can use the Haskell build tool called [stack](https://docs.haskellstack.org/en/stable/README/#how-to-install), or [nix](https://nixos.org/). Then for example clone this repository somewhere:
 ```
 git clone https://github.com/Yvee1/hascard.git
 cd hascard
-stack install hascard
 ```
+and do `stack install hascard` or `nix-build` respectively.
 
 ## Cards
 Decks of cards are written in `.txt` files. Cards are seperated with a line containing three dashes `---`. For examples, see the [`/cards`](https://github.com/Yvee1/hascard/tree/master/cards) directory. In this section the 4 different cards are listed, with the syntax and how it is represented in the application.
