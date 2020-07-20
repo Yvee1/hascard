@@ -30,6 +30,7 @@ opts = Opts
   <$> optional (argument str (metavar "FILE" <> help "File containing flashcards"))
   <*> switch (long "version" <> short 'v' <> help "Show version number")
 
+optsWithHelp :: ParserInfo Opts
 optsWithHelp = info (opts <**> helper) $
               fullDesc <> progDesc "Run the normal application without argument, or run it directly on a deck of flashcards by providing a file."
               <> header "Hascard - a TUI for reviewing notes"
@@ -37,9 +38,9 @@ optsWithHelp = info (opts <**> helper) $
 run :: Maybe String -> IO ()
 run Nothing = runBrickFlashcards
 run (Just file) = do
-  strOrExc <- try (readFile file) :: IO (Either IOError String)
-  case strOrExc of
+  valOrExc <- try (readFile file) :: IO (Either IOError String)
+  case valOrExc of
     Left exc -> putStr (displayException exc)
-    Right str -> case parseCards str of
+    Right val -> case parseCards val of
       Left parseError -> print parseError
       Right result -> runCardsUI result $> ()

@@ -1,6 +1,5 @@
 module Types where
 import Data.List.NonEmpty (NonEmpty)
-import qualified Data.List.NonEmpty as NE
 
 --                     Word   Description
 data Card = Definition String String
@@ -35,8 +34,9 @@ data Perforated = P String (NonEmpty String) Sentence
 
 nGapsInSentence :: Sentence -> Int
 nGapsInSentence = nGapsInSentence' 0
-nGapsInSentence' acc (Normal s) = acc
-nGapsInSentence' acc (Perforated pre gap post) = nGapsInSentence' (1+acc) post
+  where
+    nGapsInSentence' acc (Normal _) = acc
+    nGapsInSentence' acc (Perforated _ _ post) = nGapsInSentence' (1+acc) post
 
 foldSentence :: (String -> a) -> (String -> NonEmpty String -> a -> a) -> Sentence -> a
 foldSentence norm perf = f where

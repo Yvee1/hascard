@@ -1,4 +1,3 @@
-{-# OPTIONS_GHC -Wall #-}
 {-# LANGUAGE TemplateHaskell #-}
 module UI.Cards (runCardsUI) where
 
@@ -13,7 +12,6 @@ import Text.Wrap
 import Data.Text (pack)
 import UI.BrickHelpers
 import UI.Settings (getShowHints, getShowControls)
--- import System.IO.Unsafe (unsafePerformIO)
 import qualified Data.List.NonEmpty as NE
 import qualified Data.Text as T
 import qualified Data.Map.Strict as M
@@ -253,11 +251,6 @@ wrapStringWithPadding padding w s
         ts = wrapTextToLines wrapSettings w (pack s')
         ts' = ts & _last %~ (`T.append` postfix) in
     (map txt (filter (/=T.empty) ts'), T.length (last ts'), False)
-
--- debugToFile :: String -> a -> a
--- debugToFile s expr = unsafePerformIO $ do
---   appendFile "log.txt" s
---   return expr
 
 drawCardBox :: Widget Name -> Widget Name
 drawCardBox w = C.center $

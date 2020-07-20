@@ -34,6 +34,8 @@ dependencies:
 - microlens
 - process
 - optparse-applicative
+- ordered-containers
+- strict
 
 library:
   source-dirs: src
