@@ -5,10 +5,16 @@ A minimal commandline utility for reviewing notes. 'Flashcards' can be written i
 
 ## Contents
 - [Installation](#installation)
+- [Usage](#usage)
 - [Cards](#cards)
+  - [Definition](#definition)
+  - [Multiple choice](#multiple-choice)
+  - [Multiple answer](#multiple-answer)
+  - [Open question](#open-question)
 - [Miscellaneous info](#miscellaneous-info)
 
 ## Installation
+Installation on Windows is not possible sadly, aside from WSL. This is because hascard depends on vty which only supports unix operating systems (this includes MacOS). 
 ### Binary
 The binary used on my system is available under [releases](https://github.com/Yvee1/hascard/releases/). If you run debian with the x86-64 architecture that binary should work for you too. To be able to run it from any directory, it has to be added to the PATH. This can be done by copying it to e.g. the `/usr/local/bin` directory.
 
@@ -22,6 +28,9 @@ git clone https://github.com/Yvee1/hascard.git
 cd hascard
 ```
 and do `stack install hascard` or `nix-build` respectively.
+
+## Usage
+Simply run `hascard` to open the main application. Menu navigation can be done with the arrow keys or with the 'j' and 'k' keys. The controls for the different cards can be found at the bottom of the screen by default. This, and a couple other things, can be changed in the settings menu. Currently there is no functionality for making cards inside the hascard application itself, but they can easily be written in your favorite text editor since the syntax is human-friendly. Instead of selecting a deck of flashcards via the built-in filebrowser, it's also possible to run `hascard [FILE.txt]` where FILE is the text file with cards.
 
 ## Cards
 Decks of cards are written in `.txt` files. Cards are seperated with a line containing three dashes `---`. For examples, see the [`/cards`](https://github.com/Yvee1/hascard/tree/master/cards) directory. In this section the 4 different cards are listed, with the syntax and how it is represented in the application.
@@ -73,4 +82,4 @@ behaves like this
 ![](./recordings/gapped-question.gif)
 
 ## Miscellaneous info
-Written in Haskell, UI built with [brick](https://github.com/jtdaugherty/brick) and parsing of cards done with [parsec](https://github.com/haskell/parsec). Recordings of the terminal were made using [terminalizer](https://github.com/faressoft/terminalizer).
+Written in Haskell, UI built with [brick](https://github.com/jtdaugherty/brick) and parsing of cards done with [parsec](https://github.com/haskell/parsec). Recordings of the terminal were made using [terminalizer](https://github.com/faressoft/terminalizer). The filebrowser widget was mostly copied from the brick [filebrowser demo program](https://github.com/jtdaugherty/brick/blob/master/programs/FileBrowserDemo.hs).
