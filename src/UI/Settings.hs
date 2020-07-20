@@ -9,6 +9,7 @@ import Data.Functor (($>))
 import Data.Map.Strict (Map, (!))
 import System.FilePath ((</>))
 import System.Environment (lookupEnv)
+import Text.Read (readMaybe)
 import UI.BrickHelpers
 import qualified Data.Map.Strict as M
 import qualified Graphics.Vty as V
@@ -91,11 +92,12 @@ getSettings = do
   exists <- D.doesFileExist sf
   if exists 
     then do
-      settings <- parseSettings <$> readFile sf
-      if M.size settings == M.size defaultSettings
-        then return settings
-        else let settings' = settings `mergeWithDefault` defaultSettings in
-          setSettings settings' $> settings'
+      maybeSettings <- parseSettings <$> readFile sf
+      flip (maybe (return defaultSettings)) maybeSettings $ \settings ->
+        if M.size settings == M.size defaultSettings
+          then return settings
+          else let settings' = settings `mergeWithDefault` defaultSettings in
+            setSettings settings' $> settings'
 
   else return defaultSettings
 
@@ -117,8 +119,8 @@ getUseEscapeCode = do
   settings <- getSettings
   return $ settings ! 2
 
-parseSettings :: String -> Settings
-parseSettings = read
+parseSettings :: String -> Maybe Settings
+parseSettings = readMaybe
 
 getSettingsFile :: IO FilePath
 getSettingsFile = do
