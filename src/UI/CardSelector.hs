@@ -7,11 +7,12 @@ import Brick.Widgets.Border.Style
 import Brick.Widgets.Center
 import Control.Exception (displayException, try)
 import Control.Monad.IO.Class
+import Data.List (sort)
 import Lens.Micro.Platform
 import Parser
 import Stack (Stack)
 import System.Environment (lookupEnv)
-import System.FilePath ((</>), takeBaseName)
+import System.FilePath ((</>), splitFileName, dropExtension, splitPath, joinPath)
 import UI.BrickHelpers
 import UI.FileBrowser (runFileBrowserUI)
 import UI.Cards (runCardsUI)
@@ -171,8 +172,43 @@ getRecentsFile = do
 
   return (dir </> "recents")
 
+initLast :: [a] -> ([a], a)
+initLast [x] = ([], x)
+initLast (x:xs) = let (xs', y) = initLast xs
+                   in (x:xs', y)
+
 shortenFilepaths :: [FilePath] -> [FilePath]
-shortenFilepaths = map takeBaseName
+shortenFilepaths fps = uncurry shortenFilepaths' (unzip (map ((\(pre, fn) -> (pre, dropExtension fn)) . splitFileName) fps))
+  where
+    shortenFilepaths' prefixes abbreviations =
+      let ds = duplicates abbreviations in
+        if null ds then abbreviations else
+          shortenFilepaths' 
+            (flip map (zip [0..] prefixes) (
+              \(i, pre) -> if i `elem` ds then
+                joinPath (init (splitPath pre)) else pre
+            ))
+            (flip map (zip [0..] abbreviations) (
+              \(i, abbr) -> if i `elem` ds then 
+                last (splitPath (prefixes !! i)) ++ abbr
+                else abbr) )
+          
+
+duplicates :: Eq a => [a] -> [Int]
+duplicates = sort . map fst . duplicates' 0 [] []
+  where duplicates' _ _    acc []     = acc
+        duplicates' i seen acc (x:xs) = duplicates' (i+1) ((i, x) : seen) acc' xs
+          where acc' = case (getPairsWithValue x acc, getPairsWithValue x seen) of
+                  ([], []) -> acc
+                  ([], ys) -> (i, x) : ys ++ acc
+                  (_, _)   -> (i, x) : acc
+                -- acc' = if getPairsWithValue x seen then (i, x) : acc else acc 
+
+getPairsWithValue :: Eq a => a -> [(Int, a)] -> [(Int, a)]
+getPairsWithValue y []       = []
+getPairsWithValue y ((i, x):xs)
+  | x == y    = (i, x) : getPairsWithValue y xs
+  | otherwise = getPairsWithValue y xs
 
 refreshRecents :: State -> IO State
 refreshRecents s = do
