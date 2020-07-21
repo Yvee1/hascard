@@ -4,12 +4,11 @@
 module UI.FileBrowser (runFileBrowserUI) where
 
 import Brick
-import Data.List
-import Data.Char
 import Types
 import Parser
 import Control.Exception (displayException, try)
 import Control.Monad.IO.Class
+import Debug
 import Brick.Widgets.Border
 import Brick.Widgets.Center
 import Brick.Widgets.List
@@ -20,10 +19,11 @@ import qualified Graphics.Vty as V
 type Event = ()
 type Name = ()
 data State = State
-  { _fb        :: FileBrowser Name
-  , _exception :: Maybe String
-  , _cards     :: [Card]
-  , _filePath  :: Maybe FilePath
+  { _fb         :: FileBrowser Name
+  , _exception  :: Maybe String
+  , _cards      :: [Card]
+  , _filePath   :: Maybe FilePath
+  , _showHidden :: Bool
   }
 
 makeLenses ''State
@@ -64,7 +64,7 @@ drawUI State{_fb=b, _exception=exc} = [center $ ui <=> help]
              borderWithLabel (txt "Choose a file") $
              renderFileBrowser True b
         help = padTop (Pad 1) $
-               vBox [ hCenter $ txt "Up/Down: select"
+               vBox [ hCenter $ txt "Up/Down: select, h: toggle show hidden files"
                     , hCenter $ txt "/: search, Ctrl-C or Esc: cancel search"
                     , hCenter $ txt "Enter: change directory or select file"
                     , hCenter $ txt "Esc: quit"
@@ -81,6 +81,8 @@ handleEvent s@State{_fb=b} (VtyEvent ev) =
             halt s
         V.EvKey (V.KChar 'c') [V.MCtrl] | not (fileBrowserIsSearching b) ->
             halt s
+        V.EvKey (V.KChar 'h') [] | not (fileBrowserIsSearching b) -> let s' = s & showHidden %~ not in
+            continue $ s' & fb .~ setFileBrowserEntryFilter (Just (entryFilter (s' ^. showHidden))) b
         _ -> do
             b' <- handleFileBrowserEvent ev b
             let s' = s & fb .~ b'
@@ -106,12 +108,14 @@ handleEvent s _ = continue s
 runFileBrowserUI :: IO (Maybe ([Card], FilePath))
 runFileBrowserUI = do
   browser <- newFileBrowser selectNonDirectories () Nothing
-  let filteredBrowser = setFileBrowserEntryFilter (Just (fileExtensionMatch' "txt")) browser
-  s <- defaultMain app (State filteredBrowser Nothing [] Nothing)
+  let filteredBrowser = setFileBrowserEntryFilter (Just (entryFilter False)) browser
+  s <- defaultMain app (State filteredBrowser Nothing [] Nothing False)
   let mfp = s ^. filePath
   return $ fmap (s ^. cards,) mfp
 
-fileExtensionMatch' :: String -> FileInfo -> Bool
-fileExtensionMatch' ext i = case fileInfoFileType i of
-    Just RegularFile -> ('.' : (toLower <$> ext)) `isSuffixOf` (toLower <$> fileInfoFilename i)
-    _ -> True
+entryFilter :: Bool -> FileInfo -> Bool
+entryFilter acceptHidden info = fileExtensionMatch "txt" info && (acceptHidden || 
+  case fileInfoFilename info of
+    ".."    -> True
+    '.' : _ -> False
+    _       -> True)
