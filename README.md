@@ -21,6 +21,8 @@ The binary used on my system is available under [releases](https://github.com/Yv
 ### Snapcraft
 Hascard is also on [snapcraft](https://snapcraft.io/hascard). Installation instructions are on that site. If you already have snap installed you can just install hascard via `sudo snap install hascard`. By default snap applications are isolated from the system and run in a sandbox. This means that hascard does not have permission to read or write any files on the system aside from those under `%HOME/snap/hascard`. To be able to read cards also in other directories under the home directory, hascard makes use of the `home` interface which might need to be enabled manually using `sudo snap connect hascard:home :home`.
 
+**Note**: The installation with snapcraft does not work with all terminals, [known issues are with alacritty and st](https://github.com/Yvee1/hascard/issues/3), because of problems with terminfo that I do not know how to solve. With me, this did not happen with the other installation methods so try those if you have a somewhat non-standard terminal. If anyone knows what the problem might be, let me know!
+
 ### Install from source
 Another option is to build hascard and install it from source. For this you can use the Haskell build tool called [stack](https://docs.haskellstack.org/en/stable/README/#how-to-install), or [nix](https://nixos.org/). Then for example clone this repository somewhere:
 ```
