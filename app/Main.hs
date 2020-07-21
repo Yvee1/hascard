@@ -8,6 +8,7 @@ import Data.Version (showVersion)
 import Paths_hascard (version)
 import Parser
 import Options.Applicative
+import System.Directory (makeAbsolute)
 import System.Process (runCommand)
 import System.FilePath (takeExtension)
 
@@ -52,4 +53,4 @@ run (Just file) = do
          Left exc -> putStrLn (displayException exc)
          Right val -> case parseCards val of
            Left parseError -> print parseError
-           Right result -> addRecent textfile *> runCardsUI result $> ()
+           Right result -> (makeAbsolute textfile >>= addRecent) *> runCardsUI result $> ()
