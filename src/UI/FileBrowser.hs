@@ -4,16 +4,15 @@
 module UI.FileBrowser (runFileBrowserUI) where
 
 import Brick
-import Types
-import Parser
-import Control.Exception (displayException, try)
-import Control.Monad.IO.Class
-import Debug
 import Brick.Widgets.Border
 import Brick.Widgets.Center
 import Brick.Widgets.List
 import Brick.Widgets.FileBrowser
+import Control.Exception (displayException, try)
+import Control.Monad.IO.Class
 import Lens.Micro.Platform
+import Parser
+import Types
 import qualified Graphics.Vty as V
 
 type Event = ()

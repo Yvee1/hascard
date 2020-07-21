@@ -33,7 +33,7 @@ pMultChoice = do
 pChoice = do
   kind <- oneOf "*-"
   space
-  text <- manyTill anyChar $ lookAhead (try (try choicePrefix <|> seperator))
+  text <- manyTill anyChar $ lookAhead (try (try choicePrefix <|> seperator <|> (eof >> return [])))
   return (kind, text)
 
 choicePrefix =  string "- "
@@ -49,7 +49,7 @@ pOption = do
   char '['
   kind <- oneOf "*x "
   string "] "
-  text <- manyTill anyChar $ lookAhead (try (seperator <|> string "["))
+  text <- manyTill anyChar $ lookAhead (try (seperator <|> string "[" <|> (eof >> return [])))
   return $ makeOption kind text
 
 pOpen = do
@@ -88,7 +88,7 @@ pNormal = do
 pDef = do
   header <- pHeader
   many eol
-  descr <- manyTill chars $ lookAhead (try seperator)
+  descr <- manyTill chars $ lookAhead (try (seperator <|> (eof >> return [])))
   return (header, descr)
 
 eol =  try (string "\n\r")
