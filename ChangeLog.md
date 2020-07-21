@@ -1,5 +1,14 @@
 # Changelog for hascard
 
+## 0.1.2.0
+New:
+- Directories are now hidden by default, and can be shown by pressing 'h' in the filebrowser
+
+
+Fixed bugs:
+- Parsing now succeeds even if the text file does not end with ---
+- When passing a file via the CLI, the absolute path is saved instead of the relative one, preventing issues with the 'recently selected files'
+
 ## 0.1.1.0
 New:
 - Add nix build support (by @srid)
