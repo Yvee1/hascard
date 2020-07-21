@@ -1,5 +1,15 @@
+{-# LANGUAGE TemplateHaskell #-}
 module Types where
 import Data.List.NonEmpty (NonEmpty)
+import Lens.Micro.Platform
+import System.Random.MWC (GenIO)
+
+data GlobalState = GlobalState
+  { _mwc :: GenIO
+  , _doShuffle :: Bool
+  , _subset :: Maybe Int }
+
+makeLenses ''GlobalState
 
 --                     Word   Description
 data Card = Definition String String

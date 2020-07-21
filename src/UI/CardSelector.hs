@@ -1,5 +1,10 @@
 {-# LANGUAGE TemplateHaskell #-}
-module UI.CardSelector (runCardSelectorUI, getRecents, getRecentsFile, addRecent) where
+module UI.CardSelector 
+  (runCardSelectorUI
+  , getRecents
+  , getRecentsFile
+  , addRecent
+  , runCardsWithOptions) where
 
 import Brick
 import Brick.Widgets.Border
@@ -7,15 +12,18 @@ import Brick.Widgets.Border.Style
 import Brick.Widgets.Center
 import Control.Exception (displayException, try)
 import Control.Monad.IO.Class
+import Data.Functor (void)
 import Data.List (sort)
+import Data.Random
 import Lens.Micro.Platform
 import Parser
 import Stack (Stack)
 import System.Environment (lookupEnv)
 import System.FilePath ((</>), splitFileName, dropExtension, splitPath, joinPath)
+import Types
 import UI.BrickHelpers
 import UI.FileBrowser (runFileBrowserUI)
-import UI.Cards (runCardsUI)
+import UI.Cards (runCardsUI, Card)
 import qualified Brick.Widgets.List as L
 import qualified Data.Vector as Vec
 import qualified Graphics.Vty as V
@@ -29,6 +37,7 @@ data State = State
   { _list       :: L.List Name String
   , _exception  :: Maybe String
   , _recents    :: Stack FilePath
+  , _gs         :: GlobalState
   }
 
 makeLenses ''State
@@ -117,18 +126,18 @@ handleEvent s@State{_list=l} (VtyEvent e) =
                                 Left parseError -> continue (s' & exception ?~ show parseError)
                                 Right result -> suspendAndResume $ do
                                   s'' <- addRecentInternal s' fp
-                                  _ <- runCardsUI result
+                                  _ <- runCardsWithOptions (s^.gs) result
                                   return (s'' & exception .~ Nothing)
                     _ -> continue s'
 
 handleEvent l _ = continue l
 
-runCardSelectorUI :: IO ()
-runCardSelectorUI = do
+runCardSelectorUI :: GlobalState -> IO ()
+runCardSelectorUI gs = do
   rs <- getRecents
   let prettyRecents = shortenFilepaths (S.toList rs)
   let options = Vec.fromList (prettyRecents ++ ["Select file from system"])
-  let initialState = State (L.list () options 1) Nothing rs
+  let initialState = State (L.list () options 1) Nothing rs gs
   _ <- defaultMain app initialState
   return () 
 
@@ -224,4 +233,10 @@ refreshRecents s = do
 runFileBrowser :: State -> IO State
 runFileBrowser s = do
   result <- runFileBrowserUI
-  maybe (return s) (\(cards, fp) -> addRecentInternal s fp <* runCardsUI cards) result
+  maybe (return s) (\(cards, fp) -> addRecentInternal s fp <* runCardsWithOptions (s^.gs) cards) result
+
+runCardsWithOptions :: GlobalState -> [Card] -> IO ()
+runCardsWithOptions state cards =
+  let n = length cards in do
+    cards' <- if state^.doShuffle then sampleFrom (state^.mwc) (shuffleN n cards) else return cards
+    void $ maybe (runCardsUI state cards') (\n -> runCardsUI state (take n cards')) (state^.subset)

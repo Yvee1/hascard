@@ -1,3 +1,4 @@
+{-# LANGUAGE TemplateHaskell #-}
 module UI.MainMenu (runMainMenuUI) where
 
 import Brick
@@ -5,6 +6,8 @@ import Brick.Widgets.Border
 import Brick.Widgets.Border.Style
 import Brick.Widgets.Center
 import Data.Functor (($>))
+import Lens.Micro.Platform
+import Types (GlobalState)
 import UI.BrickHelpers
 import UI.CardSelector
 import UI.Info
@@ -15,7 +18,11 @@ import qualified Brick.Widgets.List as L
 
 type Event = ()
 type Name = ()
-type State = L.List Name String
+data State = State 
+  { _l  :: L.List Name String
+  , _gs :: GlobalState }
+
+makeLenses ''State
 
 app :: App State Event Name
 app = App 
@@ -49,7 +56,7 @@ drawMenu s =
 
 drawList :: State -> Widget Name
 drawList s = vLimit 4 $
-             L.renderList drawListElement True s
+             L.renderList drawListElement True (s^.l)
 
 drawListElement :: Bool -> String -> Widget Name
 drawListElement selected = hCenteredStrWrapWithAttr attr
@@ -68,29 +75,29 @@ theMap = attrMap V.defAttr
     , (titleAttr, fg V.yellow) ]
 
 handleEvent :: State -> BrickEvent Name Event -> EventM Name (Next State)
-handleEvent l (VtyEvent e) =
+handleEvent s (VtyEvent e) =
     case e of
-      V.EvKey (V.KChar 'c') [V.MCtrl]  -> halt l
-      V.EvKey V.KEsc [] -> halt l
+      V.EvKey (V.KChar 'c') [V.MCtrl]  -> halt s
+      V.EvKey V.KEsc [] -> halt s
       V.EvKey V.KEnter [] ->
-        case L.listSelected l of
-          Just 0 -> suspendAndResume $ runCardSelectorUI $> l
-          Just 1 -> suspendAndResume $ runInfoUI $> l
-          Just 2 -> suspendAndResume $ runSettingsUI $> l
-          Just 3 -> halt l
+        case L.listSelected (s^.l) of
+          Just 0 -> suspendAndResume $ runCardSelectorUI (s^.gs)$> s
+          Just 1 -> suspendAndResume $ runInfoUI  $> s
+          Just 2 -> suspendAndResume $ runSettingsUI $> s
+          Just 3 -> halt s
           _ -> undefined
 
-      ev -> continue =<< L.handleListEventVi L.handleListEvent ev l
+      ev -> continue . flip (l .~) s =<< L.handleListEventVi L.handleListEvent ev (s^.l)
 handleEvent l _ = continue l
 
-runMainMenuUI :: IO ()
-runMainMenuUI = do
+runMainMenuUI :: GlobalState -> IO ()
+runMainMenuUI gs = do
   let options = Vec.fromList [ "Select"
                              , "Info"
                              , "Settings"
                              , "Quit" ]
 
-  let initialState = L.list () options 1
+  let initialState = State (L.list () options 1) gs
   _ <- defaultMain app initialState
   return ()
 

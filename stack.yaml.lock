@@ -3,7 +3,42 @@
 # For more information, please see the documentation at:
 #   https://docs.haskellstack.org/en/stable/lock_files
 
-packages: []
+packages:
+- completed:
+    hackage: random-fu-0.2.7.4@sha256:5b5cd338ebbf02ff867691ec27abe481158fb2ae161c3e2e77163434eea0008a,4527
+    pantry-tree:
+      size: 2455
+      sha256: b8b0f7e60515305dd2ccb3d8fb03e7efd985addcdf247ac9a522f4bcbe1d1caa
+  original:
+    hackage: random-fu-0.2.7.4
+- completed:
+    hackage: random-1.1@sha256:7b67624fd76ddf97c206de0801dc7e888097e9d572974be9b9ea6551d76965df,1777
+    pantry-tree:
+      size: 637
+      sha256: 14a1b01728c5584e87c9fa00746a66e28ffd89dd2c0eabd334c8463953496e1b
+  original:
+    hackage: random-1.1
+- completed:
+    hackage: random-source-0.3.0.8@sha256:db1897e13adb4748d571a8e71fb0c38911ae66ea2557d4def7c30378a0ae2f69,3879
+    pantry-tree:
+      size: 914
+      sha256: 3f27fb10fa6f7c78a2256069579ad46c390ed6cc98203ff4240a30ab3065126f
+  original:
+    hackage: random-source-0.3.0.8
+- completed:
+    hackage: rvar-0.2.0.6@sha256:d07cbb734ec307539fb58d4344b2284a1a91f41c9308f437c27ae8bada2111bf,2317
+    pantry-tree:
+      size: 158
+      sha256: 48f154bad9ac1cf15c8df874bb903ece2e0d1fe1703e144f31fa32bd776581c0
+  original:
+    hackage: rvar-0.2.0.6@sha256:d07cbb734ec307539fb58d4344b2284a1a91f41c9308f437c27ae8bada2111bf,2317
+- completed:
+    hackage: flexible-defaults-0.0.3@sha256:6a7ab000561e1075003cb1053dfbbb4020ae2b02916776d1479c9c3fc82f5d0d,2508
+    pantry-tree:
+      size: 497
+      sha256: 53d8b98b9e899d63f7e464670e908f6eb22d8a5ba0b6ea48182fb810b426f0f8
+  original:
+    hackage: flexible-defaults-0.0.3@sha256:6a7ab000561e1075003cb1053dfbbb4020ae2b02916776d1479c9c3fc82f5d0d,2508
 snapshots:
 - completed:
     size: 531674

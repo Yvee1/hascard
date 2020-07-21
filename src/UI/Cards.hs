@@ -1,5 +1,5 @@
 {-# LANGUAGE TemplateHaskell #-}
-module UI.Cards (runCardsUI) where
+module UI.Cards (runCardsUI, Card) where
 
 import Brick
 import Lens.Micro.Platform
@@ -418,8 +418,8 @@ theMap = attrMap V.defAttr
   , (gapAttr, V.defAttr `V.withStyle` V.underline)
   ]
 
-runCardsUI :: [Card] -> IO State
-runCardsUI deck = do
+runCardsUI :: GlobalState -> [Card] -> IO State
+runCardsUI gs deck = do
   hints <- getShowHints
   controls <- getShowControls
 

@@ -1,10 +1,10 @@
-module UI (module X, runBrickFlashcards) where
+module UI (module X, module UI) where
 
 import UI.Cards        as X (runCardsUI)
 import UI.CardSelector as X
 import UI.MainMenu     as X (runMainMenuUI)
 import UI.Settings     as X
+import Types           as X (GlobalState (..), mwc, doShuffle, subset)
 
-runBrickFlashcards :: IO ()
+runBrickFlashcards :: GlobalState -> IO ()
 runBrickFlashcards = runMainMenuUI
-  
