@@ -18,4 +18,4 @@ script:
 - stack setup
 - stack build
 after_success:
-- echo "success"
+- sh travis/attach-binary.sh
