@@ -1,5 +1,10 @@
 # Changelog for hascard
 
+## 0.1.3.0
+New:
+- Add `-s` shuffle flag and `-a` amount option to CLI.
+- Add macOS binary and homebrew formula
+
 ## 0.1.2.0
 New:
 - Hidden files/directories (so starting with '.') are now hidden by default, and can be shown by pressing 'h' in the filebrowser
