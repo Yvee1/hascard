@@ -12,8 +12,8 @@ os:
 - linux
 - osx
 before_install:
-- sh tools/install-stack.sh
-- sh tools/install-ghr.sh
+- sh travis/install-stack.sh
+- sh travis/install-ghr.sh
 script:
 - stack setup
 - stack build
