@@ -14,14 +14,22 @@ A minimal commandline utility for reviewing notes. 'Flashcards' can be written i
 - [Miscellaneous info](#miscellaneous-info)
 
 ## Installation
-Installation on Windows is not possible sadly, aside from WSL. This is because hascard depends on vty which only supports unix operating systems (this includes MacOS). 
-### Binary
-The binary used on my system is available under [releases](https://github.com/Yvee1/hascard/releases/). If you run debian with the x86-64 architecture that binary should work for you too. To be able to run it from any directory, it has to be added to the PATH. This can be done by copying it to e.g. the `/usr/local/bin` directory.
+Installation on Windows is not possible sadly, aside from WSL. This is because hascard depends on vty which only supports unix operating systems (this includes macOS).
 
 ### Snapcraft
 Hascard is also on [snapcraft](https://snapcraft.io/hascard). Installation instructions are on that site. If you already have snap installed you can just install hascard via `sudo snap install hascard`. By default snap applications are isolated from the system and run in a sandbox. This means that hascard does not have permission to read or write any files on the system aside from those under `%HOME/snap/hascard`. To be able to read cards also in other directories under the home directory, hascard makes use of the `home` interface which might need to be enabled manually using `sudo snap connect hascard:home :home`.
 
 **Note**: The installation with snapcraft does not work with all terminals, [known issues are with alacritty and st](https://github.com/Yvee1/hascard/issues/3), because of problems with terminfo that I do not know how to solve. With me, this did not happen with the other installation methods so try those if you have a somewhat non-standard terminal. If anyone knows what the problem might be, let me know!
+
+### Homebrew (for macOS)
+For macOS users an installation using homebrew is provided via a custom tap. You can run 
+```
+brew update
+brew install Yvee1/tools/hascard
+```
+
+### Binary
+Linux and macOS binaries are available under [releases](https://github.com/Yvee1/hascard/releases/). To be able to run it from any directory, it has to be added to the PATH. This can be done by copying it to e.g. the `/usr/local/bin` directory.
 
 ### Install from source
 Another option is to build hascard and install it from source. For this you can use the Haskell build tool called [stack](https://docs.haskellstack.org/en/stable/README/#how-to-install), or [nix](https://nixos.org/). Then for example clone this repository somewhere:
@@ -87,4 +95,4 @@ behaves like this
 ![](./recordings/gapped-question.gif)
 
 ## Miscellaneous info
-Written in Haskell, UI built with [brick](https://github.com/jtdaugherty/brick) and parsing of cards done with [parsec](https://github.com/haskell/parsec). Recordings of the terminal were made using [terminalizer](https://github.com/faressoft/terminalizer). The filebrowser widget was mostly copied from the brick [filebrowser demo program](https://github.com/jtdaugherty/brick/blob/master/programs/FileBrowserDemo.hs).
+Written in Haskell, UI built with [brick](https://github.com/jtdaugherty/brick) and parsing of cards done with [parsec](https://github.com/haskell/parsec). Recordings of the terminal were made using [terminalizer](https://github.com/faressoft/terminalizer). The filebrowser widget was mostly copied from the brick [filebrowser demo program](https://github.com/jtdaugherty/brick/blob/master/programs/FileBrowserDemo.hs). Homebrew and Travis configurations were made much easier by [the tutorial from Chris Penner](https://chrispenner.ca/posts/homebrew-haskell).
