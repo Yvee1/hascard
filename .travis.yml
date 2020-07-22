@@ -1,0 +1,21 @@
+addons:
+  apt:
+    packages:
+    - libgmp-dev
+language: c
+sudo: false
+cache:
+  directories:
+  - $HOME/.local/bin
+  - $HOME/.stack
+os:
+- linux
+- osx
+before_install:
+- sh tools/install-stack.sh
+- sh tools/install-ghr.sh
+script:
+- stack setup
+- stack build
+after_success:
+- echo "success"
