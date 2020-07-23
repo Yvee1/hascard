@@ -1,4 +1,11 @@
 # Changelog for hascard
+## 0.1.4.0
+New:
+- Deleted or moved files are also no longer shown in the recently selected files list
+
+Fixed bugs:
+- A new line after the last seperator `---` caused the parsing to fail, now it does not
+- If the last card was an open question and there was no `---` at the end, it was shown as a definition card (issue #6, thanks @stemvork)
 
 ## 0.1.3.0
 New:
