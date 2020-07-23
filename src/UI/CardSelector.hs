@@ -11,6 +11,7 @@ import Brick.Widgets.Border
 import Brick.Widgets.Border.Style
 import Brick.Widgets.Center
 import Control.Exception (displayException, try)
+import Control.Monad (filterM)
 import Control.Monad.IO.Class
 import Data.Functor (void)
 import Data.List (sort)
@@ -146,8 +147,15 @@ getRecents = do
   rf <- getRecentsFile
   exists <- D.doesFileExist rf
   if exists
-    then S.fromList . lines <$> IOS.readFile rf
+    then removeDeletedFiles rf
     else return S.empty
+
+removeDeletedFiles :: FilePath -> IO (Stack FilePath)
+removeDeletedFiles fp = do
+  file <- IOS.readFile fp
+  existing <- S.fromList <$> filterM D.doesFileExist (lines file)
+  writeRecents existing
+  return existing
 
 maxRecents :: Int
 maxRecents = 5
