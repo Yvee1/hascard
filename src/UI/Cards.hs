@@ -4,7 +4,7 @@ module UI.Cards (runCardsUI, Card) where
 import Brick
 import Lens.Micro.Platform
 import Types
-import Data.Char (isSeparator, isSpace)
+import Data.Char (isSpace)
 import Data.List (dropWhileEnd)
 import Data.List.NonEmpty (NonEmpty)
 import Data.Map.Strict (Map)
@@ -108,11 +108,15 @@ drawHeader title = withAttr titleAttr $
 wrapSettings :: WrapSettings
 wrapSettings = WrapSettings {preserveIndentation=False, breakLongWords=True}
 
+isSpace' :: Char -> Bool
+isSpace' '\r' = True
+isSpace' a    = isSpace a
+
 drawDescr :: String -> Widget Name
 drawDescr descr =
   strWrapWith wrapSettings descr'
     where
-      descr' = dropWhileEnd isSpace descr
+      descr' = dropWhileEnd isSpace' descr
 
 listMultipleChoice :: CorrectOption -> [IncorrectOption] -> [String]
 listMultipleChoice c = reverse . listMultipleChoice' [] 0 c
@@ -142,7 +146,7 @@ drawDef s def = if s ^. showHints then drawHintedDef s def else drawNormalDef s 
 
 drawHintedDef :: State -> String -> Widget Name
 drawHintedDef s def = case s ^. cardState of
-  DefinitionState {_flipped=f} -> if f then drawDescr def else drawDescr [if isSeparator char || char == '\n' then char else '_' | char <- def]
+  DefinitionState {_flipped=f} -> if f then drawDescr def else drawDescr [if isSpace' char then char else '_' | char <- def]
   _ -> error "impossible: " 
 
 drawNormalDef:: State -> String -> Widget Name
@@ -152,7 +156,7 @@ drawNormalDef s def = case s ^. cardState of
     else Widget Greedy Fixed $ do
       c <- getContext
       let w = c^.availWidthL
-      let def' = dropWhileEnd isSpace def
+      let def' = dropWhileEnd isSpace' def
       render . vBox $ [str " " | _ <- wrapTextToLines wrapSettings w (pack def')]
   _ -> error "impossible: " 
 
