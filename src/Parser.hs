@@ -1,4 +1,3 @@
--- {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE DataKinds, ExistentialQuantification, GADTs, KindSignatures #-}
 module Parser (parseCards) where
   
@@ -82,7 +81,7 @@ gappedSpecialChars =  seperator
                   <|> string "_"
 
 pNormal = do
-  text <- manyTill (noneOf "_") $ lookAhead (try gappedSpecialChars)
+  text <- manyTill (noneOf "_") $ lookAhead $ try $ gappedSpecialChars <|> (eof >> return [])
   return (Normal text)
 
 pDef = do
@@ -97,7 +96,10 @@ eol =  try (string "\n\r")
     <|> string "\r"
     <?> "end of line"
 
-seperator = string "---"
+seperator = do
+  sep <- string "---"
+  many eol
+  return sep
 
 notEOL = noneOf "\n\r"
 
