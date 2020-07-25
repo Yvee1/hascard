@@ -15,13 +15,16 @@ makeLenses ''GlobalState
 data Card = Definition String String
           | OpenQuestion String Perforated
           | MultipleChoice {
-            mcQuestion   :: String,
-            mcCorrect    :: CorrectOption,
-            mcIncorrects :: [IncorrectOption]}
-          -- | MultipleAnswer String (NE.NonEmpty Answer) 
+            question   :: String,
+            correct    :: CorrectOption,
+            incorrects :: [IncorrectOption]}
           | MultipleAnswer {
-            maQuestion   :: String,
-            maOptions    :: NonEmpty Option }
+            question   :: String,
+            options    :: NonEmpty Option }
+          | Reorder {
+            question   :: String,
+            elements   :: NonEmpty (Int, String)
+          }
           
   deriving Show
 

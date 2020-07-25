@@ -28,21 +28,28 @@ data CardState =
   { _flipped        :: Bool }
   | MultipleChoiceState
   { _highlighted    :: Int
-  , _nChoices       :: Int
+  , _number         :: Int
   , _tried          :: Map Int Bool      -- indices of tried choices
   }
   | MultipleAnswerState
   { _highlighted    :: Int
   , _selected       :: Map Int Bool
-  , _nChoices       :: Int
+  , _number         :: Int
   , _entered        :: Bool
   }
   | OpenQuestionState
   { _gapInput       :: Map Int String
   , _highlighted    :: Int
-  , _nGaps          :: Int
+  , _number         :: Int
   , _entered        :: Bool
   , _correctGaps    :: Map Int Bool
+  }
+  | ReorderState
+  { _highlighted    :: Int
+  , _grabbed        :: Bool 
+  , _order          :: Map Int (Int, String)
+  , _entered        :: Bool
+  , _number         :: Int
   }
 
 data State = State
@@ -63,19 +70,25 @@ defaultCardState :: Card -> CardState
 defaultCardState Definition{} = DefinitionState { _flipped = False }
 defaultCardState (MultipleChoice _ _ ics) = MultipleChoiceState 
   { _highlighted = 0
-  , _nChoices = length ics + 1
+  , _number = length ics + 1
   , _tried = M.fromList [(i, False) | i <- [0..length ics]] }
 defaultCardState (OpenQuestion _ perforated) = OpenQuestionState 
   { _gapInput = M.empty
   , _highlighted = 0
-  , _nGaps = nGapsInPerforated perforated
+  , _number = nGapsInPerforated perforated
   , _entered = False
   , _correctGaps = M.fromList [(i, False) | i <- [0..nGapsInPerforated perforated - 1]] }
 defaultCardState (MultipleAnswer _ answers) = MultipleAnswerState 
   { _highlighted = 0
   , _selected = M.fromList [(i, False) | i <- [0..NE.length answers-1]]
   , _entered = False
-  , _nChoices = NE.length answers }
+  , _number = NE.length answers }
+defaultCardState (Reorder _ elements) = ReorderState
+  { _highlighted = 0
+  , _grabbed = False
+  , _order = M.fromList (zip [0..] (NE.toList elements))
+  , _entered = False
+  , _number = NE.length elements }
 
 app :: App State Event Name
 app = App 
@@ -86,6 +99,24 @@ app = App
   , appAttrMap = const theMap
   }
 
+runCardsUI :: GlobalState -> [Card] -> IO State
+runCardsUI gs deck = do
+  hints <- getShowHints
+  controls <- getShowControls
+
+  let initialState = State { _cards = deck
+                           , _index = 0
+                           , _currentCard = head deck
+                           , _cardState = defaultCardState (head deck)
+                           , _nCards = length deck
+                           , _showHints = hints
+                           , _showControls = controls }
+  defaultMain app initialState
+
+---------------------------------------------------
+--------------------- DRAWING ---------------------
+---------------------------------------------------
+
 drawUI :: State -> [Widget Name]
 drawUI s =  [drawCardUI s <=> drawInfo s]
 
@@ -93,12 +124,34 @@ drawInfo :: State -> Widget Name
 drawInfo s = if not (s ^. showControls) then emptyWidget else
   strWrap . ("ESC: quit" <>) $ case s ^. cardState of
     DefinitionState {}     -> ", ENTER: flip card / continue"
-    MultipleChoiceState {} -> ", ENTER: confirm answer / continue"
-    MultipleAnswerState {} -> ", ENTER: select / continue, c: confirm selection"
-    OpenQuestionState {}   -> ", LEFT/RIGHT/TAB: navigate gaps, ENTER: confirm answer / continue"
+    MultipleChoiceState {} -> ", ENTER: submit answer / continue"
+    MultipleAnswerState {} -> ", ENTER: select / continue, c: submit selection"
+    OpenQuestionState {}   -> ", LEFT/RIGHT/TAB: navigate gaps, ENTER: submit answer / continue"
+    ReorderState {}        -> ", ENTER: grab, c: submit answer"
+
+drawCardBox :: Widget Name -> Widget Name
+drawCardBox w = C.center $
+                withBorderStyle BS.unicodeRounded $
+                B.border $
+                withAttr textboxAttr $
+                hLimitPercent 60 w
 
 drawProgress :: State -> Widget Name
 drawProgress s = C.hCenter $ str (show (s^.index + 1) ++ "/" ++ show (s^.nCards))
+
+drawCardUI :: State -> Widget Name
+drawCardUI s = let p = 1 in
+  joinBorders $ drawCardBox $ (<=> drawProgress s) $
+  case (s ^. cards) !! (s ^. index) of
+    Definition title descr -> drawHeader title <=> B.hBorder <=> padLeftRight p (drawDef s descr <=> str " ")
+                              
+    MultipleChoice question correct others -> drawHeader question <=> B.hBorder <=> padLeftRight p (drawChoices s (listMultipleChoice correct others) <=> str " ")
+
+    OpenQuestion title perforated -> drawHeader title <=> B.hBorder <=> padLeftRight p (drawPerforated s perforated <=> str " ")
+
+    MultipleAnswer question options -> drawHeader question <=> B.hBorder <=> padRight (Pad p) (drawOptions s options <=> str " ")
+
+    Reorder question elements -> drawHeader question <=> B.hBorder <=> padLeftRight p (drawReorder s elements <=> str " ")
 
 drawHeader :: String -> Widget Name
 drawHeader title = withAttr titleAttr $
@@ -118,29 +171,6 @@ drawDescr descr =
     where
       descr' = dropWhileEnd isSpace' descr
 
-listMultipleChoice :: CorrectOption -> [IncorrectOption] -> [String]
-listMultipleChoice c = reverse . listMultipleChoice' [] 0 c
-  where listMultipleChoice' opts i (CorrectOption j cStr) [] = 
-          if i == j
-            then cStr : opts
-            else opts
-        listMultipleChoice' opts i c'@(CorrectOption j cStr) ics@(IncorrectOption icStr : ics') = 
-          if i == j
-            then listMultipleChoice' (cStr  : opts) (i+1) c' ics
-            else listMultipleChoice' (icStr : opts) (i+1) c' ics'
-
-drawCardUI :: State -> Widget Name
-drawCardUI s = let p = 1 in
-  joinBorders $ drawCardBox $ (<=> drawProgress s) $
-  case (s ^. cards) !! (s ^. index) of
-    Definition title descr -> drawHeader title <=> B.hBorder <=> padLeftRight p (drawDef s descr <=> str " ")
-                              
-    MultipleChoice question correct others -> drawHeader question <=> B.hBorder <=> padLeftRight p (drawChoices s (listMultipleChoice correct others) <=> str " ")
-
-    OpenQuestion title perforated -> drawHeader title <=> B.hBorder <=> padLeftRight p (drawPerforated s perforated <=> str " ")
-
-    MultipleAnswer question options -> drawHeader question <=> B.hBorder <=> padRight (Pad p) (drawOptions s options <=> str " ")
-
 drawDef :: State -> String -> Widget Name
 drawDef s def = if s ^. showHints then drawHintedDef s def else drawNormalDef s def
 
@@ -159,6 +189,17 @@ drawNormalDef s def = case s ^. cardState of
       let def' = dropWhileEnd isSpace' def
       render . vBox $ [str " " | _ <- wrapTextToLines wrapSettings w (pack def')]
   _ -> error "impossible: " 
+
+listMultipleChoice :: CorrectOption -> [IncorrectOption] -> [String]
+listMultipleChoice c = reverse . listMultipleChoice' [] 0 c
+  where listMultipleChoice' opts i (CorrectOption j cStr) [] = 
+          if i == j
+            then cStr : opts
+            else opts
+        listMultipleChoice' opts i c'@(CorrectOption j cStr) ics@(IncorrectOption icStr : ics') = 
+          if i == j
+            then listMultipleChoice' (cStr  : opts) (i+1) c' ics
+            else listMultipleChoice' (icStr : opts) (i+1) c' ics'
 
 drawChoices :: State -> [String] -> Widget Name
 drawChoices s options = case (s ^. cardState, s ^. currentCard) of
@@ -256,12 +297,29 @@ wrapStringWithPadding padding w s
         ts' = ts & _last %~ (`T.append` postfix) in
     (map txt (filter (/=T.empty) ts'), T.length (last ts'), False)
 
-drawCardBox :: Widget Name -> Widget Name
-drawCardBox w = C.center $
-                withBorderStyle BS.unicodeRounded $
-                B.border $
-                withAttr textboxAttr $
-                hLimitPercent 60 w
+drawReorder :: State -> NonEmpty (Int, String) -> Widget Name
+drawReorder s elements = case (s ^. cardState, s ^. currentCard) of
+  (ReorderState {_highlighted=j, _grabbed=g, _order=kvs, _number=n, _entered=submitted}, Reorder _ _) -> 
+    vBox . flip map (map (\i -> (i, kvs M.! i)) [0..n-1]) $
+    \(i, (k, text)) ->
+      let color = case (i == j,  g) of
+                  (True, True ) -> withAttr grabbedElementAttr
+                  (True, False) -> withAttr highlightedElementAttr
+                  _             -> id
+
+          number = 
+            case (submitted, i+1 == k) of
+              (False, _)    -> str (show (i+1) <> ". ")
+              (True, False) -> withAttr incorrectElementAttr (str (show k <> ". "))
+              (True, True ) -> withAttr correctElementAttr (str (show k <> ". "))
+      in
+        number <+> color (drawDescr text)
+
+  _ -> error "cardstate mismatch"
+
+----------------------------------------------------
+---------------------- Events ----------------------
+----------------------------------------------------
 
 handleEvent :: State -> BrickEvent Name Event -> EventM Name (Next State)
 handleEvent s (VtyEvent e) = case e of
@@ -279,7 +337,7 @@ handleEvent s (VtyEvent e) = case e of
             else continue $ s & cardState.flipped %~ not
         _ -> continue s
 
-    (MultipleChoiceState {_highlighted = i, _nChoices = n, _tried = kvs}, MultipleChoice _ (CorrectOption j _) _) ->
+    (MultipleChoiceState {_highlighted = i, _number = n, _tried = kvs}, MultipleChoice _ (CorrectOption j _) _) ->
       case ev of
         V.EvKey V.KUp [] -> continue up
         V.EvKey (V.KChar 'k') [] -> continue up
@@ -295,15 +353,15 @@ handleEvent s (VtyEvent e) = case e of
 
       where frozen = M.findWithDefault False j kvs
         
-            down = if i < n - 1 && not frozen
+            down = if i < n && not frozen
                      then s & (cardState.highlighted) +~ 1
                      else s
 
-            up = if i > 0 && not frozen
+            up = if i > 1 && not frozen
                    then s & (cardState.highlighted) -~ 1
                    else s
     
-    (MultipleAnswerState {_highlighted = i, _nChoices = n, _entered = submitted}, MultipleAnswer {}) ->
+    (MultipleAnswerState {_highlighted = i, _number = n, _entered = submitted}, MultipleAnswer {}) ->
       case ev of
         V.EvKey V.KUp [] -> continue up
         V.EvKey (V.KChar 'k') [] -> continue up
@@ -330,7 +388,7 @@ handleEvent s (VtyEvent e) = case e of
                    then s & (cardState.highlighted) -~ 1
                    else s
 
-    (OpenQuestionState {_highlighted = i, _nGaps = n, _gapInput = kvs, _correctGaps = cGaps}, OpenQuestion _ perforated) ->
+    (OpenQuestionState {_highlighted = i, _number = n, _gapInput = kvs, _correctGaps = cGaps}, OpenQuestion _ perforated) ->
       let correct = M.foldr (&&) True cGaps in
         case ev of
           V.EvKey (V.KChar '\t') [] -> continue $ 
@@ -363,9 +421,69 @@ handleEvent s (VtyEvent e) = case e of
                   backspace xs = init xs
           _ -> continue s
       
+    (ReorderState {_highlighted = i, _entered = submitted, _grabbed=dragging, _number = n }, Reorder _ _) ->
+      case ev of
+        V.EvKey V.KUp [] -> continue up
+        V.EvKey (V.KChar 'k') [] -> continue up
+        V.EvKey V.KDown [] -> continue down 
+        V.EvKey (V.KChar 'j') [] -> continue down
+
+        V.EvKey (V.KChar 'c') [] -> continue $ s & (cardState.entered) .~ True
+
+        V.EvKey V.KEnter [] ->
+            if frozen
+              then next s
+              else continue $ s & cardState.grabbed %~ not
+
+        _ -> continue s
+
+
+      where frozen = submitted
+        
+            down = 
+              case (frozen, i < n - 1, dragging) of
+                (True, _, _)  -> s
+                (_, False, _) -> s
+                (_, _, False) -> s & (cardState.highlighted) +~ 1
+                (_, _, True)  -> s & (cardState.highlighted) +~ 1
+                                   & (cardState.order) %~ interchange i (i+1)
+
+            up =
+              case (frozen, i > 0, dragging) of
+                (True, _, _)  -> s
+                (_, False, _) -> s
+                (_, _, False) -> s & (cardState.highlighted) -~ 1
+                (_, _, True)  -> s & (cardState.highlighted) -~ 1
+                                   & (cardState.order) %~ interchange i (i-1)
+
     _ -> error "impossible"
 handleEvent s _ = continue s
-      
+
+next :: State -> EventM Name (Next State)
+next s
+  | s ^. index + 1 < length (s ^. cards) = continue . updateState $ s & index +~ 1
+  | otherwise                            = halt s
+
+previous :: State -> EventM Name (Next State)
+previous s | s ^. index > 0 = continue . updateState $ s & index -~ 1
+           | otherwise      = continue s
+
+updateState :: State -> State
+updateState s =
+  let card = (s ^. cards) !! (s ^. index) in s
+    & currentCard .~ card
+    & cardState .~ defaultCardState card
+  
+interchange :: (Ord a) => a -> a -> Map a b -> Map a b
+interchange i j kvs =
+  let vali = kvs M.! i
+      valj = kvs M.! j in
+  M.insert j vali (M.insert i valj kvs)
+
+----------------------------------------------------
+-------------------- Attributes --------------------
+----------------------------------------------------
+
 titleAttr :: AttrName
 titleAttr = attrName "title"
 
@@ -393,9 +511,6 @@ correctOptAttr = attrName "correct option"
 incorrectOptAttr :: AttrName
 incorrectOptAttr = attrName "incorrect option"
 
-hiddenAttr :: AttrName
-hiddenAttr = attrName "hidden"
-
 gapAttr :: AttrName
 gapAttr = attrName "gap"
 
@@ -404,6 +519,18 @@ incorrectGapAttr = attrName "incorrect gap"
 
 correctGapAttr :: AttrName
 correctGapAttr = attrName "correct gap"
+
+highlightedElementAttr :: AttrName
+highlightedElementAttr = attrName "highlighted element"
+
+grabbedElementAttr :: AttrName
+grabbedElementAttr = attrName "grabbed element"
+
+correctElementAttr :: AttrName
+correctElementAttr = attrName "correct element"
+
+incorrectElementAttr :: AttrName
+incorrectElementAttr = attrName "incorrect element"
 
 theMap :: AttrMap
 theMap = attrMap V.defAttr
@@ -418,35 +545,9 @@ theMap = attrMap V.defAttr
   , (selectedOptAttr, fg V.blue)
   , (incorrectOptAttr, fg V.red)
   , (correctOptAttr, fg V.green)
-  , (hiddenAttr, fg V.black)
+  , (highlightedElementAttr, fg V.yellow)
+  , (grabbedElementAttr, fg V.blue)
+  , (correctElementAttr, fg V.green)
+  , (incorrectElementAttr, fg V.red)
   , (gapAttr, V.defAttr `V.withStyle` V.underline)
   ]
-
-runCardsUI :: GlobalState -> [Card] -> IO State
-runCardsUI gs deck = do
-  hints <- getShowHints
-  controls <- getShowControls
-
-  let initialState = State { _cards = deck
-                           , _index = 0
-                           , _currentCard = head deck
-                           , _cardState = defaultCardState (head deck)
-                           , _nCards = length deck
-                           , _showHints = hints
-                           , _showControls = controls }
-  defaultMain app initialState
-
-next :: State -> EventM Name (Next State)
-next s
-  | s ^. index + 1 < length (s ^. cards) = continue . updateState $ s & index +~ 1
-  | otherwise                            = halt s
-
-previous :: State -> EventM Name (Next State)
-previous s | s ^. index > 0 = continue . updateState $ s & index -~ 1
-           | otherwise      = continue s
-
-updateState :: State -> State
-updateState s =
-  let card = (s ^. cards) !! (s ^. index) in s
-    & currentCard .~ card
-    & cardState .~ defaultCardState card

@@ -13,6 +13,7 @@ parseCards = parse pCards "failed when parsing cards"
 pCards = pCard `sepEndBy1` seperator
 pCard =  uncurry3 MultipleChoice<$> try pMultChoice
      <|> uncurry MultipleAnswer <$> try pMultAnswer
+     <|> uncurry Reorder <$> try pReorder
      <|> uncurry OpenQuestion <$> try pOpen
      <|> uncurry Definition <$> pDef
 
@@ -32,7 +33,7 @@ pMultChoice = do
 pChoice = do
   kind <- oneOf "*-"
   space
-  text <- manyTill anyChar $ lookAhead (try (try choicePrefix <|> seperator <|> (eof >> return [])))
+  text <- manyTill anyChar $ lookAhead (try (try choicePrefix <|> seperator <|> eof'))
   return (kind, text)
 
 choicePrefix =  string "- "
@@ -48,8 +49,24 @@ pOption = do
   char '['
   kind <- oneOf "*x "
   string "] "
-  text <- manyTill anyChar $ lookAhead (try (seperator <|> string "[" <|> (eof >> return [])))
+  text <- manyTill anyChar $ lookAhead (try (seperator <|> string "[" <|> eof'))
   return $ makeOption kind text
+
+pReorder = do
+  header <- pHeader
+  many eol
+  elements <- pReorderElement `sepBy1` lookAhead (try pReorderPrefix)
+  return (header, NE.fromList elements)
+
+pReorderElement = do
+  int <- pReorderPrefix
+  text <- manyTill anyChar $ lookAhead (try (try seperator <|> try pReorderPrefix <|> eof'))
+  return (read int, text)
+
+pReorderPrefix = do
+  int <- many1 digit
+  string ". "
+  return int
 
 pOpen = do
   header <- pHeader
@@ -81,13 +98,13 @@ gappedSpecialChars =  seperator
                   <|> string "_"
 
 pNormal = do
-  text <- manyTill (noneOf "_") $ lookAhead $ try $ gappedSpecialChars <|> (eof >> return [])
+  text <- manyTill (noneOf "_") $ lookAhead $ try $ gappedSpecialChars <|> eof'
   return (Normal text)
 
 pDef = do
   header <- pHeader
   many eol
-  descr <- manyTill chars $ lookAhead (try (seperator <|> (eof >> return [])))
+  descr <- manyTill chars $ lookAhead $ try $ seperator <|> eof'
   return (header, descr)
 
 eol =  try (string "\n\r")
@@ -95,6 +112,8 @@ eol =  try (string "\n\r")
     <|> string "\n"
     <|> string "\r"
     <?> "end of line"
+
+eof' = eof >> return [] <?> "end of file"
 
 seperator = do
   sep <- string "---"
