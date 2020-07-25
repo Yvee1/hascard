@@ -46,7 +46,7 @@ Simply run `hascard` to open the main application. Menu navigation can be done w
 The CLI provides some options for running hascard; to see them all run `hascard -h`. As an example, say you have a file `deck.txt` with lots of cards in it and you want to review 5 random ones, you can use `hascard deck -s -a 5`. Here `-s` shuffles the deck and `-a 5` specifies we only want to look at 5 of them.
 
 ## Cards
-Decks of cards are written in `.txt` files. Cards are seperated with a line containing three dashes `---`. For examples, see the [`/cards`](https://github.com/Yvee1/hascard/tree/master/cards) directory. In this section the 4 different cards are listed, with the syntax and how it is represented in the application.
+Decks of cards are written in `.txt` files. Cards are seperated with a line containing three dashes `---`. For examples, see the [`/cards`](https://github.com/Yvee1/hascard/tree/master/cards) directory. In this section the 5 different types of cards are listed, with the syntax and how it is represented in the application.
 
 ### Definition
 This is the simplest card, it simply has a title and can be flipped to show the contents. For example the following card
@@ -93,6 +93,19 @@ The symbol € is for the currency named _Euro_, and is used in the _EU|European
 ```
 behaves like this
 ![](./recordings/gapped-question.gif)
+
+### Reorder question
+This is a question where you have to put the elements in the correct order. Each element is preceded by a number indicating their correct place. The elements are rendered in the same order as they are written. For example the card
+
+```
+# Order the letters in alphabetical order
+4. u
+1. l
+2. p
+3. s
+```
+will look like
+![](./recordings/reordering.gif)
 
 ## Miscellaneous info
 Written in Haskell, UI built with [brick](https://github.com/jtdaugherty/brick) and parsing of cards done with [parsec](https://github.com/haskell/parsec). Recordings of the terminal were made using [terminalizer](https://github.com/faressoft/terminalizer). The filebrowser widget was mostly copied from the brick [filebrowser demo program](https://github.com/jtdaugherty/brick/blob/master/programs/FileBrowserDemo.hs). Homebrew and Travis configurations were made much easier by [the tutorial from Chris Penner](https://chrispenner.ca/posts/homebrew-haskell).

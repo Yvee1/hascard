@@ -56,7 +56,11 @@ pReorder = do
   header <- pHeader
   many eol
   elements <- pReorderElement `sepBy1` lookAhead (try pReorderPrefix)
-  return (header, NE.fromList elements)
+  let numbers = map fst elements
+  if all (`elem` numbers) [1..length numbers]
+    then return (header, NE.fromList elements)
+    else error $ "A reordering question should have numbers starting from 1 and increase from there without skipping any numbers, but this is not the case:\n" 
+                    <> unlines (map show numbers)
 
 pReorderElement = do
   int <- pReorderPrefix
