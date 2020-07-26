@@ -1,4 +1,12 @@
 # Changelog for hascard
+## 0.2.0.0
+New:
+- A new type of card is available: reorder the elements. This could break previous definition or open question cards if they had the same format as the new reorder the elements card. In that case change the 1. 2. etc. to something like 1), 2) which is not seen as a reorder type card.
+- For open question cards, if you don't know the answer you can click F1 which shows the correct answer
+
+Fixed bugs:
+- Hinted definitions were not accurate because the carriage return character \r was not seen as whitespace, but as content
+
 ## 0.1.4.0
 New:
 - Deleted or moved files are also no longer shown in the recently selected files list
