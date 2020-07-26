@@ -11,6 +11,7 @@ A minimal commandline utility for reviewing notes. 'Flashcards' can be written i
   - [Multiple choice](#multiple-choice)
   - [Multiple answer](#multiple-answer)
   - [Open question](#open-question)
+  - [Reorder question](#reorder-question)
 - [Miscellaneous info](#miscellaneous-info)
 
 ## Installation
