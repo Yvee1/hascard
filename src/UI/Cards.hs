@@ -126,7 +126,7 @@ drawInfo s = if not (s ^. showControls) then emptyWidget else
     DefinitionState {}     -> ", ENTER: flip card / continue"
     MultipleChoiceState {} -> ", ENTER: submit answer / continue"
     MultipleAnswerState {} -> ", ENTER: select / continue, c: submit selection"
-    OpenQuestionState {}   -> ", LEFT/RIGHT/TAB: navigate gaps, ENTER: submit answer / continue"
+    OpenQuestionState {}   -> ", LEFT/RIGHT/TAB: navigate gaps, ENTER: submit answer / continue, F1: show answer"
     ReorderState {}        -> ", ENTER: grab, c: submit answer"
 
 drawCardBox :: Widget Name -> Widget Name
@@ -253,11 +253,11 @@ makeSentenceWidget w state = vBox . fst . makeSentenceWidget' 0 0
       OpenQuestionState {_gapInput = kvs, _highlighted=j, _entered=submitted, _correctGaps=cgs} ->
         let (ws, n, fit') = wrapStringWithPadding padding w pre
             gap = M.findWithDefault "" i kvs
-            n' =  w - n - length gap 
+            n' =  w - n - textWidth gap 
 
             cursor :: Widget Name -> Widget Name
             -- i is the index of the gap that we are drawing; j is the gap that is currently selected
-            cursor = if i == j then showCursor () (Location (length gap, 0)) else id
+            cursor = if i == j then showCursor () (Location (textWidth gap, 0)) else id
 
             correct = M.findWithDefault False i cgs
             coloring = case (submitted, correct) of
@@ -271,7 +271,7 @@ makeSentenceWidget w state = vBox . fst . makeSentenceWidget' 0 0
                 then let (ws1@(w':ws'), fit) = makeSentenceWidget' (w-n') (i+1) post in
                   if fit then ((ws & _last %~ (<+> (gapWidget <+> w'))) ++ ws', fit')
                   else ((ws & _last %~ (<+> gapWidget)) ++ ws1, fit')
-              else let (ws1@(w':ws'), fit) = makeSentenceWidget' (length gap) (i+1) post in
+              else let (ws1@(w':ws'), fit) = makeSentenceWidget' (textWidth gap) (i+1) post in
                 if fit then (ws ++ [gapWidget <+> w'] ++ ws', fit')
                 else (ws ++ [gapWidget] ++ ws1, fit')
       _ -> error "PANIC!"
@@ -279,14 +279,14 @@ makeSentenceWidget w state = vBox . fst . makeSentenceWidget' 0 0
 wrapStringWithPadding :: Int -> Int -> String -> ([Widget Name], Int, Bool)
 wrapStringWithPadding padding w s
   | null (words s) = ([str ""], padding, True)
-  | otherwise = if length (head (words s)) < w - padding then
+  | otherwise = if textWidth (head (words s)) < w - padding then
     let startsWithSpace = head s == ' ' 
         s' = if startsWithSpace then " " <> replicate padding 'X' <> tail s else replicate padding 'X' ++ s
         lastLetter = last s
         postfix = if lastLetter == ' ' then T.pack [lastLetter] else T.empty
         ts = wrapTextToLines wrapSettings w (pack s') & ix 0 %~ (if startsWithSpace then (T.pack " " `T.append`) . T.drop (padding + 1) else T.drop padding)
         ts' = ts & _last %~ (`T.append` postfix)
-        padding' = T.length (last ts') + (if length ts' == 1 then 1 else 0) * padding in
+        padding' = textWidth (last ts') + (if length ts' == 1 then 1 else 0) * padding in
           (map txt (filter (/=T.empty) ts'), padding', True)
   else
     let lastLetter = last s
@@ -295,7 +295,7 @@ wrapStringWithPadding padding w s
         postfix = if lastLetter == ' ' then T.pack [lastLetter] else T.empty
         ts = wrapTextToLines wrapSettings w (pack s')
         ts' = ts & _last %~ (`T.append` postfix) in
-    (map txt (filter (/=T.empty) ts'), T.length (last ts'), False)
+    (map txt (filter (/=T.empty) ts'), textWidth (last ts'), False)
 
 drawReorder :: State -> NonEmpty (Int, String) -> Widget Name
 drawReorder s elements = case (s ^. cardState, s ^. currentCard) of
@@ -353,11 +353,11 @@ handleEvent s (VtyEvent e) = case e of
 
       where frozen = M.findWithDefault False j kvs
         
-            down = if i < n && not frozen
+            down = if i < n-1 && not frozen
                      then s & (cardState.highlighted) +~ 1
                      else s
 
-            up = if i > 1 && not frozen
+            up = if i > 0 && not frozen
                    then s & (cardState.highlighted) -~ 1
                    else s
     
@@ -380,7 +380,7 @@ handleEvent s (VtyEvent e) = case e of
 
       where frozen = submitted
         
-            down = if i < n - 1 && not frozen
+            down = if i < n-1 && not frozen
                      then s & (cardState.highlighted) +~ 1
                      else s
 
@@ -391,6 +391,12 @@ handleEvent s (VtyEvent e) = case e of
     (OpenQuestionState {_highlighted = i, _number = n, _gapInput = kvs, _correctGaps = cGaps}, OpenQuestion _ perforated) ->
       let correct = M.foldr (&&) True cGaps in
         case ev of
+          V.EvKey (V.KFun 1) [] -> continue $
+            s & cardState.gapInput .~ correctAnswers
+              & cardState.entered .~ True
+              & cardState.correctGaps .~ M.fromAscList [(i, True) | i <- [0..n-1]]
+                  where correctAnswers = M.fromAscList $ zip [0..] $ map NE.head (sentenceToGaps (perforatedToSentence perforated))
+
           V.EvKey (V.KChar '\t') [] -> continue $ 
             if i < n - 1 && not correct
               then s & (cardState.highlighted) +~ 1
