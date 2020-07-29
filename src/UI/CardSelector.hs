@@ -54,18 +54,16 @@ app = App
 
 drawUI :: State -> [Widget Name]
 drawUI s = 
-  [ drawMenu s <=> drawException s]
-
-shuffledIndicator :: Bool -> String
-shuffledIndicator True = "(Shuffled)"
-shuffledIndicator False = ""
+  [ drawMenu s <=> drawException s ]
 
 title :: Widget Name
 title = withAttr titleAttr $ str "Select a deck of flashcards "
 
 shuffledWidget :: State -> Widget Name
 shuffledWidget s = withAttr exceptionAttr $ str $ 
-    shuffledIndicator $ s^.gs.doShuffle
+    case s^.gs.doShuffle of
+      True -> "(Shuffled)"
+      False -> ""
 
 drawMenu :: State -> Widget Name
 drawMenu s = 
@@ -168,7 +166,7 @@ removeDeletedFiles fp = do
   return existing
 
 maxRecents :: Int
-maxRecents = 10
+maxRecents = 5
 
 addRecent :: FilePath -> IO ()
 addRecent fp = do
