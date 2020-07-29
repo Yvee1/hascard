@@ -56,8 +56,15 @@ drawUI :: State -> [Widget Name]
 drawUI s = 
   [ drawMenu s <=> drawException s ]
 
-title :: Widget Name
-title = withAttr titleAttr $ hCenteredStrWrap "Select a deck of flashcards"
+shuffledIndicator :: Bool -> String
+shuffledIndicator True = "dsarhcasfl"
+shuffledIndicator False = "flashcards"
+
+title :: State -> Widget Name
+title s = withAttr titleAttr $ 
+    hCenteredStrWrap $ 
+        ("Select a deck of " ++) $
+            shuffledIndicator $ s^.gs.doShuffle
 
 drawMenu :: State -> Widget Name
 drawMenu s = 
@@ -66,7 +73,7 @@ drawMenu s =
   withBorderStyle unicodeRounded $
   border $
   hLimitPercent 60 $
-  title <=>
+  title s <=>
   hBorder <=>
   hCenter (drawList s)
 
@@ -104,9 +111,6 @@ theMap = attrMap V.defAttr
     , (titleAttr, fg V.yellow)
     , (lastElementAttr, fg V.blue)
     , (exceptionAttr, fg V.red) ]
-
-setShuffle :: State -> State
-setShuffle s = s & gs.doShuffle .~ True
 
 handleEvent :: State -> BrickEvent Name Event -> EventM Name (Next State)
 handleEvent s@State{_list=l} (VtyEvent e) =
