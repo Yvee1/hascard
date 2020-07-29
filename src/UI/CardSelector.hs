@@ -71,7 +71,7 @@ drawMenu s =
   hCenter (drawList s)
 
 drawList :: State -> Widget Name
-drawList s = vLimit 6  $
+drawList s = vLimit (maxRecents+1)  $
              L.renderListWithIndex (drawListElement l) True l
               where l = s ^. list
 
@@ -105,6 +105,9 @@ theMap = attrMap V.defAttr
     , (lastElementAttr, fg V.blue)
     , (exceptionAttr, fg V.red) ]
 
+setShuffle :: State -> State
+setShuffle s = s & gs.doShuffle .~ True
+
 handleEvent :: State -> BrickEvent Name Event -> EventM Name (Next State)
 handleEvent s@State{_list=l} (VtyEvent e) =
     case e of
@@ -114,6 +117,7 @@ handleEvent s@State{_list=l} (VtyEvent e) =
         _ -> do l' <- L.handleListEventVi L.handleListEvent e l
                 let s' = (s & list .~ l') in
                   case e of
+                    V.EvKey (V.KChar 's') []  -> continue (s & gs.doShuffle %~ not)
                     V.EvKey V.KEnter [] ->
                       case L.listSelectedElement l' of
                         Nothing -> continue s'
@@ -158,7 +162,7 @@ removeDeletedFiles fp = do
   return existing
 
 maxRecents :: Int
-maxRecents = 5
+maxRecents = 10
 
 addRecent :: FilePath -> IO ()
 addRecent fp = do
