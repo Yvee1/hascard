@@ -54,17 +54,18 @@ app = App
 
 drawUI :: State -> [Widget Name]
 drawUI s = 
-  [ drawMenu s <=> drawException s ]
+  [ drawMenu s <=> drawException s]
 
 shuffledIndicator :: Bool -> String
-shuffledIndicator True = "dsarhcasfl"
-shuffledIndicator False = "flashcards"
+shuffledIndicator True = "(Shuffled)"
+shuffledIndicator False = ""
 
-title :: State -> Widget Name
-title s = withAttr titleAttr $ 
-    hCenteredStrWrap $ 
-        ("Select a deck of " ++) $
-            shuffledIndicator $ s^.gs.doShuffle
+title :: Widget Name
+title = withAttr titleAttr $ str "Select a deck of flashcards "
+
+shuffledWidget :: State -> Widget Name
+shuffledWidget s = withAttr exceptionAttr $ str $ 
+    shuffledIndicator $ s^.gs.doShuffle
 
 drawMenu :: State -> Widget Name
 drawMenu s = 
@@ -73,7 +74,7 @@ drawMenu s =
   withBorderStyle unicodeRounded $
   border $
   hLimitPercent 60 $
-  title s <=>
+  hCenter (title <+> shuffledWidget s) <=>
   hBorder <=>
   hCenter (drawList s)
 
@@ -121,7 +122,8 @@ handleEvent s@State{_list=l} (VtyEvent e) =
         _ -> do l' <- L.handleListEventVi L.handleListEvent e l
                 let s' = (s & list .~ l') in
                   case e of
-                    V.EvKey (V.KChar 's') []  -> continue (s & gs.doShuffle %~ not)
+                    V.EvKey (V.KChar 's') []  -> 
+                      continue (s & gs.doShuffle %~ not)
                     V.EvKey V.KEnter [] ->
                       case L.listSelectedElement l' of
                         Nothing -> continue s'
