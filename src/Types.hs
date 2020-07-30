@@ -5,9 +5,9 @@ import Lens.Micro.Platform
 import System.Random.MWC (GenIO)
 
 data GlobalState = GlobalState
-  { _mwc :: GenIO
+  { _mwc       :: GenIO
   , _doShuffle :: Bool
-  , _subset :: Maybe Int }
+  , _subset    :: Maybe Int }
 
 makeLenses ''GlobalState
 

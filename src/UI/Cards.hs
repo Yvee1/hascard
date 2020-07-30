@@ -10,6 +10,7 @@ import Data.List.NonEmpty (NonEmpty)
 import Data.Map.Strict (Map)
 import Text.Wrap
 import Data.Text (pack)
+import UI.Attributes
 import UI.BrickHelpers
 import UI.Settings (getShowHints, getShowControls)
 import qualified Data.List.NonEmpty as NE
@@ -104,13 +105,14 @@ runCardsUI gs deck = do
   hints <- getShowHints
   controls <- getShowControls
 
-  let initialState = State { _cards = deck
-                           , _index = 0
-                           , _currentCard = head deck
-                           , _cardState = defaultCardState (head deck)
-                           , _nCards = length deck
-                           , _showHints = hints
-                           , _showControls = controls }
+  let initialState = 
+        State { _cards = deck
+              , _index = 0
+              , _currentCard = head deck
+              , _cardState = defaultCardState (head deck)
+              , _nCards = length deck
+              , _showHints = hints
+              , _showControls = controls }
   defaultMain app initialState
 
 ---------------------------------------------------
@@ -143,15 +145,25 @@ drawCardUI :: State -> Widget Name
 drawCardUI s = let p = 1 in
   joinBorders $ drawCardBox $ (<=> drawProgress s) $
   case (s ^. cards) !! (s ^. index) of
-    Definition title descr -> drawHeader title <=> B.hBorder <=> padLeftRight p (drawDef s descr <=> str " ")
+    Definition title descr -> drawHeader title
+                          <=> B.hBorder
+                          <=> padLeftRight p (drawDef s descr <=> str " ")
                               
-    MultipleChoice question correct others -> drawHeader question <=> B.hBorder <=> padLeftRight p (drawChoices s (listMultipleChoice correct others) <=> str " ")
+    MultipleChoice question correct others -> drawHeader question 
+                                          <=> B.hBorder 
+                                          <=> padLeftRight p (drawChoices s (listMultipleChoice correct others) <=> str " ")
 
-    OpenQuestion title perforated -> drawHeader title <=> B.hBorder <=> padLeftRight p (drawPerforated s perforated <=> str " ")
+    OpenQuestion title perforated -> drawHeader title
+                                 <=> B.hBorder
+                                 <=> padLeftRight p (drawPerforated s perforated <=> str " ")
 
-    MultipleAnswer question options -> drawHeader question <=> B.hBorder <=> padRight (Pad p) (drawOptions s options <=> str " ")
+    MultipleAnswer question options -> drawHeader question
+                                   <=> B.hBorder
+                                   <=> padRight (Pad p) (drawOptions s options <=> str " ")
 
-    Reorder question elements -> drawHeader question <=> B.hBorder <=> padLeftRight p (drawReorder s elements <=> str " ")
+    Reorder question elements -> drawHeader question
+                             <=> B.hBorder
+                             <=> padLeftRight p (drawReorder s elements <=> str " ")
 
 drawHeader :: String -> Widget Name
 drawHeader title = withAttr titleAttr $
@@ -485,75 +497,3 @@ interchange i j kvs =
   let vali = kvs M.! i
       valj = kvs M.! j in
   M.insert j vali (M.insert i valj kvs)
-
-----------------------------------------------------
--------------------- Attributes --------------------
-----------------------------------------------------
-
-titleAttr :: AttrName
-titleAttr = attrName "title"
-
-textboxAttr :: AttrName
-textboxAttr = attrName "textbox"
-
-highlightedChoiceAttr :: AttrName
-highlightedChoiceAttr = attrName "highlighted choice"
-
-incorrectChoiceAttr :: AttrName
-incorrectChoiceAttr = attrName "incorrect choice"
-
-correctChoiceAttr :: AttrName
-correctChoiceAttr = attrName "correct choice"
-
-highlightedOptAttr :: AttrName
-highlightedOptAttr = attrName "highlighted option"
-
-selectedOptAttr :: AttrName
-selectedOptAttr = attrName "selected option"
-
-correctOptAttr :: AttrName
-correctOptAttr = attrName "correct option"
-
-incorrectOptAttr :: AttrName
-incorrectOptAttr = attrName "incorrect option"
-
-gapAttr :: AttrName
-gapAttr = attrName "gap"
-
-incorrectGapAttr :: AttrName
-incorrectGapAttr = attrName "incorrect gap"
-
-correctGapAttr :: AttrName
-correctGapAttr = attrName "correct gap"
-
-highlightedElementAttr :: AttrName
-highlightedElementAttr = attrName "highlighted element"
-
-grabbedElementAttr :: AttrName
-grabbedElementAttr = attrName "grabbed element"
-
-correctElementAttr :: AttrName
-correctElementAttr = attrName "correct element"
-
-incorrectElementAttr :: AttrName
-incorrectElementAttr = attrName "incorrect element"
-
-theMap :: AttrMap
-theMap = attrMap V.defAttr
-  [ (titleAttr, fg V.yellow)
-  , (textboxAttr, V.defAttr)
-  , (highlightedChoiceAttr, fg V.yellow)
-  , (incorrectChoiceAttr, fg V.red)
-  , (correctChoiceAttr, fg V.green)
-  , (incorrectGapAttr, fg V.red `V.withStyle` V.underline)
-  , (correctGapAttr, fg V.green `V.withStyle` V.underline)
-  , (highlightedOptAttr, fg V.yellow)
-  , (selectedOptAttr, fg V.blue)
-  , (incorrectOptAttr, fg V.red)
-  , (correctOptAttr, fg V.green)
-  , (highlightedElementAttr, fg V.yellow)
-  , (grabbedElementAttr, fg V.blue)
-  , (correctElementAttr, fg V.green)
-  , (incorrectElementAttr, fg V.red)
-  , (gapAttr, V.defAttr `V.withStyle` V.underline)
-  ]

@@ -1,10 +1,11 @@
 {-# LANGUAGE TemplateHaskell #-}
 module UI.CardSelector 
-  (runCardSelectorUI
+  ( runCardSelectorUI
   , getRecents
   , getRecentsFile
   , addRecent
-  , runCardsWithOptions) where
+  , runCardsWithOptions
+  , doRandomization ) where
 
 import Brick
 import Brick.Widgets.Border
@@ -22,6 +23,7 @@ import Stack (Stack)
 import System.Environment (lookupEnv)
 import System.FilePath ((</>), splitFileName, dropExtension, splitPath, joinPath)
 import Types
+import UI.Attributes hiding (theMap)
 import UI.BrickHelpers
 import UI.FileBrowser (runFileBrowserUI)
 import UI.Cards (runCardsUI, Card)
@@ -31,6 +33,7 @@ import qualified Graphics.Vty as V
 import qualified Stack as S
 import qualified System.Directory as D
 import qualified System.IO.Strict as IOS (readFile)
+import qualified UI.Attributes as A
 
 type Event = ()
 type Name = ()
@@ -54,7 +57,7 @@ app = App
 
 drawUI :: State -> [Widget Name]
 drawUI s = 
-  [ drawMenu s <=> drawException s ]
+  [ drawException (s ^. exception), drawMenu s ]
 
 title :: Widget Name
 title = withAttr titleAttr $ hCenteredStrWrap "Select a deck of flashcards"
@@ -80,35 +83,22 @@ drawListElement l i selected = hCenteredStrWrapWithAttr (wAttr1 . wAttr2)
   where wAttr1 = if selected then withDefAttr selectedAttr else id
         wAttr2 = if i == length l - 1 then withAttr lastElementAttr else id
 
-drawException :: State -> Widget Name
-drawException s = case s ^. exception of
-  Nothing -> emptyWidget
-  Just exc  -> withAttr exceptionAttr $ strWrap exc
-
-titleAttr :: AttrName
-titleAttr = attrName "title"
-
-selectedAttr :: AttrName
-selectedAttr = attrName "selected"
-
 lastElementAttr :: AttrName
 lastElementAttr = attrName "last element"
 
-exceptionAttr :: AttrName
-exceptionAttr = attrName "exception"
-
 theMap :: AttrMap
-theMap = attrMap V.defAttr
+theMap = applyAttrMappings
     [ (L.listAttr, V.defAttr)
     , (selectedAttr, fg V.white `V.withStyle` V.underline)
     , (titleAttr, fg V.yellow)
-    , (lastElementAttr, fg V.blue)
-    , (exceptionAttr, fg V.red) ]
+    , (lastElementAttr, fg V.blue) ] A.theMap
 
 handleEvent :: State -> BrickEvent Name Event -> EventM Name (Next State)
-handleEvent s@State{_list=l} (VtyEvent e) =
-    case e of
-        V.EvKey (V.KChar 'c') [V.MCtrl]  -> halt s
+handleEvent s@State{_list=l, _exception=exc} (VtyEvent ev) =
+    case (exc, ev) of
+      (Just _, _) -> continue $ s & exception .~ Nothing
+      (_, e) -> case e of
+        V.EvKey (V.KChar 'c') [V.MCtrl] -> halt s
         V.EvKey V.KEsc [] -> halt s
 
         _ -> do l' <- L.handleListEventVi L.handleListEvent e l
@@ -244,7 +234,10 @@ runFileBrowser s = do
   maybe (return s) (\(cards, fp) -> addRecentInternal s fp <* runCardsWithOptions (s^.gs) cards) result
 
 runCardsWithOptions :: GlobalState -> [Card] -> IO ()
-runCardsWithOptions state cards =
+runCardsWithOptions state cards = void $ doRandomization state cards >>= runCardsUI state
+
+doRandomization :: GlobalState -> [Card] -> IO [Card]
+doRandomization state cards = 
   let n = length cards in do
     cards' <- if state^.doShuffle then sampleFrom (state^.mwc) (shuffleN n cards) else return cards
-    void $ maybe (runCardsUI state cards') (\n -> runCardsUI state (take n cards')) (state^.subset)
+    return $ maybe cards' (`take` cards') (state^.subset)
