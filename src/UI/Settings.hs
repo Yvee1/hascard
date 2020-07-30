@@ -76,7 +76,7 @@ drawSettings s = vBox $ map (drawSetting s) (zip [0..] descriptions)
 
 drawSetting :: State -> (Int, String) -> Widget Name
 drawSetting (selected, settings) (i, text) =
-  strWrap text <+> str " " <+> word
+  strWrap text <+> str "  " <+> word
   where word = if settings ! i then underline (str "Yes") else underline (str "No") <+> str " "
         underline = if i == selected then withAttr selectedAttr else id
 

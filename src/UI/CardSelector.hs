@@ -114,7 +114,7 @@ handleEvent s@State{_list=l, _exception=exc} (VtyEvent ev) =
                             case fileOrExc of
                               Left exc -> continue (s' & exception ?~ displayException exc)
                               Right file -> case parseCards file of
-                                Left parseError -> continue (s' & exception ?~ show parseError)
+                                Left parseError -> continue (s' & exception ?~ errorBundlePretty parseError)
                                 Right result -> suspendAndResume $ do
                                   s'' <- addRecentInternal s' fp
                                   _ <- runCardsWithOptions (s^.gs) result

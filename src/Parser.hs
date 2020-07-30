@@ -1,16 +1,20 @@
-{-# LANGUAGE DataKinds, ExistentialQuantification, GADTs, KindSignatures #-}
-module Parser (parseCards) where
+{-# LANGUAGE DataKinds, ExistentialQuantification, GADTs, KindSignatures, OverloadedStrings #-}
+module Parser (parseCards, errorBundlePretty) where
   
+import Data.Void
 import qualified Data.List.NonEmpty as NE
-import Text.Parsec
+import Text.Megaparsec
+import Text.Megaparsec.Char
 import Types
+
+type Parser = Parsec Void String
 
 uncurry3 f (a, b, c) = f a b c
 
-parseCards :: String -> Either ParseError [Card]
+parseCards :: String -> Either (ParseErrorBundle String Void) [Card]
 parseCards = parse pCards "failed when parsing cards"
 
-pCards = pCard `sepEndBy1` seperator
+pCards = (pCard `sepEndBy1` seperator) <* eof
 pCard =  uncurry3 MultipleChoice<$> try pMultChoice
      <|> uncurry MultipleAnswer <$> try pMultAnswer
      <|> uncurry Reorder <$> try pReorder
@@ -20,8 +24,8 @@ pCard =  uncurry3 MultipleChoice<$> try pMultChoice
 pHeader = do
   many eol
   char '#'
-  spaces
-  many notEOL
+  spaceChar
+  many (noneOf ['\n', '\r'])
 
 pMultChoice = do
   header <- pHeader
@@ -31,9 +35,9 @@ pMultChoice = do
   return (header, correct, incorrects)
 
 pChoice = do
-  kind <- oneOf "*-"
-  space
-  text <- manyTill anyChar $ lookAhead (try (try choicePrefix <|> seperator <|> eof'))
+  kind <- oneOf ['*','-']
+  spaceChar
+  text <- manyTill anySingle $ lookAhead (try (try choicePrefix <|> seperator <|> eof'))
   return (kind, text)
 
 choicePrefix =  string "- "
@@ -47,9 +51,9 @@ pMultAnswer = do
 
 pOption = do
   char '['
-  kind <- oneOf "*x "
+  kind <- oneOf ['*','x',' ']
   string "] "
-  text <- manyTill anyChar $ lookAhead (try (seperator <|> string "[" <|> eof'))
+  text <- manyTill anySingle $ lookAhead (try (seperator <|> string "[" <|> eof'))
   return $ makeOption kind text
 
 pReorder = do
@@ -64,11 +68,11 @@ pReorder = do
 
 pReorderElement = do
   int <- pReorderPrefix
-  text <- manyTill anyChar $ lookAhead (try (try seperator <|> try pReorderPrefix <|> eof'))
+  text <- manyTill anySingle $ lookAhead (try (try seperator <|> try pReorderPrefix <|> eof'))
   return (read int, text)
 
 pReorderPrefix = do
-  int <- many1 digit
+  int <- some digitChar
   string ". "
   return int
 
@@ -87,13 +91,13 @@ pPerforated = do
   (pre, gap) <- pGap
   Perforated pre gap <$> pSentence 
 
-chars = escaped <|> anyChar
+chars = escaped <|> anySingle
 escaped = char '\\' >> char '_'
 
 pGap = do
   pre <- manyTill chars $ lookAhead (try gappedSpecialChars)
   char '_'
-  gaps <- manyTill (noneOf "_|") (lookAhead (try gappedSpecialChars)) `sepBy1` string "|"
+  gaps <- manyTill (noneOf ['_','|']) (lookAhead (try gappedSpecialChars)) `sepBy1` string "|"
   char '_'
   return (pre, NE.fromList gaps)
 
@@ -102,7 +106,7 @@ gappedSpecialChars =  seperator
                   <|> string "_"
 
 pNormal = do
-  text <- manyTill (noneOf "_") $ lookAhead $ try $ gappedSpecialChars <|> eof'
+  text <- manyTill (noneOf ['_']) $ lookAhead $ try $ gappedSpecialChars <|> eof'
   return (Normal text)
 
 pDef = do
@@ -111,20 +115,12 @@ pDef = do
   descr <- manyTill chars $ lookAhead $ try $ seperator <|> eof'
   return (header, descr)
 
-eol =  try (string "\n\r")
-    <|> try (string "\r\n")
-    <|> string "\n"
-    <|> string "\r"
-    <?> "end of line"
-
 eof' = eof >> return [] <?> "end of file"
 
 seperator = do
   sep <- string "---"
   many eol
   return sep
-
-notEOL = noneOf "\n\r"
 
 makeMultipleChoice :: [(Char, String)] -> (CorrectOption, [IncorrectOption])
 makeMultipleChoice options = makeMultipleChoice' [] [] 0 options
@@ -138,5 +134,5 @@ makeMultipleChoice options = makeMultipleChoice' [] [] 0 options
 
 makeOption :: Char -> String -> Option
 makeOption kind text
-  | kind `elem` "*x" = Option Correct text
-  | otherwise        = Option Incorrect text
+  | kind `elem` ['*','x'] = Option Correct text
+  | otherwise             = Option Incorrect text
