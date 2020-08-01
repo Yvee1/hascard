@@ -1,7 +1,7 @@
 {-# OPTIONS_GHC -Wall #-}
-{-# LANGUAGE OverloadedStrings, TemplateHaskell, TupleSections #-}
+{-# LANGUAGE OverloadedStrings, TupleSections, FlexibleInstances #-}
 
-module UI.FileBrowser (runFileBrowserUI) where
+module UI.FileBrowser (State, drawUI, handleEvent, theMap, runFileBrowserUI) where
 
 import Brick
 import Brick.Widgets.Border
@@ -12,31 +12,10 @@ import Control.Exception (displayException, try)
 import Control.Monad.IO.Class
 import Lens.Micro.Platform
 import Parser
-import Types
+import States
 import UI.BrickHelpers
 import qualified UI.Attributes as A
 import qualified Graphics.Vty as V
-
-type Event = ()
-type Name = ()
-data State = State
-  { _fb         :: FileBrowser Name
-  , _exception  :: Maybe String
-  , _cards      :: [Card]
-  , _filePath   :: Maybe FilePath
-  , _showHidden :: Bool
-  }
-
-makeLenses ''State
-
-app :: App State Event Name
-app = App 
-  { appDraw = drawUI
-  , appChooseCursor = neverShowCursor
-  , appHandleEvent = handleEvent
-  , appStartEvent = return
-  , appAttrMap = const theMap
-  }
 
 theMap :: AttrMap
 theMap = applyAttrMappings
@@ -52,8 +31,8 @@ theMap = applyAttrMappings
     , (fileBrowserSelectedAttr, V.white `on` V.magenta)
     ] A.theMap
 
-drawUI :: State -> [Widget Name]
-drawUI State{_fb=b, _exception=exc} = [drawException exc, center $ ui <=> help]
+drawUI :: FBS -> [Widget Name]
+drawUI FBS{_fb=b, _exception'=exc} = [drawException exc, center $ ui <=> help]
     where
         ui = hCenter $
              vLimit 15 $
@@ -67,46 +46,53 @@ drawUI State{_fb=b, _exception=exc} = [drawException exc, center $ ui <=> help]
                     , hCenter $ txt "Esc: quit"
                     ]
 
-handleEvent :: State -> BrickEvent Name Event -> EventM Name (Next State)
-handleEvent s@State{_fb=b, _exception=excep} (VtyEvent ev) =
-  case (excep, ev) of
-    (Just _, _) -> continue $ s & exception .~ Nothing
-    (_, e) -> case e of
-      V.EvKey V.KEsc [] | not (fileBrowserIsSearching b) ->
-          halt s
-      V.EvKey (V.KChar 'c') [V.MCtrl] | not (fileBrowserIsSearching b) ->
-          halt s
-      V.EvKey (V.KChar 'h') [] | not (fileBrowserIsSearching b) -> let s' = s & showHidden %~ not in
-          continue $ s' & fb .~ setFileBrowserEntryFilter (Just (entryFilter (s' ^. showHidden))) b
-      _ -> do
-          b' <- handleFileBrowserEvent ev b
-          let s' = s & fb .~ b'
-          -- If the browser has a selected file after handling the
-          -- event (because the user pressed Enter), shut down.
-          case ev of
-              V.EvKey V.KEnter [] ->
-                  case fileBrowserSelection b' of
-                      [] -> continue s'
-                      [fileInfo] -> do
-                        let fp = fileInfoFilePath fileInfo
-                        fileOrExc <- liftIO (try (readFile fp) :: IO (Either IOError String))
-                        case fileOrExc of
-                          Left exc -> continue (s' & exception ?~ displayException exc)
-                          Right file -> case parseCards file of
-                            Left parseError -> continue (s & exception ?~ errorBundlePretty parseError)
-                            Right result -> halt (s' & cards .~ result & filePath ?~ fp)
-                      _ -> halt s'
+handleEvent :: GlobalState -> FBS -> BrickEvent Name Event -> EventM Name (Next GlobalState)
+handleEvent gs s@FBS{_fb=b, _exception'=excep} (VtyEvent ev) =
+  let update = updateFBS gs
+      continue' = continue . update
+      halt' = halt . update in
+    case (excep, ev) of
+      (Just _, _) -> continue' $ s & exception' .~ Nothing
+      (_, e) -> case e of
+        V.EvKey V.KEsc [] | not (fileBrowserIsSearching b) ->
+            halt gs
+        V.EvKey (V.KChar 'c') [V.MCtrl] | not (fileBrowserIsSearching b) ->
+            halt gs
+        V.EvKey (V.KChar 'h') [] | not (fileBrowserIsSearching b) -> let s' = s & showHidden %~ not in
+            continue' $ s' & fb .~ setFileBrowserEntryFilter (Just (entryFilter (s' ^. showHidden))) b
+        _ -> do
+            b' <- handleFileBrowserEvent ev b
+            let s' = s & fb .~ b'
+            -- If the browser has a selected file after handling the
+            -- event (because the user pressed Enter), shut down.
+            case ev of
+                V.EvKey V.KEnter [] ->
+                    case fileBrowserSelection b' of
+                        [] -> continue' s'
+                        [fileInfo] -> do
+                          let fp = fileInfoFilePath fileInfo
+                          fileOrExc <- liftIO (try (readFile fp) :: IO (Either IOError String))
+                          case fileOrExc of
+                            Left exc -> continue' (s' & exception' ?~ displayException exc)
+                            Right file -> case parseCards file of
+                              Left parseError -> continue' (s & exception' ?~ errorBundlePretty parseError)
+                              Right result -> halt' (s' & parsedCards .~ result & filePath ?~ fp)
+                        _ -> halt gs
 
-              _ -> continue s'
-handleEvent s _ = continue s
+                _ -> continue' s'
+handleEvent gs _ _ = continue gs
 
-runFileBrowserUI :: IO (Maybe ([Card], FilePath))
-runFileBrowserUI = do
+runFileBrowserUI :: GlobalState -> IO GlobalState
+runFileBrowserUI gs = do
   browser <- newFileBrowser selectNonDirectories () Nothing
   let filteredBrowser = setFileBrowserEntryFilter (Just (entryFilter False)) browser
-  s <- defaultMain app (State filteredBrowser Nothing [] Nothing False)
-  let mfp = s ^. filePath
-  return $ fmap (s ^. cards,) mfp
+  return $ goToState (FileBrowserState (FBS filteredBrowser Nothing [] Nothing False)) gs
+  
+  -- browser <- newFileBrowser selectNonDirectories () Nothing
+  -- let filteredBrowser = setFileBrowserEntryFilter (Just (entryFilter False)) browser
+  -- s <- defaultMain app (State filteredBrowser Nothing [] Nothing False)
+  -- let mfp = s ^. filePath
+  -- return $ fmap (s ^. cards,) mfp
 
 entryFilter :: Bool -> FileInfo -> Bool
 entryFilter acceptHidden info = fileExtensionMatch "txt" info && (acceptHidden || 

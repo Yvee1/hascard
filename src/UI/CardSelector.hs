@@ -1,11 +1,12 @@
 {-# LANGUAGE TemplateHaskell #-}
 module UI.CardSelector 
-  ( runCardSelectorUI
+  ( State
+  , drawUI
+  , handleEvent
+  , theMap
   , getRecents
   , getRecentsFile
-  , addRecent
-  , runCardsWithOptions
-  , doRandomization ) where
+  , addRecent) where
 
 import Brick
 import Brick.Widgets.Border
@@ -22,11 +23,12 @@ import Parser
 import Stack (Stack)
 import System.Environment (lookupEnv)
 import System.FilePath ((</>), splitFileName, dropExtension, splitPath, joinPath)
+import States
 import Types
 import UI.Attributes hiding (theMap)
 import UI.BrickHelpers
 import UI.FileBrowser (runFileBrowserUI)
-import UI.Cards (runCardsUI, Card)
+import UI.Cards (Card)
 import qualified Brick.Widgets.List as L
 import qualified Data.Vector as Vec
 import qualified Graphics.Vty as V
@@ -35,34 +37,14 @@ import qualified System.Directory as D
 import qualified System.IO.Strict as IOS (readFile)
 import qualified UI.Attributes as A
 
-type Event = ()
-type Name = ()
-data State = State
-  { _list       :: L.List Name String
-  , _exception  :: Maybe String
-  , _recents    :: Stack FilePath
-  , _gs         :: GlobalState
-  }
-
-makeLenses ''State
-
-app :: App State Event Name
-app = App 
-  { appDraw = drawUI
-  , appChooseCursor = neverShowCursor
-  , appHandleEvent = handleEvent
-  , appStartEvent = return
-  , appAttrMap = const theMap
-  }
-
-drawUI :: State -> [Widget Name]
+drawUI :: CSS -> [Widget Name]
 drawUI s = 
   [ drawException (s ^. exception), drawMenu s ]
 
 title :: Widget Name
 title = withAttr titleAttr $ hCenteredStrWrap "Select a deck of flashcards"
 
-drawMenu :: State -> Widget Name
+drawMenu :: CSS -> Widget Name
 drawMenu s = 
   joinBorders $
   center $ 
@@ -73,7 +55,7 @@ drawMenu s =
   hBorder <=>
   hCenter (drawList s)
 
-drawList :: State -> Widget Name
+drawList :: CSS -> Widget Name
 drawList s = vLimit 6  $
              L.renderListWithIndex (drawListElement l) True l
               where l = s ^. list
@@ -93,44 +75,47 @@ theMap = applyAttrMappings
     , (titleAttr, fg V.yellow)
     , (lastElementAttr, fg V.blue) ] A.theMap
 
-handleEvent :: State -> BrickEvent Name Event -> EventM Name (Next State)
-handleEvent s@State{_list=l, _exception=exc} (VtyEvent ev) =
-    case (exc, ev) of
-      (Just _, _) -> continue $ s & exception .~ Nothing
-      (_, e) -> case e of
-        V.EvKey (V.KChar 'c') [V.MCtrl] -> halt s
-        V.EvKey V.KEsc [] -> halt s
+handleEvent :: GlobalState -> CSS -> BrickEvent Name Event -> EventM Name (Next GlobalState)
+handleEvent gs s@CSS{_list=l, _exception=exc} (VtyEvent ev) =
+  let update = updateCSS gs
+      continue' = continue . update
+      halt' = halt . update in
+        case (exc, ev) of
+          (Just _, _) -> continue' $ s & exception .~ Nothing
+          (_, e) -> case e of
+            V.EvKey (V.KChar 'c') [V.MCtrl] -> halt gs
+            V.EvKey V.KEsc [] -> halt gs
 
-        _ -> do l' <- L.handleListEventVi L.handleListEvent e l
-                let s' = (s & list .~ l') in
-                  case e of
-                    V.EvKey V.KEnter [] ->
-                      case L.listSelectedElement l' of
-                        Nothing -> continue s'
-                        Just (_, "Select file from system") -> suspendAndResume $ runFileBrowser s'
-                        Just (i, _) -> do
-                            let fp = (s' ^. recents) `S.unsafeElemAt` i
-                            fileOrExc <- liftIO (try (readFile fp) :: IO (Either IOError String))
-                            case fileOrExc of
-                              Left exc -> continue (s' & exception ?~ displayException exc)
-                              Right file -> case parseCards file of
-                                Left parseError -> continue (s' & exception ?~ errorBundlePretty parseError)
-                                Right result -> suspendAndResume $ do
-                                  s'' <- addRecentInternal s' fp
-                                  _ <- runCardsWithOptions (s^.gs) result
-                                  return (s'' & exception .~ Nothing)
-                    _ -> continue s'
+            _ -> do l' <- L.handleListEventVi L.handleListEvent e l
+                    let s' = (s & list .~ l') in
+                      case e of
+                        V.EvKey V.KEnter [] ->
+                          case L.listSelectedElement l' of
+                            Nothing -> continue' s'
+                            Just (_, "Select file from system") -> liftIO (runFileBrowser (update s')) >>= continue
+                            Just (i, _) -> do
+                                let fp = (s' ^. recents) `S.unsafeElemAt` i
+                                fileOrExc <- liftIO (try (readFile fp) :: IO (Either IOError String))
+                                case fileOrExc of
+                                  Left exc -> continue' (s' & exception ?~ displayException exc)
+                                  Right file -> case parseCards file of
+                                    Left parseError -> continue' (s' & exception ?~ errorBundlePretty parseError)
+                                    Right result -> suspendAndResume $ do
+                                      s'' <- addRecentInternal s' fp
+                                      -- _ <- runCardsWithOptions (s^.gs) result
+                                      return $ update (s'' & exception .~ Nothing)
+                        _ -> continue' s'
 
-handleEvent l _ = continue l
+handleEvent gs _ _ = continue gs
 
-runCardSelectorUI :: GlobalState -> IO ()
-runCardSelectorUI gs = do
-  rs <- getRecents
-  let prettyRecents = shortenFilepaths (S.toList rs)
-  let options = Vec.fromList (prettyRecents ++ ["Select file from system"])
-  let initialState = State (L.list () options 1) Nothing rs gs
-  _ <- defaultMain app initialState
-  return () 
+-- runCardSelectorUI :: GlobalState -> IO ()
+-- runCardSelectorUI gs = do
+--   rs <- getRecents
+--   let prettyRecents = shortenFilepaths (S.toList rs)
+--   let options = Vec.fromList (prettyRecents ++ ["Select file from system"])
+--   let initialState = State (L.list () options 1) Nothing rs gs
+--   _ <- defaultMain app initialState
+--   return () 
 
 getRecents :: IO (Stack FilePath)
 getRecents = do
@@ -159,7 +144,7 @@ addRecent fp = do
               else S.removeLast rs'
   writeRecents rs''
 
-addRecentInternal :: State -> FilePath -> IO State
+addRecentInternal :: CSS -> FilePath -> IO CSS
 addRecentInternal s fp = do
   addRecent fp
   refreshRecents s
@@ -220,7 +205,7 @@ getPairsWithValue y ((i, x):xs)
   | x == y    = (i, x) : getPairsWithValue y xs
   | otherwise = getPairsWithValue y xs
 
-refreshRecents :: State -> IO State
+refreshRecents :: CSS -> IO CSS
 refreshRecents s = do
   rs <- getRecents
   let prettyRecents = shortenFilepaths (S.toList rs)
@@ -228,16 +213,17 @@ refreshRecents s = do
   return $ s & recents .~ rs
              & list    .~ L.list () options 1
 
-runFileBrowser :: State -> IO State
-runFileBrowser s = do
-  result <- runFileBrowserUI
-  maybe (return s) (\(cards, fp) -> addRecentInternal s fp <* runCardsWithOptions (s^.gs) cards) result
+runFileBrowser :: GlobalState -> IO GlobalState
+runFileBrowser gs = do
+  result <- runFileBrowserUI gs
+  -- maybe (return s) (\(cards, fp) -> addRecentInternal s fp <* runCardsWithOptions (s^.gs) cards) result
+  return result
 
-runCardsWithOptions :: GlobalState -> [Card] -> IO ()
-runCardsWithOptions state cards = void $ doRandomization state cards >>= runCardsUI state
+-- runCardsWithOptions :: GlobalState -> [Card] -> IO ()
+-- runCardsWithOptions state cards = void $ doRandomization state cards >>= runCardsUI state
 
-doRandomization :: GlobalState -> [Card] -> IO [Card]
-doRandomization state cards = 
-  let n = length cards in do
-    cards' <- if state^.doShuffle then sampleFrom (state^.mwc) (shuffleN n cards) else return cards
-    return $ maybe cards' (`take` cards') (state^.subset)
+-- doRandomization :: GlobalState -> [Card] -> IO [Card]
+-- doRandomization state cards = 
+--   let n = length cards in do
+--     cards' <- if state^.doShuffle then sampleFrom (state^.mwc) (shuffleN n cards) else return cards
+--     return $ maybe cards' (`take` cards') (state^.subset)

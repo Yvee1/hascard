@@ -1,24 +1,15 @@
-module UI.Info (runInfoUI) where
+module UI.Info (State, drawUI, handleEvent, theMap, runInfoUI) where
 
 import Brick
 import Brick.Widgets.Border
 import Brick.Widgets.Border.Style
 import Brick.Widgets.Center
 import Control.Monad (void)
+import States
 import qualified Graphics.Vty as V
 
-type Event = ()
-type Name = ()
-type State = ()
-
-app :: App State Event Name
-app = App 
-  { appDraw = (:[]) . const ui
-  , appChooseCursor = neverShowCursor
-  , appHandleEvent = handleEvent
-  , appStartEvent = return
-  , appAttrMap = const theMap
-  }
+drawUI :: State -> [Widget Name]
+drawUI = (:[]) . const ui
 
 ui :: Widget Name
 ui =
@@ -31,7 +22,7 @@ ui =
   hBorder <=>
   drawInfo
 
-handleEvent :: State -> BrickEvent Name Event -> EventM Name (Next State)
+handleEvent :: GlobalState -> BrickEvent Name Event -> EventM Name (Next GlobalState)
 handleEvent s (VtyEvent e) =
     case e of
       V.EvKey (V.KChar 'c') [V.MCtrl]  -> halt s
@@ -57,8 +48,8 @@ drawInfo =
   vLimitPercent 60 $
   viewport () Vertical (strWrap info)
 
-runInfoUI :: IO ()
-runInfoUI = void $ defaultMain app ()
+runInfoUI :: GlobalState -> GlobalState
+runInfoUI = goToState (InfoState ())
 
 info :: String
 info = 
