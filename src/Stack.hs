@@ -27,8 +27,18 @@ safeHead = (`elemAt` 0)
 last :: Stack a -> a
 last s = s `unsafeElemAt` (Stack.size s - 1)
 
+pop :: Ord a => Stack a -> Stack a
+pop s = OS.delete (Stack.head s) s
+
+popWithInfo :: Ord a => Stack a -> (Stack a, a, a)
+popWithInfo s = let
+  top  = Stack.head s
+  s'   = OS.delete top s
+  top' = Stack.head s' in
+    (s', top, top')
+
 tail :: Ord a => Stack a -> [a]
-tail s = toList $ OS.delete (Stack.head s) s
+tail = toList . pop
 
 elemAt :: Stack a -> Int -> Maybe a
 elemAt = OS.elemAt

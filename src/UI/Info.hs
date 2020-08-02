@@ -8,7 +8,7 @@ import Control.Monad (void)
 import States
 import qualified Graphics.Vty as V
 
-drawUI :: State -> [Widget Name]
+drawUI :: IS -> [Widget Name]
 drawUI = (:[]) . const ui
 
 ui :: Widget Name
@@ -22,18 +22,21 @@ ui =
   hBorder <=>
   drawInfo
 
-handleEvent :: GlobalState -> BrickEvent Name Event -> EventM Name (Next GlobalState)
-handleEvent s (VtyEvent e) =
+handleEvent :: GlobalState -> IS -> BrickEvent Name Event -> EventM Name (Next GlobalState)
+handleEvent gs s (VtyEvent e) =
+  let update = updateIS gs
+      continue' = continue . update
+      halt' = continue . popState in
     case e of
-      V.EvKey (V.KChar 'c') [V.MCtrl]  -> halt s
-      V.EvKey V.KEsc [] -> halt s
-      V.EvKey V.KEnter [] -> halt s
-      V.EvKey V.KDown [] -> vScrollBy (viewportScroll ()) 1 >> continue s
-      V.EvKey (V.KChar 'j') [] -> vScrollBy (viewportScroll ()) 1 >> continue s
-      V.EvKey V.KUp [] -> vScrollBy (viewportScroll ()) (-1) >> continue s
-      V.EvKey (V.KChar 'k') [] -> vScrollBy (viewportScroll ()) (-1) >> continue s
-      _ -> continue s
-handleEvent s _ = continue s
+      V.EvKey (V.KChar 'c') [V.MCtrl]  -> halt' gs
+      V.EvKey V.KEsc [] -> halt' gs
+      V.EvKey V.KEnter [] -> halt' gs
+      V.EvKey V.KDown [] -> vScrollBy (viewportScroll ()) 1 >> continue' s
+      V.EvKey (V.KChar 'j') [] -> vScrollBy (viewportScroll ()) 1 >> continue' s
+      V.EvKey V.KUp [] -> vScrollBy (viewportScroll ()) (-1) >> continue' s
+      V.EvKey (V.KChar 'k') [] -> vScrollBy (viewportScroll ()) (-1) >> continue' s
+      _ -> continue' s
+handleEvent gs _ _ = continue gs
 
 titleAttr :: AttrName
 titleAttr = attrName "title"
@@ -49,7 +52,7 @@ drawInfo =
   viewport () Vertical (strWrap info)
 
 runInfoUI :: GlobalState -> GlobalState
-runInfoUI = goToState (InfoState ())
+runInfoUI = (`goToState` InfoState ())
 
 info :: String
 info = 

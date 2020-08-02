@@ -34,10 +34,11 @@ ui s =
 
 handleEvent :: GlobalState -> SS -> BrickEvent Name Event -> EventM Name (Next GlobalState)
 handleEvent gs s@(i, settings) (VtyEvent e) =
-  let update = updateSS gs in
+  let update = updateSS gs
+      halt'  = continue . popState in
     case e of
-      V.EvKey (V.KChar 'c') [V.MCtrl] -> halt gs
-      V.EvKey V.KEsc [] -> halt gs
+      V.EvKey (V.KChar 'c') [V.MCtrl] -> halt' gs
+      V.EvKey V.KEsc [] -> halt' gs
       V.EvKey V.KEnter [] -> continue $ update (i, settings')
         where settings' = M.adjust not i settings
       V.EvKey V.KUp [] -> continue $ update (max 0 (i-1), settings)
@@ -75,7 +76,7 @@ runSettingsUI :: GlobalState -> IO GlobalState
 runSettingsUI gs = do
   currentSettings <- getSettings
   -- (_, newSettings) <- defaultMain app (0, currentSettings)
-  return $ goToState (SettingsState (0, currentSettings)) gs
+  return $ gs `goToState` SettingsState (0, currentSettings)
 
 
   -- setSettings newSettings

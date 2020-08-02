@@ -48,29 +48,13 @@ handleAttrMap gs = case getState gs of
   FileBrowserState  _ -> FB.theMap
   CardsState        _ ->  C.theMap
 
-runCardsUI :: GlobalState -> [Card] -> IO GlobalState
-runCardsUI gs deck = do
-  hints    <- S.getShowHints
-  controls <- S.getShowControls
+-- runMainMenuUI :: GlobalState -> GlobalState
+-- runMainMenuUI gs = 
+--   let options = Vec.fromList 
+--                   [ "Select"
+--                   , "Info"
+--                   , "Settings"
+--                   , "Quit" ]
 
-  let initialState = 
-        C.State { C._cards = deck
-              , C._index = 0
-              , C._currentCard = head deck
-              , C._cardState = C.defaultCardState (head deck)
-              , C._nCards = length deck
-              , C._showHints = hints
-              , C._showControls = controls }
-
-  return $ goToState initialState
-
-runMainMenuUI :: GlobalState -> GlobalState
-runMainMenuUI gs = 
-  let options = Vec.fromList 
-                  [ "Select"
-                  , "Info"
-                  , "Settings"
-                  , "Quit" ]
-
-      initialState = MM.State (L.list () options 1) gs in 
-        goToState initialState
+--       initialState = MMS (L.list () options 1) in 
+--   gs `goToState` MainMenuState initialState

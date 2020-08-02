@@ -6,7 +6,8 @@ module UI.CardSelector
   , theMap
   , getRecents
   , getRecentsFile
-  , addRecent) where
+  , addRecent
+  , runCardSelectorUI ) where
 
 import Brick
 import Brick.Widgets.Border
@@ -17,10 +18,9 @@ import Control.Monad (filterM)
 import Control.Monad.IO.Class
 import Data.Functor (void)
 import Data.List (sort)
-import Data.Random
 import Lens.Micro.Platform
 import Parser
-import Stack (Stack)
+import Recents
 import System.Environment (lookupEnv)
 import System.FilePath ((</>), splitFileName, dropExtension, splitPath, joinPath)
 import States
@@ -28,14 +28,20 @@ import Types
 import UI.Attributes hiding (theMap)
 import UI.BrickHelpers
 import UI.FileBrowser (runFileBrowserUI)
-import UI.Cards (Card)
+import UI.Cards (Card, runCardsUI, runCardsWithOptions)
 import qualified Brick.Widgets.List as L
 import qualified Data.Vector as Vec
 import qualified Graphics.Vty as V
 import qualified Stack as S
-import qualified System.Directory as D
-import qualified System.IO.Strict as IOS (readFile)
 import qualified UI.Attributes as A
+
+runCardSelectorUI :: GlobalState -> IO GlobalState
+runCardSelectorUI gs = do
+  rs <- getRecents
+  let prettyRecents = shortenFilepaths (S.toList rs)
+  let options = Vec.fromList (prettyRecents ++ ["Select file from system"])
+  let initialState = CSS (L.list () options 1) Nothing rs
+  return $ gs `goToState` CardSelectorState initialState
 
 drawUI :: CSS -> [Widget Name]
 drawUI s = 
@@ -79,12 +85,12 @@ handleEvent :: GlobalState -> CSS -> BrickEvent Name Event -> EventM Name (Next 
 handleEvent gs s@CSS{_list=l, _exception=exc} (VtyEvent ev) =
   let update = updateCSS gs
       continue' = continue . update
-      halt' = halt . update in
+      halt' = continue . popState in
         case (exc, ev) of
           (Just _, _) -> continue' $ s & exception .~ Nothing
           (_, e) -> case e of
-            V.EvKey (V.KChar 'c') [V.MCtrl] -> halt gs
-            V.EvKey V.KEsc [] -> halt gs
+            V.EvKey (V.KChar 'c') [V.MCtrl] -> halt' gs
+            V.EvKey V.KEsc [] -> halt' gs
 
             _ -> do l' <- L.handleListEventVi L.handleListEvent e l
                     let s' = (s & list .~ l') in
@@ -92,7 +98,7 @@ handleEvent gs s@CSS{_list=l, _exception=exc} (VtyEvent ev) =
                         V.EvKey V.KEnter [] ->
                           case L.listSelectedElement l' of
                             Nothing -> continue' s'
-                            Just (_, "Select file from system") -> liftIO (runFileBrowser (update s')) >>= continue
+                            Just (_, "Select file from system") -> continue =<< liftIO (runFileBrowser (update s'))
                             Just (i, _) -> do
                                 let fp = (s' ^. recents) `S.unsafeElemAt` i
                                 fileOrExc <- liftIO (try (readFile fp) :: IO (Either IOError String))
@@ -100,110 +106,20 @@ handleEvent gs s@CSS{_list=l, _exception=exc} (VtyEvent ev) =
                                   Left exc -> continue' (s' & exception ?~ displayException exc)
                                   Right file -> case parseCards file of
                                     Left parseError -> continue' (s' & exception ?~ errorBundlePretty parseError)
-                                    Right result -> suspendAndResume $ do
+                                    Right result -> continue =<< liftIO (do
                                       s'' <- addRecentInternal s' fp
-                                      -- _ <- runCardsWithOptions (s^.gs) result
-                                      return $ update (s'' & exception .~ Nothing)
+                                      let s''' = s'' & exception .~ Nothing
+                                      runCardsWithOptions (update s''') result)
+                                      -- return $ update ()
                         _ -> continue' s'
 
 handleEvent gs _ _ = continue gs
 
--- runCardSelectorUI :: GlobalState -> IO ()
--- runCardSelectorUI gs = do
---   rs <- getRecents
---   let prettyRecents = shortenFilepaths (S.toList rs)
---   let options = Vec.fromList (prettyRecents ++ ["Select file from system"])
---   let initialState = State (L.list () options 1) Nothing rs gs
---   _ <- defaultMain app initialState
---   return () 
-
-getRecents :: IO (Stack FilePath)
-getRecents = do
-  rf <- getRecentsFile
-  exists <- D.doesFileExist rf
-  if exists
-    then removeDeletedFiles rf
-    else return S.empty
-
-removeDeletedFiles :: FilePath -> IO (Stack FilePath)
-removeDeletedFiles fp = do
-  file <- IOS.readFile fp
-  existing <- S.fromList <$> filterM D.doesFileExist (lines file)
-  writeRecents existing
-  return existing
-
-maxRecents :: Int
-maxRecents = 5
-
-addRecent :: FilePath -> IO ()
-addRecent fp = do
-  rs <- getRecents
-  let rs'  = fp `S.insert` rs 
-      rs'' = if S.size rs' <= maxRecents
-              then rs'
-              else S.removeLast rs'
-  writeRecents rs''
-
-addRecentInternal :: CSS -> FilePath -> IO CSS
-addRecentInternal s fp = do
-  addRecent fp
-  refreshRecents s
-
-writeRecents :: Stack FilePath -> IO ()
-writeRecents stack = do
-  file <- getRecentsFile
-  writeFile file $ unlines (S.toList stack)
-
-getRecentsFile :: IO FilePath
-getRecentsFile = do
-  maybeSnap <- lookupEnv "SNAP_USER_DATA"
-  xdg <- D.getXdgDirectory D.XdgData "hascard"
-
-  let dir = case maybeSnap of
-                Just path | not (null path) -> path
-                          | otherwise       -> xdg
-                Nothing                     -> xdg
-  D.createDirectoryIfMissing True dir
-
-  return (dir </> "recents")
-
-initLast :: [a] -> ([a], a)
-initLast [x] = ([], x)
-initLast (x:xs) = let (xs', y) = initLast xs
-                   in (x:xs', y)
-
-shortenFilepaths :: [FilePath] -> [FilePath]
-shortenFilepaths fps = uncurry shortenFilepaths' (unzip (map ((\(pre, fn) -> (pre, dropExtension fn)) . splitFileName) fps))
-  where
-    shortenFilepaths' prefixes abbreviations =
-      let ds = duplicates abbreviations in
-        if null ds then abbreviations else
-          shortenFilepaths' 
-            (flip map (zip [0..] prefixes) (
-              \(i, pre) -> if i `elem` ds then
-                joinPath (init (splitPath pre)) else pre
-            ))
-            (flip map (zip [0..] abbreviations) (
-              \(i, abbr) -> if i `elem` ds then 
-                last (splitPath (prefixes !! i)) ++ abbr
-                else abbr) )
-          
-
-duplicates :: Eq a => [a] -> [Int]
-duplicates = sort . map fst . duplicates' 0 [] []
-  where duplicates' _ _    acc []     = acc
-        duplicates' i seen acc (x:xs) = duplicates' (i+1) ((i, x) : seen) acc' xs
-          where acc' = case (getPairsWithValue x acc, getPairsWithValue x seen) of
-                  ([], []) -> acc
-                  ([], ys) -> (i, x) : ys ++ acc
-                  (_, _)   -> (i, x) : acc
-                -- acc' = if getPairsWithValue x seen then (i, x) : acc else acc 
-
-getPairsWithValue :: Eq a => a -> [(Int, a)] -> [(Int, a)]
-getPairsWithValue y []       = []
-getPairsWithValue y ((i, x):xs)
-  | x == y    = (i, x) : getPairsWithValue y xs
-  | otherwise = getPairsWithValue y xs
+runFileBrowser :: GlobalState -> IO GlobalState
+runFileBrowser gs = do
+  result <- runFileBrowserUI gs
+  -- maybe (return s) (\(cards, fp) -> addRecentInternal s fp <* runCardsWithOptions (s^.gs) cards) result
+  return result
 
 refreshRecents :: CSS -> IO CSS
 refreshRecents s = do
@@ -213,17 +129,7 @@ refreshRecents s = do
   return $ s & recents .~ rs
              & list    .~ L.list () options 1
 
-runFileBrowser :: GlobalState -> IO GlobalState
-runFileBrowser gs = do
-  result <- runFileBrowserUI gs
-  -- maybe (return s) (\(cards, fp) -> addRecentInternal s fp <* runCardsWithOptions (s^.gs) cards) result
-  return result
-
--- runCardsWithOptions :: GlobalState -> [Card] -> IO ()
--- runCardsWithOptions state cards = void $ doRandomization state cards >>= runCardsUI state
-
--- doRandomization :: GlobalState -> [Card] -> IO [Card]
--- doRandomization state cards = 
---   let n = length cards in do
---     cards' <- if state^.doShuffle then sampleFrom (state^.mwc) (shuffleN n cards) else return cards
---     return $ maybe cards' (`take` cards') (state^.subset)
+addRecentInternal :: CSS -> FilePath -> IO CSS
+addRecentInternal s fp = do
+  addRecent fp
+  refreshRecents s

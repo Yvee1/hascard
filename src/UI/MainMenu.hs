@@ -1,21 +1,33 @@
 {-# LANGUAGE TemplateHaskell #-}
-module UI.MainMenu (State (..), drawUI, handleEvent, theMap) where
+module UI.MainMenu (State (..), drawUI, handleEvent, theMap, runMainMenuUI) where
 
 import Brick
 import Brick.Widgets.Border
 import Brick.Widgets.Border.Style
 import Brick.Widgets.Center
+import Control.Monad.IO.Class
 import Data.Functor (($>))
 import Lens.Micro.Platform
 import States
 import UI.Attributes
 import UI.BrickHelpers
--- import UI.CardSelector (runCardSelectorUI)
--- import UI.Info (runInfoUI)
--- import UI.Settings (runSettingsUI)
+import UI.CardSelector (runCardSelectorUI)
+import UI.Info (runInfoUI)
+import UI.Settings (runSettingsUI)
 import qualified Data.Vector as Vec
 import qualified Graphics.Vty as V
 import qualified Brick.Widgets.List as L
+
+runMainMenuUI :: GlobalState -> GlobalState
+runMainMenuUI gs = 
+  let options = Vec.fromList 
+                  [ "Select"
+                  , "Info"
+                  , "Settings"
+                  , "Quit" ]
+
+      initialState = MMS (L.list () options 1) in
+  gs `goToState` MainMenuState initialState
 
 title :: Widget Name
 title = withAttr titleAttr $
@@ -54,9 +66,9 @@ handleEvent gs s (VtyEvent e) =
       V.EvKey V.KEsc [] -> halt gs
       V.EvKey V.KEnter [] ->
         case L.listSelected (s^.l) of
-          -- Just 0 -> suspendAndResume $ runCardSelectorUI (s^.gs)$> s
-          -- Just 1 -> suspendAndResume $ runInfoUI  $> s
-          -- Just 2 -> suspendAndResume $ runSettingsUI $> s
+          Just 0 -> continue =<< liftIO (runCardSelectorUI gs)
+          Just 1 -> continue $ runInfoUI gs
+          Just 2 -> continue =<< liftIO (runSettingsUI gs)
           Just 3 -> halt gs
           _ -> undefined
 

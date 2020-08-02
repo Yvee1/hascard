@@ -1,4 +1,4 @@
-{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE TemplateHaskell, TypeSynonymInstances, FlexibleInstances #-}
 module States where
 
 import Brick.Widgets.FileBrowser
@@ -22,6 +22,9 @@ data Mode  = MainMenu
            | FileBrowser 
            | Cards
   deriving (Show, Eq, Ord)
+
+-- class HasMode t where
+--   getMode :: t -> Mode
 
 data State = MainMenuState     MMS
            | SettingsState     SS
@@ -77,20 +80,31 @@ data CS = CS
   , _showControls   :: Bool
   -- , _incorrectCards :: [Int]      -- list of indices of incorrect answers
   }
+-- instance HasMode CS where
+--   getMode = const Cards
 
 newtype MMS = MMS 
   { _l  :: List Name String }
+-- instance HasMode MMS where
+--   getMode = const MainMenu
 
 type IS = ()
+-- instance HasMode IS where
+--   getMode = const Info
 
 type Settings = Map Int Bool
+
 type SS = (Int, Settings)
+-- instance HasMode SS where
+--   getMode = const Settings
 
 data CSS = CSS
   { _list       :: List Name String
   , _exception  :: Maybe String
   , _recents    :: Stack FilePath
   }
+-- instance HasMode CSS where
+--   getMode = const CardSelector
 
 data FBS = FBS
   { _fb          :: FileBrowser Name
@@ -99,6 +113,16 @@ data FBS = FBS
   , _filePath    :: Maybe FilePath
   , _showHidden  :: Bool
   }
+-- instance HasMode FBS where
+--   getMode = const FileBrowser
+
+getMode :: State -> Mode
+getMode (MainMenuState     _) = MainMenu
+getMode (SettingsState     _) = Settings
+getMode (InfoState         _) = Info
+getMode (CardSelectorState _) = CardSelector
+getMode (FileBrowserState  _) = FileBrowser
+getMode (CardsState        _) = Cards
 
 makeLenses ''State
 makeLenses ''MMS
@@ -112,18 +136,22 @@ getState :: GlobalState -> State
 getState = fromJust . safeGetState
 
 updateState :: GlobalState -> State -> GlobalState
-updateState gs s@(MainMenuState _)     = gs & states %~ Map.insert MainMenu s
-updateState gs s@(SettingsState _)     = gs & states %~ Map.insert Settings s
-updateState gs s@(InfoState _)         = gs & states %~ Map.insert Info s
-updateState gs s@(CardSelectorState _) = gs & states %~ Map.insert CardSelector s
-updateState gs s@(FileBrowserState _)  = gs & states %~ Map.insert FileBrowser s
--- updateState gs s@(MainMenuState _) = gs & states %~ Map.insert MainMenu s
+-- updateState gs s@(MainMenuState _)     = gs & states %~ Map.insert MainMenu s
+-- updateState gs s@(SettingsState _)     = gs & states %~ Map.insert Settings s
+-- updateState gs s@(InfoState _)         = gs & states %~ Map.insert Info s
+-- updateState gs s@(CardSelectorState _) = gs & states %~ Map.insert CardSelector s
+-- updateState gs s@(FileBrowserState _)  = gs & states %~ Map.insert FileBrowser s
+-- updateState gs s@(CardsState _)        = gs & states %~ Map.insert Cards s
+updateState gs s = gs & states %~ Map.insert (getMode s) s
 
 updateMMS :: GlobalState -> MMS -> GlobalState
 updateMMS gs s = updateState gs (MainMenuState s)
 
 updateSS :: GlobalState -> SS -> GlobalState
 updateSS gs s = updateState gs (SettingsState s)
+
+updateIS :: GlobalState -> IS -> GlobalState
+updateIS gs s = updateState gs (InfoState s)
 
 updateCS :: GlobalState -> CS -> GlobalState
 updateCS gs s = updateState gs (CardsState s)
@@ -137,17 +165,29 @@ updateInfo gs s = updateState gs (InfoState s)
 updateFBS :: GlobalState -> FBS -> GlobalState
 updateFBS gs s = updateState gs (FileBrowserState s)
 
-goToState :: State -> GlobalState -> GlobalState
-goToState s@(MainMenuState _) gs     = gs & states %~ Map.insert MainMenu s
-                                          & stack  %~ insert MainMenu
-goToState s@(SettingsState _) gs     = gs & states %~ Map.insert Settings s
-                                          & stack  %~ insert Settings
-goToState s@(InfoState _) gs         = gs & states %~ Map.insert Info s
-                                          & stack  %~ insert Info
-goToState s@(CardSelectorState _) gs = gs & states %~ Map.insert CardSelector s
-                                          & stack  %~ insert CardSelector
-goToState s@(FileBrowserState _) gs  = gs & states %~ Map.insert FileBrowser s
-                                          & stack  %~ insert FileBrowser
+goToState :: GlobalState -> State -> GlobalState
+-- goToState gs s@(MainMenuState _)     = gs & states %~ Map.insert MainMenu s
+--                                           & stack  %~ insert MainMenu
+-- goToState gs s@(SettingsState _)     = gs & states %~ Map.insert Settings s
+--                                           & stack  %~ insert Settings
+-- goToState gs s@(InfoState _)         = gs & states %~ Map.insert Info s
+--                                           & stack  %~ insert Info
+-- goToState gs s@(CardSelectorState _) = gs & states %~ Map.insert CardSelector s
+--                                           & stack  %~ insert CardSelector
+-- goToState gs s@(FileBrowserState _)  = gs & states %~ Map.insert FileBrowser s
+--                                           & stack  %~ insert FileBrowser
+-- goToState gs s@(CardsState _)        = gs & states %~ Map.insert Cards s
+--                                           & stack  %~ insert Cards
+goToState gs s = gs & states %~ Map.insert (getMode s) s
+                    & stack  %~ insert (getMode s)
+
+popState :: GlobalState -> GlobalState
+popState gs = let
+  s    = gs ^. stack
+  top  = Stack.head s
+  s'   = Stack.pop s in
+    gs & states %~ Map.delete top
+       & stack  .~ s'
 
 safeGetState :: GlobalState -> Maybe State
 safeGetState gs = do

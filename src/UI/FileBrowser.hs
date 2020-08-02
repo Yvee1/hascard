@@ -13,7 +13,9 @@ import Control.Monad.IO.Class
 import Lens.Micro.Platform
 import Parser
 import States
+import Recents
 import UI.BrickHelpers
+import UI.Cards (runCardsWithOptions)
 import qualified UI.Attributes as A
 import qualified Graphics.Vty as V
 
@@ -50,14 +52,14 @@ handleEvent :: GlobalState -> FBS -> BrickEvent Name Event -> EventM Name (Next 
 handleEvent gs s@FBS{_fb=b, _exception'=excep} (VtyEvent ev) =
   let update = updateFBS gs
       continue' = continue . update
-      halt' = halt . update in
+      halt' = continue . popState in
     case (excep, ev) of
       (Just _, _) -> continue' $ s & exception' .~ Nothing
       (_, e) -> case e of
         V.EvKey V.KEsc [] | not (fileBrowserIsSearching b) ->
-            halt gs
+            halt' gs
         V.EvKey (V.KChar 'c') [V.MCtrl] | not (fileBrowserIsSearching b) ->
-            halt gs
+            halt' gs
         V.EvKey (V.KChar 'h') [] | not (fileBrowserIsSearching b) -> let s' = s & showHidden %~ not in
             continue' $ s' & fb .~ setFileBrowserEntryFilter (Just (entryFilter (s' ^. showHidden))) b
         _ -> do
@@ -76,8 +78,12 @@ handleEvent gs s@FBS{_fb=b, _exception'=excep} (VtyEvent ev) =
                             Left exc -> continue' (s' & exception' ?~ displayException exc)
                             Right file -> case parseCards file of
                               Left parseError -> continue' (s & exception' ?~ errorBundlePretty parseError)
-                              Right result -> halt' (s' & parsedCards .~ result & filePath ?~ fp)
-                        _ -> halt gs
+                              -- Right result -> halt' (s' & parsedCards .~ result & filePath ?~ fp)
+                              Right result -> continue =<< liftIO (do
+                                      addRecent fp
+                                      let s'' = s' & exception' .~ Nothing
+                                      runCardsWithOptions (update s'') result)
+                        _ -> halt' gs
 
                 _ -> continue' s'
 handleEvent gs _ _ = continue gs
@@ -86,7 +92,7 @@ runFileBrowserUI :: GlobalState -> IO GlobalState
 runFileBrowserUI gs = do
   browser <- newFileBrowser selectNonDirectories () Nothing
   let filteredBrowser = setFileBrowserEntryFilter (Just (entryFilter False)) browser
-  return $ goToState (FileBrowserState (FBS filteredBrowser Nothing [] Nothing False)) gs
+  return $ gs `goToState` FileBrowserState (FBS filteredBrowser Nothing [] Nothing False)
   
   -- browser <- newFileBrowser selectNonDirectories () Nothing
   -- let filteredBrowser = setFileBrowserEntryFilter (Just (entryFilter False)) browser

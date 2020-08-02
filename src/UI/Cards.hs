@@ -1,4 +1,4 @@
-module UI.Cards (Card, State(..), drawUI, handleEvent, theMap, defaultCardState) where
+module UI.Cards (Card, State(..), drawUI, handleEvent, theMap, defaultCardState, runCardsUI, runCardsWithOptions) where
 
 import Brick
 import Lens.Micro.Platform
@@ -10,6 +10,7 @@ import Data.List.NonEmpty (NonEmpty)
 import Data.Map.Strict (Map)
 import Text.Wrap
 import Data.Text (pack)
+import DeckHandling
 import UI.Attributes
 import UI.BrickHelpers
 import UI.Settings (getShowHints, getShowControls)
@@ -44,6 +45,25 @@ defaultCardState (Reorder _ elements) = ReorderState
   , _order = M.fromList (zip [0..] (NE.toList elements))
   , _entered = False
   , _number = NE.length elements }
+
+runCardsUI :: GlobalState -> [Card] -> IO GlobalState
+runCardsUI gs deck = do
+  hints    <- getShowHints
+  controls <- getShowControls
+
+  let initialState = 
+        CS { _cards = deck
+           , _index = 0
+           , _currentCard = head deck
+           , _cardState = defaultCardState (head deck)
+           , _nCards = length deck
+           , _showHints = hints
+           , _showControls = controls }
+ 
+  return $ gs `goToState` CardsState initialState
+
+runCardsWithOptions :: GlobalState -> [Card] -> IO GlobalState
+runCardsWithOptions state cards = doRandomization state cards >>= runCardsUI state
 
 ---------------------------------------------------
 --------------------- DRAWING ---------------------
@@ -266,10 +286,11 @@ drawReorder s elements = case (s ^. cardState, s ^. currentCard) of
 handleEvent :: GlobalState -> CS -> BrickEvent Name Event -> EventM Name (Next GlobalState)
 handleEvent gs s (VtyEvent e) =
   let update = updateCS gs
-      continue' = continue . update in
+      continue' = continue . update
+      halt' = continue . popState in
     case e of
-      V.EvKey V.KEsc []                -> halt gs
-      V.EvKey (V.KChar 'c') [V.MCtrl]  -> halt gs
+      V.EvKey V.KEsc []                -> halt' gs
+      V.EvKey (V.KChar 'c') [V.MCtrl]  -> halt' gs
       V.EvKey V.KRight [V.MCtrl]       -> next gs s
       V.EvKey V.KLeft  [V.MCtrl]       -> previous gs s
 
@@ -413,7 +434,7 @@ handleEvent gs _ _ = continue gs
 next :: GlobalState -> CS -> EventM Name (Next GlobalState)
 next gs s
   | s ^. index + 1 < length (s ^. cards) = continue . updateCS gs . straightenState $ s & index +~ 1
-  | otherwise                            = halt gs
+  | otherwise                            = continue $ popState  gs
 
 previous :: GlobalState -> CS -> EventM Name (Next GlobalState)
 previous gs s | s ^. index > 0 = continue . updateCS gs . straightenState $ s & index -~ 1
