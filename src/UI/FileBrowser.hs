@@ -1,7 +1,7 @@
 {-# OPTIONS_GHC -Wall #-}
-{-# LANGUAGE OverloadedStrings, TupleSections, FlexibleInstances #-}
+{-# LANGUAGE OverloadedStrings, FlexibleInstances #-}
 
-module UI.FileBrowser (State, drawUI, handleEvent, theMap, runFileBrowserUI) where
+module UI.FileBrowser (State, drawUI, handleEvent, theMap) where
 
 import Brick
 import Brick.Widgets.Border
@@ -14,8 +14,8 @@ import Lens.Micro.Platform
 import Parser
 import States
 import Recents
+import Runners
 import UI.BrickHelpers
-import UI.Cards (runCardsWithOptions)
 import qualified UI.Attributes as A
 import qualified Graphics.Vty as V
 
@@ -65,8 +65,6 @@ handleEvent gs s@FBS{_fb=b, _exception'=excep} (VtyEvent ev) =
         _ -> do
             b' <- handleFileBrowserEvent ev b
             let s' = s & fb .~ b'
-            -- If the browser has a selected file after handling the
-            -- event (because the user pressed Enter), shut down.
             case ev of
                 V.EvKey V.KEnter [] ->
                     case fileBrowserSelection b' of
@@ -81,28 +79,8 @@ handleEvent gs s@FBS{_fb=b, _exception'=excep} (VtyEvent ev) =
                               -- Right result -> halt' (s' & parsedCards .~ result & filePath ?~ fp)
                               Right result -> continue =<< liftIO (do
                                       addRecent fp
-                                      let s'' = s' & exception' .~ Nothing
-                                      runCardsWithOptions (update s'') result)
+                                      runCardsWithOptions (update s') result)
                         _ -> halt' gs
 
                 _ -> continue' s'
 handleEvent gs _ _ = continue gs
-
-runFileBrowserUI :: GlobalState -> IO GlobalState
-runFileBrowserUI gs = do
-  browser <- newFileBrowser selectNonDirectories () Nothing
-  let filteredBrowser = setFileBrowserEntryFilter (Just (entryFilter False)) browser
-  return $ gs `goToState` FileBrowserState (FBS filteredBrowser Nothing [] Nothing False)
-  
-  -- browser <- newFileBrowser selectNonDirectories () Nothing
-  -- let filteredBrowser = setFileBrowserEntryFilter (Just (entryFilter False)) browser
-  -- s <- defaultMain app (State filteredBrowser Nothing [] Nothing False)
-  -- let mfp = s ^. filePath
-  -- return $ fmap (s ^. cards,) mfp
-
-entryFilter :: Bool -> FileInfo -> Bool
-entryFilter acceptHidden info = fileExtensionMatch "txt" info && (acceptHidden || 
-  case fileInfoFilename info of
-    ".."    -> True
-    '.' : _ -> False
-    _       -> True)

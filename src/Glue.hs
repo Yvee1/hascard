@@ -1,10 +1,6 @@
 module Glue where
 import Brick
 import States
-import UI.Cards (Card)
-import qualified Brick.Widgets.List as L
-import qualified Stack
-import qualified Data.Vector      as Vec
 import qualified UI.MainMenu      as MM
 import qualified UI.Settings      as S
 import qualified UI.Info          as I
@@ -47,14 +43,3 @@ handleAttrMap gs = case getState gs of
   CardSelectorState _ -> CS.theMap
   FileBrowserState  _ -> FB.theMap
   CardsState        _ ->  C.theMap
-
--- runMainMenuUI :: GlobalState -> GlobalState
--- runMainMenuUI gs = 
---   let options = Vec.fromList 
---                   [ "Select"
---                   , "Info"
---                   , "Settings"
---                   , "Quit" ]
-
---       initialState = MMS (L.list () options 1) in 
---   gs `goToState` MainMenuState initialState

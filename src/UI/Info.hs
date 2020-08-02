@@ -1,10 +1,9 @@
-module UI.Info (State, drawUI, handleEvent, theMap, runInfoUI) where
+module UI.Info (State, drawUI, handleEvent, theMap) where
 
 import Brick
 import Brick.Widgets.Border
 import Brick.Widgets.Border.Style
 import Brick.Widgets.Center
-import Control.Monad (void)
 import States
 import qualified Graphics.Vty as V
 
@@ -50,9 +49,6 @@ drawInfo =
   padLeftRight 1 $
   vLimitPercent 60 $
   viewport () Vertical (strWrap info)
-
-runInfoUI :: GlobalState -> GlobalState
-runInfoUI = (`goToState` InfoState ())
 
 info :: String
 info = 

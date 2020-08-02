@@ -1,4 +1,4 @@
-module UI.Cards (Card, State(..), drawUI, handleEvent, theMap, defaultCardState, runCardsUI, runCardsWithOptions) where
+module UI.Cards (Card, State(..), drawUI, handleEvent, theMap) where
 
 import Brick
 import Lens.Micro.Platform
@@ -13,7 +13,7 @@ import Data.Text (pack)
 import DeckHandling
 import UI.Attributes
 import UI.BrickHelpers
-import UI.Settings (getShowHints, getShowControls)
+import Settings
 import qualified Data.List.NonEmpty as NE
 import qualified Data.Text as T
 import qualified Data.Map.Strict as M
@@ -21,49 +21,6 @@ import qualified Brick.Widgets.Border as B
 import qualified Brick.Widgets.Border.Style as BS
 import qualified Brick.Widgets.Center as C
 import qualified Graphics.Vty as V
-
-defaultCardState :: Card -> CardState
-defaultCardState Definition{} = DefinitionState { _flipped = False }
-defaultCardState (MultipleChoice _ _ ics) = MultipleChoiceState 
-  { _highlighted = 0
-  , _number = length ics + 1
-  , _tried = M.fromList [(i, False) | i <- [0..length ics]] }
-defaultCardState (OpenQuestion _ perforated) = OpenQuestionState 
-  { _gapInput = M.empty
-  , _highlighted = 0
-  , _number = nGapsInPerforated perforated
-  , _entered = False
-  , _correctGaps = M.fromList [(i, False) | i <- [0..nGapsInPerforated perforated - 1]] }
-defaultCardState (MultipleAnswer _ answers) = MultipleAnswerState 
-  { _highlighted = 0
-  , _selected = M.fromList [(i, False) | i <- [0..NE.length answers-1]]
-  , _entered = False
-  , _number = NE.length answers }
-defaultCardState (Reorder _ elements) = ReorderState
-  { _highlighted = 0
-  , _grabbed = False
-  , _order = M.fromList (zip [0..] (NE.toList elements))
-  , _entered = False
-  , _number = NE.length elements }
-
-runCardsUI :: GlobalState -> [Card] -> IO GlobalState
-runCardsUI gs deck = do
-  hints    <- getShowHints
-  controls <- getShowControls
-
-  let initialState = 
-        CS { _cards = deck
-           , _index = 0
-           , _currentCard = head deck
-           , _cardState = defaultCardState (head deck)
-           , _nCards = length deck
-           , _showHints = hints
-           , _showControls = controls }
- 
-  return $ gs `goToState` CardsState initialState
-
-runCardsWithOptions :: GlobalState -> [Card] -> IO GlobalState
-runCardsWithOptions state cards = doRandomization state cards >>= runCardsUI state
 
 ---------------------------------------------------
 --------------------- DRAWING ---------------------
@@ -287,7 +244,7 @@ handleEvent :: GlobalState -> CS -> BrickEvent Name Event -> EventM Name (Next G
 handleEvent gs s (VtyEvent e) =
   let update = updateCS gs
       continue' = continue . update
-      halt' = continue . popState in
+      halt' = flip goToModeOrQuit CardSelector in
     case e of
       V.EvKey V.KEsc []                -> halt' gs
       V.EvKey (V.KChar 'c') [V.MCtrl]  -> halt' gs

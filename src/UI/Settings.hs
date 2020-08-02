@@ -1,20 +1,15 @@
-module UI.Settings (State, drawUI, handleEvent, theMap, runSettingsUI, getShowHints, getShowControls, getUseEscapeCode) where
+module UI.Settings (State, drawUI, handleEvent, theMap) where
 
 import Brick hiding (mergeWithDefault)
 import Brick.Widgets.Border
 import Brick.Widgets.Border.Style
 import Brick.Widgets.Center
-import Control.Monad (void)
-import Data.Functor (($>))
-import Data.Map.Strict (Map, (!))
+import Control.Monad.IO.Class
+import Data.Map.Strict ((!))
 import States
-import System.FilePath ((</>))
-import System.Environment (lookupEnv)
-import Text.Read (readMaybe)
-import UI.BrickHelpers
+import Settings
 import qualified Data.Map.Strict as M
 import qualified Graphics.Vty as V
-import qualified System.Directory as D
 
 drawUI :: SS -> [Widget Name]
 drawUI = (:[]) . ui
@@ -33,9 +28,9 @@ ui s =
   (drawSettings s)
 
 handleEvent :: GlobalState -> SS -> BrickEvent Name Event -> EventM Name (Next GlobalState)
-handleEvent gs s@(i, settings) (VtyEvent e) =
+handleEvent gs (i, settings) (VtyEvent e) =
   let update = updateSS gs
-      halt'  = continue . popState in
+      halt' global = continue (popState global) <* liftIO (setSettings settings)  in
     case e of
       V.EvKey (V.KChar 'c') [V.MCtrl] -> halt' gs
       V.EvKey V.KEsc [] -> halt' gs
@@ -71,68 +66,3 @@ drawSetting (selected, settings) (i, text) =
   strWrap text <+> str "  " <+> word
   where word = if settings ! i then underline (str "Yes") else underline (str "No") <+> str " "
         underline = if i == selected then withAttr selectedAttr else id
-
-runSettingsUI :: GlobalState -> IO GlobalState
-runSettingsUI gs = do
-  currentSettings <- getSettings
-  -- (_, newSettings) <- defaultMain app (0, currentSettings)
-  return $ gs `goToState` SettingsState (0, currentSettings)
-
-
-  -- setSettings newSettings
-
-getSettings :: IO Settings
-getSettings = do
-  sf <- getSettingsFile
-  exists <- D.doesFileExist sf
-  if exists 
-    then do
-      maybeSettings <- parseSettings <$> readFile sf
-      flip (maybe (return defaultSettings)) maybeSettings $ \settings ->
-        if M.size settings == M.size defaultSettings
-          then return settings
-          else let settings' = settings `mergeWithDefault` defaultSettings in
-            setSettings settings' $> settings'
-
-  else return defaultSettings
-
-mergeWithDefault :: Settings -> Settings -> Settings
-mergeWithDefault = flip M.union
-
-getShowHints :: IO Bool
-getShowHints = do
-  settings <- getSettings
-  return $ settings ! 0 
-
-getShowControls :: IO Bool
-getShowControls = do
-  settings <- getSettings
-  return $ settings ! 1
-
-getUseEscapeCode :: IO Bool
-getUseEscapeCode = do
-  settings <- getSettings
-  return $ settings ! 2
-
-parseSettings :: String -> Maybe Settings
-parseSettings = readMaybe
-
-getSettingsFile :: IO FilePath
-getSettingsFile = do
-  maybeSnap <- lookupEnv "SNAP_USER_DATA"
-  xdg <- D.getXdgDirectory D.XdgConfig "hascard"
-
-  let dir = case maybeSnap of
-                Just path | not (null path) -> path
-                          | otherwise       -> xdg
-                Nothing                     -> xdg
-  D.createDirectoryIfMissing True dir
-  return (dir </> "settings")
-
-defaultSettings :: Settings
-defaultSettings = M.fromList [(0, False), (1, True), (2, False)]
-
-setSettings :: Settings -> IO ()
-setSettings settings = do
-  sf <- getSettingsFile
-  writeFile sf (show settings)

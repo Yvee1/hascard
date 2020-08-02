@@ -1,6 +1,5 @@
 module Types where
 import Data.List.NonEmpty (NonEmpty)
-import Lens.Micro.Platform
 
 --                     Word   Description
 data Card = Definition String String
@@ -16,7 +15,6 @@ data Card = Definition String String
             question   :: String,
             elements   :: NonEmpty (Int, String)
           }
-          
   deriving Show
 
 data Type = Incorrect | Correct
