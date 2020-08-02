@@ -14,6 +14,8 @@ import System.Directory (makeAbsolute)
 import System.FilePath (takeExtension)
 import System.Process (runCommand)
 import System.Random.MWC (createSystemRandom, GenIO)
+import qualified Data.Map.Strict as Map (empty)
+import qualified Stack
 
 data Opts = Opts
   { _optFile         :: Maybe String
@@ -54,7 +56,7 @@ nothingIf p a
 run :: Opts -> IO ()
 run opts = run' (opts ^. optFile)
   where
-    mkGlobalState gen = GlobalState {_mwc=gen, _doShuffle=opts^.optShuffle, _subset=nothingIf (<0) (opts^.optSubset) }
+    mkGlobalState gen = GlobalState {_mwc=gen, _doShuffle=opts^.optShuffle, _subset=nothingIf (<0) (opts^.optSubset), _states=Map.empty, _stack=Stack.empty }
     run' Nothing = createSystemRandom >>= start Nothing . mkGlobalState
     run' (Just file) = do
       let filepath =
@@ -76,5 +78,5 @@ run opts = run' (opts ^. optFile)
                    start (Just result) (mkGlobalState gen)
 
 start :: Maybe [Card] -> GlobalState -> IO ()
-start Nothing gs = runBrickFlashcards gs
-start (Just cards) gs = runCardsWithOptions gs cards
+start Nothing gs = runBrickFlashcards (runMainMenuUI gs)
+start (Just cards) gs = runBrickFlashcards =<< runCardsWithOptions gs cards

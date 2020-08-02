@@ -1,38 +1,17 @@
-{-# LANGUAGE TemplateHaskell #-}
-module UI.MainMenu (runMainMenuUI) where
+module UI.MainMenu (State (..), drawUI, handleEvent, theMap) where
 
 import Brick
 import Brick.Widgets.Border
 import Brick.Widgets.Border.Style
 import Brick.Widgets.Center
-import Data.Functor (($>))
+import Control.Monad.IO.Class
 import Lens.Micro.Platform
-import Types (GlobalState)
+import Runners
+import States
 import UI.Attributes
 import UI.BrickHelpers
-import UI.CardSelector
-import UI.Info
-import UI.Settings
-import qualified Data.Vector as Vec
 import qualified Graphics.Vty as V
 import qualified Brick.Widgets.List as L
-
-type Event = ()
-type Name = ()
-data State = State 
-  { _l  :: L.List Name String
-  , _gs :: GlobalState }
-
-makeLenses ''State
-
-app :: App State Event Name
-app = App 
-  { appDraw = drawUI
-  , appChooseCursor = neverShowCursor
-  , appHandleEvent = handleEvent
-  , appStartEvent = return
-  , appAttrMap = const theMap
-  }
 
 title :: Widget Name
 title = withAttr titleAttr $
@@ -40,11 +19,11 @@ title = withAttr titleAttr $
         str "├─┤├─┤└─┐│  ├─┤├┬┘ ││" <=>
         str "┴ ┴┴ ┴└─┘└─┘┴ ┴┴└──┴┘" 
 
-drawUI :: State -> [Widget Name]
+drawUI :: MMS -> [Widget Name]
 drawUI s = 
   [ drawMenu s ]
 
-drawMenu :: State -> Widget Name
+drawMenu :: MMS -> Widget Name
 drawMenu s = 
   joinBorders $
   center $ 
@@ -55,7 +34,7 @@ drawMenu s =
   hBorder <=>
   drawList s
 
-drawList :: State -> Widget Name
+drawList :: MMS -> Widget Name
 drawList s = vLimit 4 $
              L.renderList drawListElement True (s^.l)
 
@@ -63,30 +42,19 @@ drawListElement :: Bool -> String -> Widget Name
 drawListElement selected = hCenteredStrWrapWithAttr attr
   where attr = if selected then withAttr selectedAttr else id
 
-handleEvent :: State -> BrickEvent Name Event -> EventM Name (Next State)
-handleEvent s (VtyEvent e) =
+handleEvent :: GlobalState -> MMS -> BrickEvent Name Event -> EventM Name (Next GlobalState)
+handleEvent gs s (VtyEvent e) =
+  let update = updateMMS gs in
     case e of
-      V.EvKey (V.KChar 'c') [V.MCtrl]  -> halt s
-      V.EvKey V.KEsc [] -> halt s
+      V.EvKey (V.KChar 'c') [V.MCtrl]  -> halt gs
+      V.EvKey V.KEsc [] -> halt gs
       V.EvKey V.KEnter [] ->
         case L.listSelected (s^.l) of
-          Just 0 -> suspendAndResume $ runCardSelectorUI (s^.gs)$> s
-          Just 1 -> suspendAndResume $ runInfoUI  $> s
-          Just 2 -> suspendAndResume $ runSettingsUI $> s
-          Just 3 -> halt s
+          Just 0 -> continue =<< liftIO (runCardSelectorUI gs)
+          Just 1 -> continue $ runInfoUI gs
+          Just 2 -> continue =<< liftIO (runSettingsUI gs)
+          Just 3 -> halt gs
           _ -> undefined
 
-      ev -> continue . flip (l .~) s =<< L.handleListEventVi L.handleListEvent ev (s^.l)
-handleEvent l _ = continue l
-
-runMainMenuUI :: GlobalState -> IO ()
-runMainMenuUI gs = do
-  let options = Vec.fromList 
-                  [ "Select"
-                  , "Info"
-                  , "Settings"
-                  , "Quit" ]
-
-  let initialState = State (L.list () options 1) gs
-  _ <- defaultMain app initialState
-  return ()
+      ev -> continue . update . flip (l .~) s =<< L.handleListEventVi L.handleListEvent ev (s^.l)
+handleEvent gs _ _ = continue gs

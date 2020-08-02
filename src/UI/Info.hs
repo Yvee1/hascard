@@ -1,24 +1,14 @@
-module UI.Info (runInfoUI) where
+module UI.Info (State, drawUI, handleEvent, theMap) where
 
 import Brick
 import Brick.Widgets.Border
 import Brick.Widgets.Border.Style
 import Brick.Widgets.Center
-import Control.Monad (void)
+import States
 import qualified Graphics.Vty as V
 
-type Event = ()
-type Name = ()
-type State = ()
-
-app :: App State Event Name
-app = App 
-  { appDraw = (:[]) . const ui
-  , appChooseCursor = neverShowCursor
-  , appHandleEvent = handleEvent
-  , appStartEvent = return
-  , appAttrMap = const theMap
-  }
+drawUI :: IS -> [Widget Name]
+drawUI = (:[]) . const ui
 
 ui :: Widget Name
 ui =
@@ -31,18 +21,21 @@ ui =
   hBorder <=>
   drawInfo
 
-handleEvent :: State -> BrickEvent Name Event -> EventM Name (Next State)
-handleEvent s (VtyEvent e) =
+handleEvent :: GlobalState -> IS -> BrickEvent Name Event -> EventM Name (Next GlobalState)
+handleEvent gs s (VtyEvent e) =
+  let update = updateIS gs
+      continue' = continue . update
+      halt' = continue . popState in
     case e of
-      V.EvKey (V.KChar 'c') [V.MCtrl]  -> halt s
-      V.EvKey V.KEsc [] -> halt s
-      V.EvKey V.KEnter [] -> halt s
-      V.EvKey V.KDown [] -> vScrollBy (viewportScroll ()) 1 >> continue s
-      V.EvKey (V.KChar 'j') [] -> vScrollBy (viewportScroll ()) 1 >> continue s
-      V.EvKey V.KUp [] -> vScrollBy (viewportScroll ()) (-1) >> continue s
-      V.EvKey (V.KChar 'k') [] -> vScrollBy (viewportScroll ()) (-1) >> continue s
-      _ -> continue s
-handleEvent s _ = continue s
+      V.EvKey (V.KChar 'c') [V.MCtrl]  -> halt' gs
+      V.EvKey V.KEsc [] -> halt' gs
+      V.EvKey V.KEnter [] -> halt' gs
+      V.EvKey V.KDown [] -> vScrollBy (viewportScroll ()) 1 >> continue' s
+      V.EvKey (V.KChar 'j') [] -> vScrollBy (viewportScroll ()) 1 >> continue' s
+      V.EvKey V.KUp [] -> vScrollBy (viewportScroll ()) (-1) >> continue' s
+      V.EvKey (V.KChar 'k') [] -> vScrollBy (viewportScroll ()) (-1) >> continue' s
+      _ -> continue' s
+handleEvent gs _ _ = continue gs
 
 titleAttr :: AttrName
 titleAttr = attrName "title"
@@ -56,9 +49,6 @@ drawInfo =
   padLeftRight 1 $
   vLimitPercent 60 $
   viewport () Vertical (strWrap info)
-
-runInfoUI :: IO ()
-runInfoUI = void $ defaultMain app ()
 
 info :: String
 info = 
