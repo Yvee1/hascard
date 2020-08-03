@@ -31,7 +31,13 @@ drawUI s =
   [ drawException (s ^. exception), drawMenu s ]
 
 title :: Widget Name
-title = withAttr titleAttr $ hCenteredStrWrap "Select a deck of flashcards"
+title = withAttr titleAttr $ str "Select a deck of flashcards "
+
+shuffledWidget :: State -> Widget Name
+shuffledWidget s = withAttr exceptionAttr $ str $ 
+    case s^.gs.doShuffle of
+      True -> "(Shuffled)"
+      False -> ""
 
 drawMenu :: CSS -> Widget Name
 drawMenu s = 
@@ -40,7 +46,7 @@ drawMenu s =
   withBorderStyle unicodeRounded $
   border $
   hLimitPercent 60 $
-  title <=>
+  hCenter (title <+> shuffledWidget s) <=>
   hBorder <=>
   hCenter (drawList s)
 
