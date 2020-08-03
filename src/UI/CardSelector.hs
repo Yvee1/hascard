@@ -26,27 +26,25 @@ import qualified Graphics.Vty as V
 import qualified Stack as S
 import qualified UI.Attributes as A
 
-drawUI :: CSS -> [Widget Name]
-drawUI s = 
-  [ drawException (s ^. exception), drawMenu s ]
+drawUI :: GlobalState -> CSS -> [Widget Name]
+drawUI gs s = 
+  [ drawException (s ^. exception), drawMenu gs s ]
 
 title :: Widget Name
 title = withAttr titleAttr $ str "Select a deck of flashcards "
 
-shuffledWidget :: State -> Widget Name
-shuffledWidget s = withAttr exceptionAttr $ str $ 
-    case s^.gs.doShuffle of
-      True -> "(Shuffled)"
-      False -> ""
+shuffledWidget :: Bool -> Widget Name
+shuffledWidget shuffled = withAttr shuffledAttr $ str $ 
+    if shuffled then "(Shuffled)" else ""
 
-drawMenu :: CSS -> Widget Name
-drawMenu s = 
+drawMenu :: GlobalState -> CSS -> Widget Name
+drawMenu gs s = 
   joinBorders $
   center $ 
   withBorderStyle unicodeRounded $
   border $
   hLimitPercent 60 $
-  hCenter (title <+> shuffledWidget s) <=>
+  hCenter (title <+> shuffledWidget (gs^.doShuffle)) <=>
   hBorder <=>
   hCenter (drawList s)
 
@@ -80,6 +78,7 @@ handleEvent gs s@CSS{_list=l, _exception=exc} (VtyEvent ev) =
           (_, e) -> case e of
             V.EvKey (V.KChar 'c') [V.MCtrl] -> halt' gs
             V.EvKey V.KEsc [] -> halt' gs
+            V.EvKey (V.KChar 's') []  -> continue (gs & doShuffle %~ not)
 
             _ -> do l' <- L.handleListEventVi L.handleListEvent e l
                     let s' = (s & list .~ l') in

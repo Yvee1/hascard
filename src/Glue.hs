@@ -22,7 +22,7 @@ drawUI gs = case getState gs of
   MainMenuState     s -> MM.drawUI s
   SettingsState     s ->  S.drawUI s
   InfoState         s ->  I.drawUI s
-  CardSelectorState s -> CS.drawUI s
+  CardSelectorState s -> CS.drawUI gs s
   FileBrowserState  s -> FB.drawUI s
   CardsState        s ->  C.drawUI s
 

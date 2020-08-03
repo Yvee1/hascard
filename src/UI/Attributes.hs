@@ -58,6 +58,9 @@ incorrectElementAttr = attrName "incorrect element"
 exceptionAttr :: AttrName
 exceptionAttr = attrName "exception"
 
+shuffledAttr :: AttrName
+shuffledAttr = attrName "shuffled indicator"
+
 theMap :: AttrMap
 theMap = attrMap defAttr
   [ (titleAttr, fg yellow)
@@ -78,4 +81,5 @@ theMap = attrMap defAttr
   , (gapAttr, defAttr `withStyle` underline)
   , (selectedAttr, fg white `withStyle` underline)
   , (exceptionAttr, fg red)
-  , (focusedFormInputAttr, defAttr `withStyle` underline) ]
+  , (focusedFormInputAttr, defAttr `withStyle` underline)
+  , (shuffledAttr, fg red) ]
