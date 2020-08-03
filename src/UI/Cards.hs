@@ -10,10 +10,8 @@ import Data.List.NonEmpty (NonEmpty)
 import Data.Map.Strict (Map)
 import Text.Wrap
 import Data.Text (pack)
-import DeckHandling
 import UI.Attributes
 import UI.BrickHelpers
-import Settings
 import qualified Data.List.NonEmpty as NE
 import qualified Data.Text as T
 import qualified Data.Map.Strict as M
@@ -176,7 +174,7 @@ makeSentenceWidget w state = vBox . fst . makeSentenceWidget' 0 0
 
             cursor :: Widget Name -> Widget Name
             -- i is the index of the gap that we are drawing; j is the gap that is currently selected
-            cursor = if i == j then showCursor () (Location (textWidth gap, 0)) else id
+            cursor = if i == j then showCursor Ordinary (Location (textWidth gap, 0)) else id
 
             correct = M.findWithDefault False i cgs
             coloring = case (submitted, correct) of

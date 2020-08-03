@@ -8,7 +8,7 @@ import qualified UI.CardSelector  as CS
 import qualified UI.FileBrowser   as FB
 import qualified UI.Cards         as C
 
-globalApp :: App GlobalState () ()
+globalApp :: App GlobalState Event Name
 globalApp = App
   { appDraw = drawUI
   , appChooseCursor = showFirstCursor

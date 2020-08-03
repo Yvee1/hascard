@@ -45,7 +45,7 @@ drawMenu s =
   hCenter (drawList s)
 
 drawList :: CSS -> Widget Name
-drawList s = vLimit 6  $
+drawList s = vLimit (s ^. maxRecentsToShow + 1)  $
              L.renderListWithIndex (drawListElement l) True l
               where l = s ^. list
 
@@ -104,7 +104,7 @@ refreshRecents s = do
   let prettyRecents = shortenFilepaths (S.toList rs)
       options       = Vec.fromList (prettyRecents ++ ["Select file from system"])
   return $ s & recents .~ rs
-             & list    .~ L.list () options 1
+             & list    .~ L.list Ordinary options 1
 
 addRecentInternal :: CSS -> FilePath -> IO CSS
 addRecentInternal s fp = do

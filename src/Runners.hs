@@ -12,9 +12,14 @@ import qualified Stack as S
 cardSelectorState :: IO State
 cardSelectorState = do
   rs <- getRecents
+  maxRs <- getMaxRecents
   let prettyRecents = shortenFilepaths (S.toList rs)
-  let options = Vec.fromList (prettyRecents ++ ["Select file from system"])
-  let initialState = CSS (L.list () options 1) Nothing rs
+      options = Vec.fromList (prettyRecents ++ ["Select file from system"])
+      initialState = CSS
+        { _list = L.list Ordinary options 1
+        , _exception = Nothing
+        , _recents = rs
+        , _maxRecentsToShow = maxRs }
   return $ CardSelectorState initialState
 
 mainMenuState :: State
@@ -25,7 +30,7 @@ mainMenuState =
                   , "Settings"
                   , "Quit" ]
 
-      initialState = MMS (L.list () options 1) in
+      initialState = MMS (L.list Ordinary options 1) in
   MainMenuState initialState
 
 cardsState :: [Card] -> IO State
@@ -47,17 +52,12 @@ cardsState deck = do
 cardsWithOptionsState :: GlobalState -> [Card] -> IO State
 cardsWithOptionsState gs cards = doRandomization gs cards >>= cardsState
 
-settingsState :: IO State
-settingsState = do
-  currentSettings <- getSettings
-  return $ SettingsState (0, currentSettings)
-
 infoState :: State
 infoState = InfoState ()
 
 fileBrowserState :: IO State
 fileBrowserState = do
-  browser <- newFileBrowser selectNonDirectories () Nothing
+  browser <- newFileBrowser selectNonDirectories Ordinary Nothing
   let filteredBrowser = setFileBrowserEntryFilter (Just (entryFilter False)) browser
   return $ FileBrowserState (FBS filteredBrowser Nothing [] Nothing False)
 

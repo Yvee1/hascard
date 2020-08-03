@@ -2,6 +2,7 @@
 module States where
 
 import Brick
+import Brick.Forms (Form)
 import Brick.Widgets.FileBrowser
 import Brick.Widgets.List (List)
 import Data.Map.Strict (Map)
@@ -14,7 +15,12 @@ import qualified Data.List.NonEmpty as NE
 import qualified Data.Map.Strict as M
 import qualified Stack
 
-type Name = ()
+data Name = HintsField
+          | ControlsField
+          | EscapeCodeField
+          | MaxRecentsField
+          | Ordinary
+  deriving (Eq, Ord, Show)
 type Event = ()
 
 data Mode  = MainMenu    
@@ -109,14 +115,20 @@ newtype MMS = MMS
 
 type IS = ()
 
-type Settings = Map Int Bool
+data Settings = FormState
+  { _hints           :: Bool
+  , _controls        :: Bool
+  , _escapeCode      :: Bool
+  , _maxRecents      :: Int }
+  deriving (Read, Show)
 
-type SS = (Int, Settings)
+type SS = Form Settings Event Name
 
 data CSS = CSS
-  { _list       :: List Name String
-  , _exception  :: Maybe String
-  , _recents    :: Stack FilePath
+  { _list             :: List Name String
+  , _exception        :: Maybe String
+  , _recents          :: Stack FilePath
+  , _maxRecentsToShow :: Int
   }
 
 data FBS = FBS
@@ -140,6 +152,7 @@ makeLenses ''MMS
 makeLenses ''GlobalState
 makeLenses ''CardState
 makeLenses ''CS
+makeLenses ''Settings
 makeLenses ''CSS
 makeLenses ''FBS
 

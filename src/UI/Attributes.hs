@@ -1,5 +1,7 @@
 module UI.Attributes where
 import Brick
+import Brick.Forms
+import Brick.Widgets.Edit
 import Graphics.Vty
 
 titleAttr :: AttrName
@@ -75,4 +77,5 @@ theMap = attrMap defAttr
   , (incorrectElementAttr, fg red)
   , (gapAttr, defAttr `withStyle` underline)
   , (selectedAttr, fg white `withStyle` underline)
-  , (exceptionAttr, fg red) ]
+  , (exceptionAttr, fg red)
+  , (focusedFormInputAttr, defAttr `withStyle` underline) ]

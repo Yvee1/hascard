@@ -43,6 +43,9 @@ tail = toList . pop
 elemAt :: Stack a -> Int -> Maybe a
 elemAt = OS.elemAt
 
+takeStack :: Ord a => Int -> Stack a -> Stack a
+takeStack n = fromList . take n . toList
+
 unsafeElemAt :: Stack a -> Int -> a
 unsafeElemAt s = fromJust . OS.elemAt s
 

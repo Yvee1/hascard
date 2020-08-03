@@ -2,10 +2,9 @@ module UI.BrickHelpers where
 import Text.Wrap
 import Brick
 import Brick.Widgets.Border
-import Brick.Widgets.Border.Style
 import Brick.Widgets.Center
 import Data.Text (pack)
-import Graphics.Vty (imageWidth, imageHeight)
+import Graphics.Vty (imageWidth, imageHeight, charFill)
 import Lens.Micro
 import UI.Attributes
 
@@ -38,3 +37,11 @@ drawException (Just e) =
         centerPopup $ 
         borderWithLabel (str "Error") $
         withAttr exceptionAttr $ str e
+
+-- | Fill all available space with the specified character. Grows only
+-- horizontally.
+hFill :: Char -> Widget n
+hFill ch =
+    Widget Greedy Fixed $ do
+      c <- getContext
+      return $ emptyResult & imageL .~ charFill (c^.attrL) ch (c^.availWidthL) 1

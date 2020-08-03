@@ -1,10 +1,10 @@
 module Recents where
 import Control.Monad (filterM)
 import Data.List (sort)
+import Settings
 import Stack (Stack)
 import System.Environment (lookupEnv)
 import System.FilePath ((</>), splitFileName, dropExtension, splitPath, joinPath)
-import qualified Data.Vector as Vec
 import qualified Stack as S
 import qualified System.Directory as D
 import qualified System.IO.Strict as IOS (readFile)
@@ -14,22 +14,31 @@ getRecents = do
   rf <- getRecentsFile
   exists <- D.doesFileExist rf
   if exists
-    then removeDeletedFiles rf
+    then removeDeletedFiles rf *> clampRecents rf
     else return S.empty
 
 removeDeletedFiles :: FilePath -> IO (Stack FilePath)
 removeDeletedFiles fp = do
-  file <- IOS.readFile fp
-  existing <- S.fromList <$> filterM D.doesFileExist (lines file)
+  contents <- IOS.readFile fp
+  existing <- S.fromList <$> filterM D.doesFileExist (lines contents)
   writeRecents existing
   return existing
 
-maxRecents :: Int
-maxRecents = 5
+parseRecents :: String -> Stack FilePath
+parseRecents = S.fromList . lines
+
+clampRecents :: FilePath -> IO (Stack FilePath)
+clampRecents fp = do
+  rs <- parseRecents <$> IOS.readFile fp
+  maxRs <- getMaxRecents
+  let clamped = S.takeStack maxRs rs
+  writeRecents clamped
+  return clamped
 
 addRecent :: FilePath -> IO ()
 addRecent fp = do
   rs <- getRecents
+  maxRecents <- getMaxRecents
   let rs'  = fp `S.insert` rs 
       rs'' = if S.size rs' <= maxRecents
               then rs'

@@ -7,6 +7,7 @@ import Brick.Widgets.Center
 import Control.Monad.IO.Class
 import Lens.Micro.Platform
 import Runners
+import Settings
 import States
 import UI.Attributes
 import UI.BrickHelpers
