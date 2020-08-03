@@ -1,10 +1,14 @@
-module UI (module X, module UI) where
+module UI (module X, runBrickFlashcards, GlobalState(..), Card, goToState) where
 
-import UI.Cards        as X (runCardsUI)
-import UI.CardSelector as X
-import UI.MainMenu     as X (runMainMenuUI)
-import UI.Settings     as X
-import Types           as X (GlobalState (..), mwc, doShuffle, subset)
+import UI.CardSelector as X (addRecent)
+import Settings        as X (getUseEscapeCode)
+import Runners         as X
+import Brick
+import Glue
+import States
+import Types (Card)
 
 runBrickFlashcards :: GlobalState -> IO ()
-runBrickFlashcards = runMainMenuUI
+runBrickFlashcards gs = do
+  _ <- defaultMain globalApp gs
+  return ()

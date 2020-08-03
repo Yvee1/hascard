@@ -1,7 +1,7 @@
 {-# OPTIONS_GHC -Wall #-}
-{-# LANGUAGE OverloadedStrings, TemplateHaskell, TupleSections #-}
+{-# LANGUAGE OverloadedStrings, FlexibleInstances #-}
 
-module UI.FileBrowser (runFileBrowserUI) where
+module UI.FileBrowser (State, drawUI, handleEvent, theMap) where
 
 import Brick
 import Brick.Widgets.Border
@@ -12,35 +12,15 @@ import Control.Exception (displayException, try)
 import Control.Monad.IO.Class
 import Lens.Micro.Platform
 import Parser
-import Types
+import States
+import Recents
+import Runners
+import UI.BrickHelpers
+import qualified UI.Attributes as A
 import qualified Graphics.Vty as V
 
-type Event = ()
-type Name = ()
-data State = State
-  { _fb         :: FileBrowser Name
-  , _exception  :: Maybe String
-  , _cards      :: [Card]
-  , _filePath   :: Maybe FilePath
-  , _showHidden :: Bool
-  }
-
-makeLenses ''State
-
-app :: App State Event Name
-app = App 
-  { appDraw = drawUI
-  , appChooseCursor = neverShowCursor
-  , appHandleEvent = handleEvent
-  , appStartEvent = return
-  , appAttrMap = const theMap
-  }
-
-errorAttr :: AttrName
-errorAttr = "error"
-
 theMap :: AttrMap
-theMap = attrMap V.defAttr
+theMap = applyAttrMappings
     [ (listSelectedFocusedAttr, V.black `on` V.yellow)
     , (fileBrowserCurrentDirectoryAttr, V.white `on` V.blue)
     , (fileBrowserSelectionInfoAttr, V.white `on` V.blue)
@@ -51,11 +31,10 @@ theMap = attrMap V.defAttr
     , (fileBrowserSymbolicLinkAttr, fg V.cyan)
     , (fileBrowserUnixSocketAttr, fg V.red)
     , (fileBrowserSelectedAttr, V.white `on` V.magenta)
-    , (errorAttr, fg V.red)
-    ]
+    ] A.theMap
 
-drawUI :: State -> [Widget Name]
-drawUI State{_fb=b, _exception=exc} = [center $ ui <=> help]
+drawUI :: FBS -> [Widget Name]
+drawUI FBS{_fb=b, _exception'=exc} = [drawException exc, center $ ui <=> help]
     where
         ui = hCenter $
              vLimit 15 $
@@ -67,54 +46,42 @@ drawUI State{_fb=b, _exception=exc} = [center $ ui <=> help]
                     , hCenter $ txt "/: search, Ctrl-C or Esc: cancel search"
                     , hCenter $ txt "Enter: change directory or select file"
                     , hCenter $ txt "Esc: quit"
-                    , case exc of
-                          Nothing -> emptyWidget
-                          Just e -> hCenter $ withDefAttr errorAttr $
-                                    str e
                     ]
 
-handleEvent :: State -> BrickEvent Name Event -> EventM Name (Next State)
-handleEvent s@State{_fb=b} (VtyEvent ev) =
-    case ev of
+handleEvent :: GlobalState -> FBS -> BrickEvent Name Event -> EventM Name (Next GlobalState)
+handleEvent gs s@FBS{_fb=b, _exception'=excep} (VtyEvent ev) =
+  let update = updateFBS gs
+      continue' = continue . update
+      halt' = continue . popState in
+    case (excep, ev) of
+      (Just _, _) -> continue' $ s & exception' .~ Nothing
+      (_, e) -> case e of
         V.EvKey V.KEsc [] | not (fileBrowserIsSearching b) ->
-            halt s
+            halt' gs
         V.EvKey (V.KChar 'c') [V.MCtrl] | not (fileBrowserIsSearching b) ->
-            halt s
+            halt' gs
         V.EvKey (V.KChar 'h') [] | not (fileBrowserIsSearching b) -> let s' = s & showHidden %~ not in
-            continue $ s' & fb .~ setFileBrowserEntryFilter (Just (entryFilter (s' ^. showHidden))) b
+            continue' $ s' & fb .~ setFileBrowserEntryFilter (Just (entryFilter (s' ^. showHidden))) b
         _ -> do
             b' <- handleFileBrowserEvent ev b
             let s' = s & fb .~ b'
-            -- If the browser has a selected file after handling the
-            -- event (because the user pressed Enter), shut down.
             case ev of
                 V.EvKey V.KEnter [] ->
                     case fileBrowserSelection b' of
-                        [] -> continue s'
+                        [] -> continue' s'
                         [fileInfo] -> do
                           let fp = fileInfoFilePath fileInfo
                           fileOrExc <- liftIO (try (readFile fp) :: IO (Either IOError String))
                           case fileOrExc of
-                            Left exc -> continue (s' & exception ?~ displayException exc)
+                            Left exc -> continue' (s' & exception' ?~ displayException exc)
                             Right file -> case parseCards file of
-                              Left parseError -> continue (s & exception ?~ show parseError)
-                              Right result -> halt (s' & cards .~ result & filePath ?~ fp)
-                        _ -> halt s'
+                              Left parseError -> continue' (s & exception' ?~ errorBundlePretty parseError)
+                              -- Right result -> halt' (s' & parsedCards .~ result & filePath ?~ fp)
+                              Right result -> continue =<< liftIO (do
+                                      addRecent fp
+                                      let gs' = update s'
+                                      (gs' `moveToState`) <$> cardsWithOptionsState (update s') result)
+                        _ -> halt' gs
 
-                _ -> continue s'
-handleEvent s _ = continue s
-
-runFileBrowserUI :: IO (Maybe ([Card], FilePath))
-runFileBrowserUI = do
-  browser <- newFileBrowser selectNonDirectories () Nothing
-  let filteredBrowser = setFileBrowserEntryFilter (Just (entryFilter False)) browser
-  s <- defaultMain app (State filteredBrowser Nothing [] Nothing False)
-  let mfp = s ^. filePath
-  return $ fmap (s ^. cards,) mfp
-
-entryFilter :: Bool -> FileInfo -> Bool
-entryFilter acceptHidden info = fileExtensionMatch "txt" info && (acceptHidden || 
-  case fileInfoFilename info of
-    ".."    -> True
-    '.' : _ -> False
-    _       -> True)
+                _ -> continue' s'
+handleEvent gs _ _ = continue gs

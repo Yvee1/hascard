@@ -9,6 +9,9 @@ type Stack a = OSet a
 empty :: Stack a
 empty = OS.empty
 
+singleton :: a -> Stack a
+singleton = OS.singleton
+
 insert :: Ord a => a -> Stack a -> Stack a
 insert = (|<)
 
@@ -18,14 +21,30 @@ removeLast s = OS.delete (Stack.last s) s
 head :: Stack a -> a
 head = (`unsafeElemAt` 0)
 
+safeHead :: Stack a -> Maybe a
+safeHead = (`elemAt` 0)
+
 last :: Stack a -> a
 last s = s `unsafeElemAt` (Stack.size s - 1)
 
+pop :: Ord a => Stack a -> Stack a
+pop s = OS.delete (Stack.head s) s
+
+popWithInfo :: Ord a => Stack a -> (Stack a, a, a)
+popWithInfo s = let
+  top  = Stack.head s
+  s'   = OS.delete top s
+  top' = Stack.head s' in
+    (s', top, top')
+
 tail :: Ord a => Stack a -> [a]
-tail s = toList $ OS.delete (Stack.head s) s
+tail = toList . pop
 
 elemAt :: Stack a -> Int -> Maybe a
 elemAt = OS.elemAt
+
+takeStack :: Ord a => Int -> Stack a -> Stack a
+takeStack n = fromList . take n . toList
 
 unsafeElemAt :: Stack a -> Int -> a
 unsafeElemAt s = fromJust . OS.elemAt s
