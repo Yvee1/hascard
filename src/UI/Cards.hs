@@ -244,7 +244,7 @@ handleEvent :: GlobalState -> CS -> BrickEvent Name Event -> EventM Name (Next G
 handleEvent gs s (VtyEvent e) =
   let update = updateCS gs
       continue' = continue . update
-      halt' = flip goToModeOrQuit CardSelector in
+      halt' = flip moveToModeOrQuit CardSelector in
     case e of
       V.EvKey V.KEsc []                -> halt' gs
       V.EvKey (V.KChar 'c') [V.MCtrl]  -> halt' gs

@@ -78,5 +78,5 @@ run opts = run' (opts ^. optFile)
                    start (Just result) (mkGlobalState gen)
 
 start :: Maybe [Card] -> GlobalState -> IO ()
-start Nothing gs = runBrickFlashcards (runMainMenuUI gs)
-start (Just cards) gs = runBrickFlashcards =<< runCardsWithOptions gs cards
+start Nothing gs = runBrickFlashcards (gs `goToState` mainMenuState)
+start (Just cards) gs = runBrickFlashcards =<< (gs `goToState`) <$> cardsWithOptionsState gs cards

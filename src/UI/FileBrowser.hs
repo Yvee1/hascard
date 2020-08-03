@@ -79,7 +79,8 @@ handleEvent gs s@FBS{_fb=b, _exception'=excep} (VtyEvent ev) =
                               -- Right result -> halt' (s' & parsedCards .~ result & filePath ?~ fp)
                               Right result -> continue =<< liftIO (do
                                       addRecent fp
-                                      runCardsWithOptions (update s') result)
+                                      let gs' = update s'
+                                      (gs' `moveToState`) <$> cardsWithOptionsState (update s') result)
                         _ -> halt' gs
 
                 _ -> continue' s'

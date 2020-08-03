@@ -50,9 +50,9 @@ handleEvent gs s (VtyEvent e) =
       V.EvKey V.KEsc [] -> halt gs
       V.EvKey V.KEnter [] ->
         case L.listSelected (s^.l) of
-          Just 0 -> continue =<< liftIO (runCardSelectorUI gs)
-          Just 1 -> continue $ runInfoUI gs
-          Just 2 -> continue =<< liftIO (runSettingsUI gs)
+          Just 0 -> continue =<< (gs `goToState`) <$> liftIO cardSelectorState
+          Just 1 -> continue $ gs `goToState` infoState
+          Just 2 -> continue =<< (gs `goToState`) <$> liftIO settingsState 
           Just 3 -> halt gs
           _ -> undefined
 

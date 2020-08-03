@@ -174,6 +174,9 @@ goToState :: GlobalState -> State -> GlobalState
 goToState gs s = gs & states %~ M.insert (getMode s) s
                     & stack  %~ insert (getMode s)
 
+moveToState :: GlobalState -> State -> GlobalState 
+moveToState gs = goToState (popState gs)
+
 popState :: GlobalState -> GlobalState
 popState gs = let
   s    = gs ^. stack
@@ -190,3 +193,7 @@ safeGetState gs = do
 goToModeOrQuit :: GlobalState -> Mode -> EventM n (Next GlobalState)
 goToModeOrQuit gs mode = 
   maybe (halt gs) (continue . goToState gs) $ M.lookup mode (gs ^. states) 
+
+moveToModeOrQuit :: GlobalState -> Mode -> EventM n (Next GlobalState)
+moveToModeOrQuit gs mode = 
+  maybe (halt gs) (continue . moveToState gs) $ M.lookup mode (gs ^. states) 

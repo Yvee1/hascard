@@ -81,7 +81,8 @@ handleEvent gs s@CSS{_list=l, _exception=exc} (VtyEvent ev) =
                         V.EvKey V.KEnter [] ->
                           case L.listSelectedElement l' of
                             Nothing -> continue' s'
-                            Just (_, "Select file from system") -> continue =<< liftIO (runFileBrowserUI (update s'))
+                            Just (_, "Select file from system") -> 
+                              let gs' = update s' in continue =<< (gs' `goToState`) <$> liftIO fileBrowserState
                             Just (i, _) -> do
                                 let fp = (s' ^. recents) `S.unsafeElemAt` i
                                 fileOrExc <- liftIO (try (readFile fp) :: IO (Either IOError String))
@@ -91,7 +92,8 @@ handleEvent gs s@CSS{_list=l, _exception=exc} (VtyEvent ev) =
                                     Left parseError -> continue' (s' & exception ?~ errorBundlePretty parseError)
                                     Right result -> continue =<< liftIO (do
                                       s'' <- addRecentInternal s' fp
-                                      runCardsWithOptions (update s'') result)
+                                      let gs' = update s''
+                                      (gs' `goToState`) <$> cardsWithOptionsState gs' result)
                         _ -> continue' s'
 
 handleEvent gs _ _ = continue gs

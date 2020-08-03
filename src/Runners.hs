@@ -9,16 +9,16 @@ import qualified Brick.Widgets.List as L
 import qualified Data.Vector as Vec
 import qualified Stack as S
 
-runCardSelectorUI :: GlobalState -> IO GlobalState
-runCardSelectorUI gs = do
+cardSelectorState :: IO State
+cardSelectorState = do
   rs <- getRecents
   let prettyRecents = shortenFilepaths (S.toList rs)
   let options = Vec.fromList (prettyRecents ++ ["Select file from system"])
   let initialState = CSS (L.list () options 1) Nothing rs
-  return $ gs `goToState` CardSelectorState initialState
+  return $ CardSelectorState initialState
 
-runMainMenuUI :: GlobalState -> GlobalState
-runMainMenuUI gs = 
+mainMenuState :: State
+mainMenuState = 
   let options = Vec.fromList 
                   [ "Select"
                   , "Info"
@@ -26,10 +26,10 @@ runMainMenuUI gs =
                   , "Quit" ]
 
       initialState = MMS (L.list () options 1) in
-  gs `goToState` MainMenuState initialState
+  MainMenuState initialState
 
-runCardsUI :: GlobalState -> [Card] -> IO GlobalState
-runCardsUI gs deck = do
+cardsState :: [Card] -> IO State
+cardsState deck = do
   hints    <- getShowHints
   controls <- getShowControls
 
@@ -42,24 +42,24 @@ runCardsUI gs deck = do
            , _showHints = hints
            , _showControls = controls }
  
-  return $ gs `goToState` CardsState initialState
+  return $ CardsState initialState
 
-runCardsWithOptions :: GlobalState -> [Card] -> IO GlobalState
-runCardsWithOptions state cards = doRandomization state cards >>= runCardsUI state
+cardsWithOptionsState :: GlobalState -> [Card] -> IO State
+cardsWithOptionsState gs cards = doRandomization gs cards >>= cardsState
 
-runSettingsUI :: GlobalState -> IO GlobalState
-runSettingsUI gs = do
+settingsState :: IO State
+settingsState = do
   currentSettings <- getSettings
-  return $ gs `goToState` SettingsState (0, currentSettings)
+  return $ SettingsState (0, currentSettings)
 
-runInfoUI :: GlobalState -> GlobalState
-runInfoUI = (`goToState` InfoState ())
+infoState :: State
+infoState = InfoState ()
 
-runFileBrowserUI :: GlobalState -> IO GlobalState
-runFileBrowserUI gs = do
+fileBrowserState :: IO State
+fileBrowserState = do
   browser <- newFileBrowser selectNonDirectories () Nothing
   let filteredBrowser = setFileBrowserEntryFilter (Just (entryFilter False)) browser
-  return $ gs `goToState` FileBrowserState (FBS filteredBrowser Nothing [] Nothing False)
+  return $ FileBrowserState (FBS filteredBrowser Nothing [] Nothing False)
 
 entryFilter :: Bool -> FileInfo -> Bool
 entryFilter acceptHidden info = fileExtensionMatch "txt" info && (acceptHidden || 
