@@ -238,12 +238,13 @@ drawReorder s = case (s ^. cardState, s ^. currentCard) of
 ----------------------------------------------------
 ---------------------- Events ----------------------
 ----------------------------------------------------
+halt' :: GlobalState -> EventM n (Next GlobalState)
+halt' = flip (moveToModeOrQuit' (\(CardSelectorState s) -> CardSelectorState <$> refreshRecents s)) CardSelector
 
 handleEvent :: GlobalState -> CS -> BrickEvent Name Event -> EventM Name (Next GlobalState)
 handleEvent gs s (VtyEvent e) =
   let update = updateCS gs
-      continue' = continue . update
-      halt' = flip (moveToModeOrQuit' (\(CardSelectorState s) -> CardSelectorState <$> refreshRecents s)) CardSelector in
+      continue' = continue . update in
     case e of
       V.EvKey V.KEsc []                -> halt' gs
       V.EvKey (V.KChar 'c') [V.MCtrl]  -> halt' gs
@@ -390,7 +391,7 @@ handleEvent gs _ _ = continue gs
 next :: GlobalState -> CS -> EventM Name (Next GlobalState)
 next gs s
   | s ^. index + 1 < length (s ^. cards) = continue . updateCS gs . straightenState $ s & index +~ 1
-  | otherwise                            = continue $ popState  gs
+  | otherwise                            = halt' gs
 
 previous :: GlobalState -> CS -> EventM Name (Next GlobalState)
 previous gs s | s ^. index > 0 = continue . updateCS gs . straightenState $ s & index -~ 1
