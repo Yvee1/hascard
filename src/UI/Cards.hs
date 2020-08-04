@@ -4,6 +4,7 @@ import Brick
 import Lens.Micro.Platform
 import Types
 import States
+import StateManagement
 import Data.Char (isSpace)
 import Data.List (dropWhileEnd)
 import Data.List.NonEmpty (NonEmpty)
@@ -66,9 +67,9 @@ drawCardUI s = let p = 1 in
                                    <=> B.hBorder
                                    <=> padRight (Pad p) (drawOptions s options <=> str " ")
 
-    Reorder question elements -> drawHeader question
+    Reorder question _ -> drawHeader question
                              <=> B.hBorder
-                             <=> padLeftRight p (drawReorder s elements <=> str " ")
+                             <=> padLeftRight p (drawReorder s <=> str " ")
 
 drawHeader :: String -> Widget Name
 drawHeader title = withAttr titleAttr $
@@ -214,8 +215,8 @@ wrapStringWithPadding padding w s
         ts' = ts & _last %~ (`T.append` postfix) in
     (map txt (filter (/=T.empty) ts'), textWidth (last ts'), False)
 
-drawReorder :: CS -> NonEmpty (Int, String) -> Widget Name
-drawReorder s elements = case (s ^. cardState, s ^. currentCard) of
+drawReorder :: CS -> Widget Name
+drawReorder s = case (s ^. cardState, s ^. currentCard) of
   (ReorderState {_highlighted=j, _grabbed=g, _order=kvs, _number=n, _entered=submitted}, Reorder _ _) -> 
     vBox . flip map (map (\i -> (i, kvs M.! i)) [0..n-1]) $
     \(i, (k, text)) ->
@@ -242,7 +243,7 @@ handleEvent :: GlobalState -> CS -> BrickEvent Name Event -> EventM Name (Next G
 handleEvent gs s (VtyEvent e) =
   let update = updateCS gs
       continue' = continue . update
-      halt' = flip moveToModeOrQuit CardSelector in
+      halt' = flip (moveToModeOrQuit' (\(CardSelectorState s) -> CardSelectorState <$> refreshRecents s)) CardSelector in
     case e of
       V.EvKey V.KEsc []                -> halt' gs
       V.EvKey (V.KChar 'c') [V.MCtrl]  -> halt' gs

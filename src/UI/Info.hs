@@ -5,6 +5,7 @@ import Brick.Widgets.Border
 import Brick.Widgets.Border.Style
 import Brick.Widgets.Center
 import States
+import StateManagement
 import qualified Graphics.Vty as V
 
 drawUI :: IS -> [Widget Name]

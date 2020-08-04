@@ -4,7 +4,6 @@ module Main where
 import UI
 import Control.Exception (displayException, try)
 import Control.Monad (void, when)
-import Data.Functor (($>))
 import Data.Version (showVersion)
 import Lens.Micro.Platform
 import Paths_hascard (version)
@@ -13,7 +12,7 @@ import Options.Applicative
 import System.Directory (makeAbsolute)
 import System.FilePath (takeExtension)
 import System.Process (runCommand)
-import System.Random.MWC (createSystemRandom, GenIO)
+import System.Random.MWC (createSystemRandom)
 import qualified Data.Map.Strict as Map (empty)
 import qualified Stack
 

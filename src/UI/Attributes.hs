@@ -1,7 +1,6 @@
 module UI.Attributes where
 import Brick
 import Brick.Forms
-import Brick.Widgets.Edit
 import Graphics.Vty
 
 titleAttr :: AttrName

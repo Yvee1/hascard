@@ -96,7 +96,7 @@ duplicates = sort . map fst . duplicates' 0 [] []
                 -- acc' = if getPairsWithValue x seen then (i, x) : acc else acc 
 
 getPairsWithValue :: Eq a => a -> [(Int, a)] -> [(Int, a)]
-getPairsWithValue y []       = []
+getPairsWithValue _ []       = []
 getPairsWithValue y ((i, x):xs)
   | x == y    = (i, x) : getPairsWithValue y xs
   | otherwise = getPairsWithValue y xs

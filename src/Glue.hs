@@ -1,6 +1,7 @@
 module Glue where
 import Brick
 import States
+import StateManagement
 import qualified UI.MainMenu      as MM
 import qualified UI.Settings      as S
 import qualified UI.Info          as I

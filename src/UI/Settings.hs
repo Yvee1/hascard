@@ -8,10 +8,9 @@ import Brick.Widgets.Border
 import Brick.Widgets.Border.Style
 import Brick.Widgets.Center
 import Control.Monad.IO.Class
-import Data.Map.Strict ((!))
 import States
+import StateManagement
 import Settings
-import qualified Data.Map.Strict as M
 import qualified Graphics.Vty as V
 
 drawUI :: SS -> [Widget Name]

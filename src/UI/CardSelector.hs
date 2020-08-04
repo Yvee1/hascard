@@ -18,10 +18,10 @@ import Parser
 import Recents
 import Runners
 import States
+import StateManagement
 import UI.Attributes hiding (theMap)
 import UI.BrickHelpers
 import qualified Brick.Widgets.List as L
-import qualified Data.Vector as Vec
 import qualified Graphics.Vty as V
 import qualified Stack as S
 import qualified UI.Attributes as A
@@ -102,14 +102,6 @@ handleEvent gs s@CSS{_list=l, _exception=exc} (VtyEvent ev) =
                         _ -> continue' s'
 
 handleEvent gs _ _ = continue gs
-
-refreshRecents :: CSS -> IO CSS
-refreshRecents s = do
-  rs <- getRecents
-  let prettyRecents = shortenFilepaths (S.toList rs)
-      options       = Vec.fromList (prettyRecents ++ ["Select file from system"])
-  return $ s & recents .~ rs
-             & list    .~ L.list Ordinary options 1
 
 addRecentInternal :: CSS -> FilePath -> IO CSS
 addRecentInternal s fp = do
