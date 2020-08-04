@@ -2,6 +2,7 @@ module Runners where
 import Brick.Widgets.FileBrowser
 import DeckHandling
 import Recents
+import Lens.Micro.Platform
 import Settings
 import States
 import Types
@@ -50,7 +51,9 @@ cardsState deck = do
   return $ CardsState initialState
 
 cardsWithOptionsState :: GlobalState -> [Card] -> IO State
-cardsWithOptionsState gs cards = doRandomization gs cards >>= cardsState
+cardsWithOptionsState gs cards = 
+  let chunked = doChunking (gs^.chunk) cards
+  in doRandomization gs chunked >>= cardsState
 
 infoState :: State
 infoState = InfoState ()

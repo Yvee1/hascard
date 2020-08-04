@@ -4,6 +4,7 @@ module States where
 import Brick.Forms (Form)
 import Brick.Widgets.FileBrowser
 import Brick.Widgets.List (List)
+import Data.Char (isDigit)
 import Data.Map.Strict (Map)
 import Lens.Micro.Platform
 import System.Random.MWC (GenIO)
@@ -35,10 +36,25 @@ data State = MainMenuState     MMS
            | FileBrowserState  FBS
            | CardsState        CS
 
+data Chunk = Chunk Int Int
+
+instance Show Chunk where
+  show (Chunk i n) = show i <> "/" <> show n
+
+instance Read Chunk where
+  readsPrec _ input =
+    let (i', rest1) = span isDigit input
+        i = read i' :: Int
+        (c:rest2) = rest1
+        (n', rest3) = span isDigit rest2
+        n = read n' :: Int
+    in [(Chunk i n, rest3) | c `elem` ['/', ' '] && n >= i && i >= 1] 
+
 data GlobalState = GlobalState
   { _mwc        :: GenIO
   , _doShuffle  :: Bool
   , _subset     :: Maybe Int
+  , _chunk      :: Chunk
   , _stack      :: Stack Mode
   , _states     :: Map Mode State
   }
