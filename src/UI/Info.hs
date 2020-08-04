@@ -52,5 +52,20 @@ drawInfo =
   viewport Ordinary Vertical (strWrap info)
 
 info :: String
-info = 
-  "Hascard is a text-based user interface for reviewing notes using 'flashcards'. Cards are written in markdown-like syntax; for more info see the README file. Use the --help flag for information on the command line options.\n\nControls:\n * Use arrows or the j and k keys for menu navigation\n\n * Enter confirms a selection, flips a card or continues to the next card\n\n * Use TAB or the arrow keys for navigating gaps in open questions\n\n * Use the c key for confirming reorder questions or multiple choice questions with more than 1 possible answer\n\n * Use F1 to show the answers of a open question\n\n * Use CTRL+Left and CTRL+Right to move to previous and next cards without having to answer them"
+info = unlines
+  [ "Hascard is a text-based user interface for reviewing notes using 'flashcards'. Cards are written in markdown-like syntax; for more info see the README file. Use the --help flag for information on the command line options."
+  , ""
+  , "Controls:"
+  , " * Use arrows or the j and k keys for menu navigation"
+  , ""
+  , " * Press the s key to toggle shuffling inside the deck selector menu"
+  , ""
+  , " * Enter confirms a selection, flips a card or continues to the next card"
+  , ""
+  , " * Use TAB or the arrow keys for navigating gaps in open questions"
+  , ""
+  , " * Use the c key for confirming reorder questions or multiple choice questions with more than 1 possible answer"
+  , ""
+  , " * Use F1 to show the answers of a open question"
+  , ""
+  , " * Use CTRL+Left and CTRL+Right to move to previous and next cards without having to answer them"]

@@ -1,4 +1,15 @@
 # Changelog for hascard
+## 0.2.1.0
+New:
+- A certain chunk of a deck of cards can be reviewed using the `-c i/n` CLI option. For example `hascard -c 3/5` will split the deck into 5 chunks, and review the 3rd one. These chunks can be used with the shuffle and amount options too.
+- Visual indicator in the deck selector menu for whether the deck is being shuffled or not.
+- Shuffling can be toggled inside the deck selector menu using the 's' key.
+- Most parsing error messages now show up as a pop-up box with nicer formattting than before.
+- The maximum number of recently selected decks stored and shown can now be changed in the settings menu.
+
+Fixed bugs:
+- Flickering when switching between menus is gone. This was done by merging the seperate Brick applications into one.
+
 ## 0.2.0.0
 New:
 - A new type of card is available: reorder the elements. This could break previous definition or open question cards if they had the same format as the new reorder the elements card. In that case change the 1. 2. etc. to something like 1), 2) which is not seen as a reorder type card.
