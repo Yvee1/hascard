@@ -72,7 +72,7 @@ run opts = run' (opts ^. optFile)
           case valOrExc of
             Left exc -> putStrLn (displayException exc)
             Right val -> case parseCards val of
-              Left parseError -> print parseError
+              Left parseError -> putStr (errorBundlePretty parseError)
               Right result ->
                 do gen <- createSystemRandom
                    makeAbsolute textfile >>= addRecent
