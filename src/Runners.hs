@@ -1,6 +1,7 @@
 module Runners where
 import Brick.Widgets.FileBrowser
 import DeckHandling
+import Data.Maybe (fromMaybe)
 import Recents
 import Lens.Micro.Platform
 import Settings
@@ -34,17 +35,25 @@ mainMenuState =
       initialState = MMS (L.list Ordinary options 1) in
   MainMenuState initialState
 
+safeHead :: [a] -> Maybe a
+safeHead [] = Nothing
+safeHead (x:_) = Just x
+
 cardsState :: [Card] -> IO State
 cardsState deck = do
   hints    <- getShowHints
   controls <- getShowControls
 
-  let initialState = 
-        CS { _cards = deck
+  let mFirstCard = safeHead deck
+      firstCard = fromMaybe (Definition "Empty deck" "Click enter to go back.") mFirstCard
+      deck' = maybe [firstCard] (const deck) mFirstCard
+
+      initialState = 
+        CS { _cards = deck'
            , _index = 0
-           , _currentCard = head deck
-           , _cardState = defaultCardState (head deck)
-           , _nCards = length deck
+           , _currentCard = firstCard
+           , _cardState = defaultCardState firstCard
+           , _nCards = length deck'
            , _showHints = hints
            , _showControls = controls }
  
