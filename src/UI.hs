@@ -1,4 +1,4 @@
-module UI (module X, runBrickFlashcards, GlobalState(..), Chunk(..), Card, goToState) where
+module UI (module X, runBrickFlashcards, GlobalState(..), GenIO, Chunk(..), Card, goToState) where
 
 import UI.CardSelector as X (addRecent)
 import Settings        as X (getUseEscapeCode)

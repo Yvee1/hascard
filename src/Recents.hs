@@ -4,7 +4,7 @@ import Data.List (sort)
 import Settings
 import Stack (Stack)
 import System.Environment (lookupEnv)
-import System.FilePath ((</>), splitFileName, dropExtension, splitPath, joinPath)
+import System.FilePath ((</>), splitFileName, takeExtension, dropExtension, splitPath, joinPath)
 import qualified Stack as S
 import qualified System.Directory as D
 import qualified System.IO.Strict as IOS (readFile)
@@ -68,8 +68,13 @@ initLast [x] = ([], x)
 initLast (x:xs) = let (xs', y) = initLast xs
                    in (x:xs', y)
 
+prep :: [FilePath] -> ([String], [FilePath])
+prep fps@(fp:_) = if all ((== takeExtension fp) . takeExtension) fps
+  then unzip (map ((\(pre, fn) -> (pre, dropExtension fn)) . splitFileName) fps)
+  else unzip (map splitFileName fps)
+
 shortenFilepaths :: [FilePath] -> [FilePath]
-shortenFilepaths fps = uncurry shortenFilepaths' (unzip (map ((\(pre, fn) -> (pre, dropExtension fn)) . splitFileName) fps))
+shortenFilepaths = uncurry shortenFilepaths' . prep 
   where
     shortenFilepaths' prefixes abbreviations =
       let ds = duplicates abbreviations in

@@ -1,5 +1,5 @@
 {-# LANGUAGE TemplateHaskell #-}
-module States where
+module States (module States, GenIO) where
 
 import Brick.Forms (Form)
 import Brick.Widgets.FileBrowser

@@ -74,7 +74,7 @@ fileBrowserState = do
   return $ FileBrowserState (FBS filteredBrowser Nothing [] Nothing False)
 
 entryFilter :: Bool -> FileInfo -> Bool
-entryFilter acceptHidden info = fileExtensionMatch "txt" info && (acceptHidden || 
+entryFilter acceptHidden info = (fileExtensionMatch "txt" info || fileExtensionMatch "md" info) && (acceptHidden || 
   case fileInfoFilename info of
     ".."    -> True
     '.' : _ -> False
