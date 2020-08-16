@@ -76,7 +76,7 @@ handleEvent gs s@FBS{_fb=b, _exception'=excep} (VtyEvent ev) =
                           case fileOrExc of
                             Left exc -> continue' (s' & exception' ?~ displayException exc)
                             Right file -> case parseCards file of
-                              Left parseError -> continue' (s & exception' ?~ errorBundlePretty parseError)
+                              Left parseError -> continue' (s & exception' ?~ parseError)
                               -- Right result -> halt' (s' & parsedCards .~ result & filePath ?~ fp)
                               Right result -> continue =<< liftIO (do
                                       addRecent fp

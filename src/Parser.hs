@@ -1,25 +1,34 @@
 {-# LANGUAGE DataKinds, ExistentialQuantification, GADTs, KindSignatures, OverloadedStrings #-}
-module Parser (parseCards, errorBundlePretty) where
+module Parser (parseCards) where
   
+import Control.Arrow
 import Data.Void
-import qualified Data.List.NonEmpty as NE
 import Text.Megaparsec
 import Text.Megaparsec.Char
+import Text.Wrap
+import Data.Text (pack, unpack)
 import Types
+import qualified Data.List.NonEmpty as NE
 
 type Parser = Parsec Void String
 
 uncurry3 f (a, b, c) = f a b c
 
-parseCards :: String -> Either (ParseErrorBundle String Void) [Card]
-parseCards = parse pCards "failed when parsing cards"
+parseCards :: String -> Either String [Card]
+parseCards s = case parse pCards "failed when parsing cards" s of
+  Left parseErrorBundle -> Left $ errorBundlePretty (parseErrorBundle :: ParseErrorBundle String Void)
+  Right msgOrCards -> left wrap (sequence msgOrCards)
+    where wrap = unlines . map unpack . wrapTextToLines (WrapSettings {preserveIndentation=False, breakLongWords=True}) 40 . pack
 
+pCards :: Parser [Either String Card]
 pCards = (pCard `sepEndBy1` seperator) <* eof
-pCard =  uncurry3 MultipleChoice<$> try pMultChoice
-     <|> uncurry MultipleAnswer <$> try pMultAnswer
-     <|> uncurry Reorder <$> try pReorder
-     <|> uncurry OpenQuestion <$> try pOpen
-     <|> uncurry Definition <$> pDef
+
+pCard :: Parser (Either String Card)
+pCard =  try pMultChoice
+     <|> Right . uncurry MultipleAnswer <$> try pMultAnswer
+     <|> try pReorder
+     <|> Right . uncurry OpenQuestion <$> try pOpen
+     <|> Right . uncurry Definition <$> pDef
 
 pHeader = do
   many eol
@@ -31,8 +40,10 @@ pMultChoice = do
   header <- pHeader
   many eol
   choices <- pChoice `sepBy1` lookAhead (try choicePrefix)
-  let (correct, incorrects) = makeMultipleChoice choices
-  return (header, correct, incorrects)
+  case makeMultipleChoice choices of
+    Left errMsg -> do pos <- getSourcePos
+                      return . Left $ sourcePosPretty pos <> "\n" <> errMsg
+    Right (correct, incorrects) -> return . Right $ MultipleChoice header correct incorrects
 
 pChoice = do
   kind <- oneOf ['*','-']
@@ -62,8 +73,9 @@ pReorder = do
   elements <- pReorderElement `sepBy1` lookAhead (try pReorderPrefix)
   let numbers = map fst elements
   if all (`elem` numbers) [1..length numbers]
-    then return (header, NE.fromList elements)
-    else error $ "A reordering question should have numbers starting from 1 and increase from there without skipping any numbers, but this is not the case:\n" 
+    then return . Right $ Reorder header (NE.fromList elements)
+    else do pos <- getSourcePos
+            return . Left $ sourcePosPretty pos <> "\n" <> "A reordering question should have numbers starting from 1 and increase from there without skipping any numbers, but this is not the case:\n" 
                     <> unlines (map show numbers)
 
 pReorderElement = do
@@ -122,15 +134,20 @@ seperator = do
   many eol
   return sep
 
-makeMultipleChoice :: [(Char, String)] -> (CorrectOption, [IncorrectOption])
+makeMultipleChoice :: [(Char, String)] -> Either String (CorrectOption, [IncorrectOption])
 makeMultipleChoice options = makeMultipleChoice' [] [] 0 options
   where
-    makeMultipleChoice' [] _ _ [] = error ("multiple choice had no correct answer: \n" ++ show options)
-    makeMultipleChoice' [c] ics _ [] = (c, reverse ics)
-    makeMultipleChoice' _ _ _ [] = error ("multiple choice had multiple correct answers: \n" ++ show options)
+    makeMultipleChoice' [] _ _ [] = Left ("multiple choice had no correct answer: \n" ++ showPretty options)
+    makeMultipleChoice' [c] ics _ [] = Right (c, reverse ics)
+    makeMultipleChoice' _ _ _ [] = Left ("multiple choice had multiple correct answers: \n" ++ showPretty options)
     makeMultipleChoice' cs ics i (('-', text) : opts) = makeMultipleChoice' cs (IncorrectOption text : ics) (i+1) opts
     makeMultipleChoice' cs ics i (('*', text) : opts) = makeMultipleChoice' (CorrectOption i text : cs) ics (i+1) opts
-    makeMultipleChoice' _  _   _ _ = error "impossible"
+    makeMultipleChoice' _  _   _ _ = Left "impossible"
+
+    showPretty :: [(Char, String)] -> String
+    showPretty = foldr ((<>) . showOne) ""
+
+    showOne (c, s) = [c] <> " " <> s
 
 makeOption :: Char -> String -> Option
 makeOption kind text

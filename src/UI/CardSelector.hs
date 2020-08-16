@@ -94,7 +94,7 @@ handleEvent gs s@CSS{_list=l, _exception=exc} (VtyEvent ev) =
                                 case fileOrExc of
                                   Left exc -> continue' (s' & exception ?~ displayException exc)
                                   Right file -> case parseCards file of
-                                    Left parseError -> continue' (s' & exception ?~ errorBundlePretty parseError)
+                                    Left parseError -> continue' (s' & exception ?~ parseError)
                                     Right result -> continue =<< liftIO (do
                                       s'' <- addRecentInternal s' fp
                                       let gs' = update s''
