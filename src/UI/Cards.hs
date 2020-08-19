@@ -71,7 +71,7 @@ drawCardUI s = let p = 1 in
 
     OpenQuestion title perforated -> drawHeader title
                                  <=> B.hBorder
-                                 <=> padLeftRight p (drawPerforated s perforated <=> str " ")
+                                 <=> padLeftRight p (atLeastV 1 (drawPerforated s perforated) <=> str " ")
 
     MultipleAnswer question options -> drawHeader question
                                    <=> B.hBorder
@@ -420,7 +420,8 @@ handleEvent gs _ _ = continue gs
 next :: GlobalState -> CS -> EventM Name (Next GlobalState)
 next gs s
   | s ^. index + 1 < length (s ^. cards) = continue . updateCS gs . straightenState $ s & index +~ 1
-  | otherwise                            = continue . updateCS gs $ s & popup ?~ finalPopup
+  | s ^. reviewMode                      = continue . updateCS gs $ s & popup ?~ finalPopup
+  | otherwise                            = halt' gs
 
 previous :: GlobalState -> CS -> EventM Name (Next GlobalState)
 previous gs s | s ^. index > 0 = continue . updateCS gs . straightenState $ s & index -~ 1

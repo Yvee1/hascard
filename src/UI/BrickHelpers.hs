@@ -45,3 +45,20 @@ hFill ch =
     Widget Greedy Fixed $ do
       c <- getContext
       return $ emptyResult & imageL .~ charFill (c^.attrL) ch (c^.availWidthL) 1
+
+-- | Fill all available space with the specified character. Grows only
+-- horizontally.
+vFill :: Char -> Widget n
+vFill ch =
+    Widget Greedy Fixed $ do
+      c <- getContext
+      return $ emptyResult & imageL .~ charFill (c^.attrL) ch 1 (c^.availHeightL)
+
+-- | Make widget at least some amount of rows high.
+atLeastV :: Int -> Widget n -> Widget n
+atLeastV n widget = Widget Fixed Fixed $ do
+  c <- getContext
+  result <- render widget
+  let h  = result^.imageL.to imageHeight
+      dh = n - h
+  if dh > 0 then render $ vLimit n (widget <=> vFill ' ') else render widget
