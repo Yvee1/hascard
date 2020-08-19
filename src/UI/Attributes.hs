@@ -60,6 +60,24 @@ exceptionAttr = attrName "exception"
 shuffledAttr :: AttrName
 shuffledAttr = attrName "shuffled indicator"
 
+yesButtonAttr :: AttrName
+yesButtonAttr = attrName "yes button"
+
+noButtonAttr :: AttrName
+noButtonAttr = attrName "no button"
+
+selectedYesButtonAttr :: AttrName
+selectedYesButtonAttr = attrName "selected yes button"
+
+selectedNoButtonAttr :: AttrName
+selectedNoButtonAttr = attrName "selected no button"
+
+correctAttr :: AttrName
+correctAttr = attrName "correct"
+
+wrongAttr :: AttrName
+wrongAttr = attrName "incorrect"
+
 theMap :: AttrMap
 theMap = attrMap defAttr
   [ (titleAttr, fg yellow)
@@ -78,7 +96,14 @@ theMap = attrMap defAttr
   , (correctElementAttr, fg green)
   , (incorrectElementAttr, fg red)
   , (gapAttr, defAttr `withStyle` underline)
-  , (selectedAttr, fg white `withStyle` underline)
+  , (selectedAttr, defAttr `withStyle` underline)
   , (exceptionAttr, fg red)
   , (focusedFormInputAttr, defAttr `withStyle` underline)
-  , (shuffledAttr, fg red) ]
+  , (shuffledAttr, fg red)
+  , (correctAttr, fg green)
+  , (wrongAttr, fg red)
+  , (yesButtonAttr, fg green)
+  , (noButtonAttr, fg red)
+  , (selectedYesButtonAttr, fg green `withStyle` underline)
+  , (selectedNoButtonAttr, fg red `withStyle` underline)
+  ]

@@ -22,6 +22,7 @@ data Opts = Opts
   , _optSubset       :: Int
   , _optChunk        :: Chunk
   , _optShuffle      :: Bool
+  , _optReview       :: Bool
   , _optVersion      :: Bool
   }
 
@@ -43,6 +44,7 @@ opts = Opts
   <*> option auto (long "amount" <> short 'a' <> metavar "n" <> help "Use the first n cards in the deck (most useful combined with shuffle)" <> value (-1))
   <*> option auto (long "chunk" <> short 'c' <> metavar "i/n" <> help "Split the deck into n chunks, and review the i'th one. Counting starts at 1." <> value (Chunk 1 1))
   <*> switch (long "shuffle" <> short 's' <> help "Randomize card order")
+  <*> switch (long "review" <> short 'r' <> help "Enable review mode: keep track of which questions were correctly and incorrectly answered")
   <*> switch (long "version" <> short 'v' <> help "Show version number")
 
 optsWithHelp :: ParserInfo Opts
@@ -56,7 +58,7 @@ nothingIf p a
   | otherwise = Just a
 
 mkGlobalState :: Opts -> GenIO -> GlobalState
-mkGlobalState opts gen = GlobalState {_mwc=gen, _doShuffle=opts^.optShuffle, _subset=nothingIf (<0) (opts^.optSubset), _states=Map.empty, _stack=Stack.empty, _chunk=opts^.optChunk }
+mkGlobalState opts gen = GlobalState {_mwc=gen, _doShuffle=opts^.optShuffle, _subset=nothingIf (<0) (opts^.optSubset), _states=Map.empty, _stack=Stack.empty, _chunk=opts^.optChunk, _doReview=opts^.optReview }
 
 cleanFilePath :: FilePath -> IO (Either String FilePath)
 cleanFilePath fp = case takeExtension fp of

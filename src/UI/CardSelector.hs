@@ -76,7 +76,6 @@ handleEvent gs s@CSS{_list=l, _exception=exc} (VtyEvent ev) =
         case (exc, ev) of
           (Just _, _) -> continue' $ s & exception .~ Nothing
           (_, e) -> case e of
-            V.EvKey (V.KChar 'c') [V.MCtrl] -> halt' gs
             V.EvKey V.KEsc [] -> halt' gs
             V.EvKey (V.KChar 's') []  -> continue (gs & doShuffle %~ not)
 

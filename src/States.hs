@@ -1,6 +1,7 @@
 {-# LANGUAGE TemplateHaskell #-}
 module States (module States, GenIO) where
 
+import Brick (Widget, EventM, Next)
 import Brick.Forms (Form)
 import Brick.Widgets.FileBrowser
 import Brick.Widgets.List (List)
@@ -12,6 +13,7 @@ import Stack hiding (head)
 import Types
 import qualified Data.List.NonEmpty as NE
 import qualified Data.Map.Strict as M
+import qualified Graphics.Vty as V
 
 data Name = HintsField
           | ControlsField
@@ -57,6 +59,7 @@ data GlobalState = GlobalState
   , _chunk      :: Chunk
   , _stack      :: Stack Mode
   , _states     :: Map Mode State
+  , _doReview   :: Bool
   }
 
 data CardState = 
@@ -79,6 +82,7 @@ data CardState =
   , _number         :: Int
   , _entered        :: Bool
   , _correctGaps    :: Map Int Bool
+  , _failed         :: Bool
   }
   | ReorderState
   { _highlighted    :: Int
@@ -99,7 +103,8 @@ defaultCardState (OpenQuestion _ perforated) = OpenQuestionState
   , _highlighted = 0
   , _number = nGapsInPerforated perforated
   , _entered = False
-  , _correctGaps = M.fromList [(i, False) | i <- [0..nGapsInPerforated perforated - 1]] }
+  , _correctGaps = M.fromList [(i, False) | i <- [0..nGapsInPerforated perforated - 1]]
+  , _failed = False }
 defaultCardState (MultipleAnswer _ answers) = MultipleAnswerState 
   { _highlighted = 0
   , _selected = M.fromList [(i, False) | i <- [0..NE.length answers-1]]
@@ -120,8 +125,22 @@ data CS = CS
   , _cardState      :: CardState
   , _showHints      :: Bool
   , _showControls   :: Bool
-  -- , _incorrectCards :: [Int]      -- list of indices of incorrect answers
+  , _reviewMode     :: Bool
+  , _correctCards   :: [Int]      -- list of indices of correct cards
+  , _popup          :: Maybe (Popup CS)
   }
+
+data Popup s = Popup 
+  { drawPopup        :: s -> Widget Name
+  , handlePopupEvent :: GlobalState -> s -> V.Event -> EventM Name (Next GlobalState)
+  , _popupState      :: PopupState
+  }
+
+data PopupState = 
+    CorrectPopup
+      { _popupSelected :: Int }
+  | FinalPopup
+  deriving Eq
 
 newtype MMS = MMS 
   { _l  :: List Name String }
@@ -160,3 +179,5 @@ makeLenses ''CS
 makeLenses ''Settings
 makeLenses ''CSS
 makeLenses ''FBS
+makeLenses ''Popup
+makeLenses ''PopupState

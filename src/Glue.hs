@@ -2,6 +2,7 @@ module Glue where
 import Brick
 import States
 import StateManagement
+import qualified Graphics.Vty     as V
 import qualified UI.MainMenu      as MM
 import qualified UI.Settings      as S
 import qualified UI.Info          as I
@@ -28,13 +29,15 @@ drawUI gs = case getState gs of
   CardsState        s ->  C.drawUI s
 
 handleEvent :: GlobalState -> BrickEvent Name Event -> EventM Name (Next GlobalState)
-handleEvent gs ev = case getState gs of
-  MainMenuState     s -> MM.handleEvent gs s ev
-  SettingsState     s ->  S.handleEvent gs s ev
-  InfoState         s ->  I.handleEvent gs s ev
-  CardSelectorState s -> CS.handleEvent gs s ev
-  FileBrowserState  s -> FB.handleEvent gs s ev
-  CardsState        s ->  C.handleEvent gs s ev
+handleEvent gs ev =
+  if ev == VtyEvent (V.EvKey (V.KChar 'c') [V.MCtrl]) then halt gs else
+  case getState gs of
+    MainMenuState     s -> MM.handleEvent gs s ev
+    SettingsState     s ->  S.handleEvent gs s ev
+    InfoState         s ->  I.handleEvent gs s ev
+    CardSelectorState s -> CS.handleEvent gs s ev
+    FileBrowserState  s -> FB.handleEvent gs s ev
+    CardsState        s ->  C.handleEvent gs s ev
 
 handleAttrMap :: GlobalState -> AttrMap
 handleAttrMap gs = case getState gs of

@@ -39,8 +39,8 @@ safeHead :: [a] -> Maybe a
 safeHead [] = Nothing
 safeHead (x:_) = Just x
 
-cardsState :: [Card] -> IO State
-cardsState deck = do
+cardsState :: Bool -> [Card] -> IO State
+cardsState doReview deck = do
   hints    <- getShowHints
   controls <- getShowControls
 
@@ -55,14 +55,17 @@ cardsState deck = do
            , _cardState = defaultCardState firstCard
            , _nCards = length deck'
            , _showHints = hints
-           , _showControls = controls }
+           , _showControls = controls
+           , _reviewMode = maybe False (const doReview) mFirstCard
+           , _correctCards = []
+           , _popup = Nothing }
  
   return $ CardsState initialState
 
 cardsWithOptionsState :: GlobalState -> [Card] -> IO State
-cardsWithOptionsState gs cards = 
+cardsWithOptionsState gs cards =
   let chunked = doChunking (gs^.chunk) cards
-  in doRandomization gs chunked >>= cardsState
+  in doRandomization gs chunked >>= cardsState (gs^.doReview)
 
 infoState :: State
 infoState = InfoState ()

@@ -58,3 +58,7 @@ nGapsInPerforated = nGapsInSentence . perforatedToSentence
 
 sentenceToGaps :: Sentence -> [NonEmpty String]
 sentenceToGaps = foldSentence (const []) (\_ gap acc -> gap : acc)
+
+isOptionCorrect :: Option -> Bool
+isOptionCorrect (Option Correct _) = True
+isOptionCorrect _                  = False

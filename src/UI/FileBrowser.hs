@@ -59,8 +59,6 @@ handleEvent gs s@FBS{_fb=b, _exception'=excep} (VtyEvent ev) =
       (_, e) -> case e of
         V.EvKey V.KEsc [] | not (fileBrowserIsSearching b) ->
             halt' gs
-        V.EvKey (V.KChar 'c') [V.MCtrl] | not (fileBrowserIsSearching b) ->
-            halt' gs
         V.EvKey (V.KChar 'h') [] | not (fileBrowserIsSearching b) -> let s' = s & showHidden %~ not in
             continue' $ s' & fb .~ setFileBrowserEntryFilter (Just (entryFilter (s' ^. showHidden))) b
         _ -> do

@@ -35,7 +35,6 @@ handleEvent gs form ev@(VtyEvent e) =
       continue' = continue . update
       halt' global = continue (popState global) <* liftIO (setSettings (formState form))  in
     case e of
-      V.EvKey (V.KChar 'c') [V.MCtrl] -> halt' gs
       V.EvKey V.KEsc [] -> halt' gs
       V.EvKey V.KDown [] -> continue' $ form { formFocus = focusNext (formFocus form) }
       V.EvKey (V.KChar 'j') [] -> continue' $ form { formFocus = focusNext (formFocus form) }

@@ -28,7 +28,6 @@ handleEvent gs s (VtyEvent e) =
       continue' = continue . update
       halt' = continue . popState in
     case e of
-      V.EvKey (V.KChar 'c') [V.MCtrl]  -> halt' gs
       V.EvKey V.KEsc [] -> halt' gs
       V.EvKey V.KEnter [] -> halt' gs
       V.EvKey V.KDown [] -> vScrollBy (viewportScroll Ordinary) 1 >> continue' s

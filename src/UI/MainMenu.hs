@@ -48,7 +48,6 @@ handleEvent :: GlobalState -> MMS -> BrickEvent Name Event -> EventM Name (Next 
 handleEvent gs s (VtyEvent e) =
   let update = updateMMS gs in
     case e of
-      V.EvKey (V.KChar 'c') [V.MCtrl]  -> halt gs
       V.EvKey V.KEsc [] -> halt gs
       V.EvKey V.KEnter [] ->
         case L.listSelected (s^.l) of
