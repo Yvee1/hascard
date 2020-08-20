@@ -1,6 +1,8 @@
 module UI.Cards (Card, State(..), drawUI, handleEvent, theMap) where
 
 import Brick
+import Control.Monad
+import Control.Monad.IO.Class
 import Lens.Micro.Platform
 import Types
 import States
@@ -13,6 +15,7 @@ import Text.Wrap
 import Data.Text (pack)
 import UI.Attributes
 import UI.BrickHelpers
+import System.FilePath
 import qualified Data.List.NonEmpty as NE
 import qualified Data.Text as T
 import qualified Data.Map.Strict as M
@@ -54,7 +57,7 @@ drawFooter s = if s^.reviewMode
         correct = withAttr correctAttr (str ("✓ " <> show nCorrect))
         nCorrect = length (s^.correctCards)
         nWrong = s^.index - nCorrect + (if endCard then 1 else 0)
-        endCard = maybe False ((==FinalPopup) . view popupState) (s^.popup)
+        endCard = maybe False (isFinalPopup . view popupState) (s^.popup)
 
 drawCardUI :: CS -> Widget Name
 drawCardUI s = let p = 1 in
@@ -404,7 +407,12 @@ handleEvent gs _ _ = continue gs
 next :: GlobalState -> CS -> EventM Name (Next GlobalState)
 next gs s
   | s ^. index + 1 < length (s ^. cards) = continue . updateCS gs . straightenState $ s & index +~ 1
-  | s ^. reviewMode                      = continue . updateCS gs $ s & popup ?~ finalPopup
+  | s ^. reviewMode                      = 
+      let thePopup = 
+            if null (s^.correctCards) || length (s^. correctCards) == length (s^.cards)
+              then finalPopup
+              else deckMakerPopup
+      in continue . updateCS gs $ s & popup ?~ thePopup
   | otherwise                            = halt' gs
 
 previous :: GlobalState -> CS -> EventM Name (Next GlobalState)
@@ -426,6 +434,11 @@ interchange i j kvs =
 ----------------------------------------------------
 ---------------------- Popups ----------------------
 ----------------------------------------------------
+
+isFinalPopup :: PopupState -> Bool
+isFinalPopup FinalPopup       = True
+isFinalPopup DeckMakerPopup{} = True
+isFinalPopup _                = False
 
 correctPopup :: Popup CS
 correctPopup = Popup drawer eventHandler initialState
@@ -458,8 +471,7 @@ correctPopup = Popup drawer eventHandler initialState
 
 finalPopup :: Popup CS
 finalPopup = Popup drawer eventHandler initialState
-  where 
-        drawer s = 
+  where drawer s = 
           let wrong    = withAttr wrongAttr   (str (" Incorrect: " <> show nWrong)   <+> hFill ' ') 
               correct  = withAttr correctAttr (str (" Correct:   " <> show nCorrect) <+> hFill ' ')
               nCorrect = length (s^.correctCards)
@@ -474,3 +486,78 @@ finalPopup = Popup drawer eventHandler initialState
         initialState = FinalPopup
 
         eventHandler gs s (V.EvKey V.KEnter []) = halt' gs
+
+deckMakerPopup :: Popup CS
+deckMakerPopup = Popup drawer eventHandler initialState
+  where drawer s =
+          let state    = fromMaybe initialState $ view popupState <$> s^.popup
+              j = state ^?! popupSelected
+
+              makeSym lens i = case (state ^?! lens, i == j) of
+                (_, True) -> withAttr highlightedOptAttr $ str "*"
+                (True, _) -> withAttr selectedOptAttr    $ str "*"
+                _         -> withAttr selectedOptAttr    $ str " "
+            
+              makeBox lens i = 
+                (if state ^?! lens then withAttr selectedOptAttr else id) $
+                  str "[" <+> makeSym lens i <+> str "]"
+
+              wBox = makeBox makeDeckIncorrect 0
+              cBox = makeBox makeDeckCorrect 1
+
+              wrong    = wBox <+> withAttr wrongAttr   (str (" Incorrect: " <> show nWrong)   <+> hFill ' ') 
+              correct  = cBox <+> withAttr correctAttr (str (" Correct:   " <> show nCorrect) <+> hFill ' ')
+              nCorrect = length (s^.correctCards)
+              nWrong   = s^.index + 1 - nCorrect in
+                centerPopup $ 
+                B.borderWithLabel (str "Generate decks") $
+                hLimit 20 $
+                str " " <=>
+                wrong <=>
+                correct <=>
+                str " " <=>
+                C.hCenter ((if j == 2 then withAttr selectedAttr else id) (str "Ok"))
+
+        initialState = DeckMakerPopup 0 False False
+
+        eventHandler gs s ev =
+          let update = updateCS gs
+              continue' = continue . update
+              p = fromJust (s ^. popup)
+              state = p ^. popupState
+          in case state ^?! popupSelected of
+            0 -> case ev of
+              V.EvKey V.KEnter []      -> continue' $ s & popup ?~ (p & popupState.makeDeckIncorrect %~ not)
+              V.EvKey V.KDown  []      -> continue' $ s & popup ?~ (p & popupState.popupSelected +~ 1)
+              V.EvKey (V.KChar 'j') [] -> continue' $ s & popup ?~ (p & popupState.popupSelected +~ 1)
+              _ -> continue' s
+            1 -> case ev of
+              V.EvKey V.KEnter []      -> continue' $ s & popup ?~ (p & popupState.makeDeckCorrect %~ not)
+              V.EvKey V.KDown  []      -> continue' $ s & popup ?~ (p & popupState.popupSelected +~ 1)
+              V.EvKey (V.KChar 'j') [] -> continue' $ s & popup ?~ (p & popupState.popupSelected +~ 1)
+              V.EvKey V.KUp  []        -> continue' $ s & popup ?~ (p & popupState.popupSelected -~ 1)
+              V.EvKey (V.KChar 'k') [] -> continue' $ s & popup ?~ (p & popupState.popupSelected -~ 1)
+              _ -> continue' s
+            2 -> case ev of
+              V.EvKey V.KEnter []      -> liftIO (generateDecks (s ^. pathToFile) (s ^. cards) (s ^. correctCards) (state ^?! makeDeckIncorrect) (state ^?! makeDeckIncorrect))
+                                       *> halt' gs
+              V.EvKey V.KUp  []        -> continue' $ s & popup ?~ (p & popupState.popupSelected -~ 1)
+              V.EvKey (V.KChar 'k') [] -> continue' $ s & popup ?~ (p & popupState.popupSelected -~ 1)
+              _ -> continue' s
+
+generateDecks :: FilePath -> [Card] -> [Int] -> Bool -> Bool -> IO ()
+generateDecks fp cards corrects makeCorrect makeIncorrect = 
+  when (makeCorrect || makeIncorrect) $ 
+    do let (correct, incorrect) = splitCorrectIncorrect cards corrects
+       when makeCorrect   $ writeFile (replaceBaseName fp (takeBaseName fp <> "+")) (cardsToString correct)
+       when makeIncorrect $ writeFile (replaceBaseName fp (takeBaseName fp <> "-")) (cardsToString incorrect)
+
+-- gets list of cards, list of indices of correct cards; returns (correct, incorrect)
+splitCorrectIncorrect :: [Card] -> [Int] -> ([Card], [Card])
+splitCorrectIncorrect cards indices = doSplit [] [] (zip [0..] cards) (reverse indices)
+  where doSplit cs ws [] _  = (reverse cs, reverse ws)
+        doSplit cs ws ((_, x):xs) [] = doSplit cs (x:ws) xs []
+        doSplit cs ws ((j, x):xs) (i:is) = 
+          if i == j
+            then doSplit (x:cs) ws xs is
+            else doSplit cs (x:ws) xs (i:is)

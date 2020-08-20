@@ -89,8 +89,8 @@ run opts = run' (opts ^. optFile)
               Right result ->
                 do gen <- createSystemRandom
                    makeAbsolute fp >>= addRecent
-                   start (Just result) (mkGlobalState opts gen)
+                   start (Just (fp, result)) (mkGlobalState opts gen)
 
-start :: Maybe [Card] -> GlobalState -> IO ()
+start :: Maybe (FilePath, [Card]) -> GlobalState -> IO ()
 start Nothing gs = runBrickFlashcards (gs `goToState` mainMenuState)
-start (Just cards) gs = runBrickFlashcards =<< (gs `goToState`) <$> cardsWithOptionsState gs cards
+start (Just (fp, cards)) gs = runBrickFlashcards =<< (gs `goToState`) <$> cardsWithOptionsState gs fp cards

@@ -128,6 +128,7 @@ data CS = CS
   , _reviewMode     :: Bool
   , _correctCards   :: [Int]      -- list of indices of correct cards
   , _popup          :: Maybe (Popup CS)
+  , _pathToFile     :: FilePath
   }
 
 data Popup s = Popup 
@@ -140,6 +141,10 @@ data PopupState =
     CorrectPopup
       { _popupSelected :: Int }
   | FinalPopup
+  | DeckMakerPopup
+      { _popupSelected     :: Int
+      , _makeDeckIncorrect :: Bool
+      , _makeDeckCorrect   :: Bool }
   deriving Eq
 
 newtype MMS = MMS 

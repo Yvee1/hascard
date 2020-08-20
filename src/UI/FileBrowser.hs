@@ -79,7 +79,7 @@ handleEvent gs s@FBS{_fb=b, _exception'=excep} (VtyEvent ev) =
                               Right result -> continue =<< liftIO (do
                                       addRecent fp
                                       let gs' = update s'
-                                      (gs' `moveToState`) <$> cardsWithOptionsState (update s') result)
+                                      (gs' `moveToState`) <$> cardsWithOptionsState (update s') fp result)
                         _ -> halt' gs
 
                 _ -> continue' s'
