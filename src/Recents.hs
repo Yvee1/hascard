@@ -69,6 +69,7 @@ initLast (x:xs) = let (xs', y) = initLast xs
                    in (x:xs', y)
 
 prep :: [FilePath] -> ([String], [FilePath])
+prep [] = ([], [])
 prep fps@(fp:_) = if all ((== takeExtension fp) . takeExtension) fps
   then unzip (map ((\(pre, fn) -> (pre, dropExtension fn)) . splitFileName) fps)
   else unzip (map splitFileName fps)
