@@ -79,7 +79,7 @@ config:
   fontFamily: "Iosevka"
   
   # The size of the font
-  fontSize: 24
+  fontSize: 21
   
   # The height of lines
   lineHeight: 0.92
@@ -377,9 +377,9 @@ records:
     content: "\e[?25l\e[12;1H\e(B\e[m            │                Settings                │             \e[13;1H\e(B\e[m            │                  \e[4mQuit\e[24m                  │             "
   - delay: 664
     content: "\e[?1049l\e[23;0;0t\e[?12l\e[?25h\e(B\e[m\e[?12l\e[?25h"
-  - delay: 9
-    content: "\e[1m\e[7m%\e[27m\e[1m\e[0m                                                                  \r \r\e]2;..skell/hascard\a"
-  - delay: 42
-    content: "\r\e[0m\e[27m\e[24m\e[J\e[01;32m➜  \e[36mhascard\e[00m \e[01;34mgit:(\e[31mmaster\e[34m) \e[33m✗\e[00m \e[K\e[?1h\e=\e[?2004h"
-  - delay: 690
-    content: "\e[?2004l\r\r\n"
+  # - delay: 9
+  #   content: "\e[1m\e[7m%\e[27m\e[1m\e[0m                                                                  \r \r\e]2;..skell/hascard\a"
+  # - delay: 42
+  #   content: "\r\e[0m\e[27m\e[24m\e[J\e[01;32m➜  \e[36mhascard\e[00m \e[01;34mgit:(\e[31mmaster\e[34m) \e[33m✗\e[00m \e[K\e[?1h\e=\e[?2004h"
+  # - delay: 690
+  #   content: "\e[?2004l\r\r\n"
