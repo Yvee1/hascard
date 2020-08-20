@@ -486,6 +486,7 @@ finalPopup = Popup drawer eventHandler initialState
         initialState = FinalPopup
 
         eventHandler gs s (V.EvKey V.KEnter []) = halt' gs
+        eventHandler gs _ _ = continue gs
 
 deckMakerPopup :: Popup CS
 deckMakerPopup = Popup drawer eventHandler initialState
