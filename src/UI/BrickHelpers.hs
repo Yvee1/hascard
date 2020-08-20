@@ -47,10 +47,10 @@ hFill ch =
       return $ emptyResult & imageL .~ charFill (c^.attrL) ch (c^.availWidthL) 1
 
 -- | Fill all available space with the specified character. Grows only
--- horizontally.
+-- vertically.
 vFill :: Char -> Widget n
 vFill ch =
-    Widget Greedy Fixed $ do
+    Widget Fixed Greedy $ do
       c <- getContext
       return $ emptyResult & imageL .~ charFill (c^.attrL) ch 1 (c^.availHeightL)
 

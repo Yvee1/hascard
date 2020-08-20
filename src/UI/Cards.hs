@@ -6,7 +6,6 @@ import Types
 import States
 import StateManagement
 import Data.Char (isSpace)
-import Data.List (dropWhileEnd)
 import Data.List.NonEmpty (NonEmpty)
 import Data.Map.Strict (Map)
 import Data.Maybe
@@ -89,15 +88,8 @@ drawHeader title = withAttr titleAttr $
 wrapSettings :: WrapSettings
 wrapSettings = WrapSettings {preserveIndentation=False, breakLongWords=True}
 
-isSpace' :: Char -> Bool
-isSpace' '\r' = True
-isSpace' a    = isSpace a
-
 drawDescr :: String -> Widget Name
-drawDescr descr =
-  strWrapWith wrapSettings descr'
-    where
-      descr' = dropWhileEnd isSpace' descr
+drawDescr = strWrapWith wrapSettings
 
 drawDef :: CS -> String -> Widget Name
 drawDef s def = if s ^. showHints then drawHintedDef s def else drawNormalDef s def
@@ -107,6 +99,10 @@ drawHintedDef s def = case s ^. cardState of
   DefinitionState {_flipped=f} -> if f then drawDescr def else drawDescr [if isSpace' char then char else '_' | char <- def]
   _ -> error "impossible: " 
 
+isSpace' :: Char -> Bool
+isSpace' '\r' = True
+isSpace' a    = isSpace a
+
 drawNormalDef:: CS -> String -> Widget Name
 drawNormalDef s def = case s ^. cardState of
   DefinitionState {_flipped=f} -> if f
@@ -114,20 +110,8 @@ drawNormalDef s def = case s ^. cardState of
     else Widget Greedy Fixed $ do
       c <- getContext
       let w = c^.availWidthL
-      let def' = dropWhileEnd isSpace' def
-      render . vBox $ [str " " | _ <- wrapTextToLines wrapSettings w (pack def')]
+      render . vBox $ [str " " | _ <- wrapTextToLines wrapSettings w (pack def)]
   _ -> error "impossible: " 
-
-listMultipleChoice :: CorrectOption -> [IncorrectOption] -> [String]
-listMultipleChoice c = reverse . listMultipleChoice' [] 0 c
-  where listMultipleChoice' opts i (CorrectOption j cStr) [] = 
-          if i == j
-            then cStr : opts
-            else opts
-        listMultipleChoice' opts i c'@(CorrectOption j cStr) ics@(IncorrectOption icStr : ics') = 
-          if i == j
-            then listMultipleChoice' (cStr  : opts) (i+1) c' ics
-            else listMultipleChoice' (icStr : opts) (i+1) c' ics'
 
 drawChoices :: CS -> [String] -> Widget Name
 drawChoices s options = case (s ^. cardState, s ^. currentCard) of
@@ -438,6 +422,10 @@ interchange i j kvs =
   let vali = kvs M.! i
       valj = kvs M.! j in
   M.insert j vali (M.insert i valj kvs)
+
+----------------------------------------------------
+---------------------- Popups ----------------------
+----------------------------------------------------
 
 correctPopup :: Popup CS
 correctPopup = Popup drawer eventHandler initialState

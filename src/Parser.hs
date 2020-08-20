@@ -2,6 +2,8 @@
 module Parser (parseCards) where
   
 import Control.Arrow
+import Data.Char (isSpace)
+import Data.List (dropWhileEnd)
 import Data.Void
 import Text.Megaparsec
 import Text.Megaparsec.Char
@@ -65,7 +67,7 @@ pOption = do
   kind <- oneOf ['*','x',' ']
   string "] "
   text <- manyTill anySingle $ lookAhead (try (seperator <|> string "[" <|> eof'))
-  return $ makeOption kind text
+  return $ makeOption kind (dropWhileEnd isSpace' text)
 
 pReorder = do
   header <- pHeader
@@ -81,7 +83,7 @@ pReorder = do
 pReorderElement = do
   int <- pReorderPrefix
   text <- manyTill anySingle $ lookAhead (try (try seperator <|> try pReorderPrefix <|> eof'))
-  return (read int, text)
+  return (read int, dropWhileEnd isSpace' text)
 
 pReorderPrefix = do
   int <- some digitChar
@@ -119,13 +121,13 @@ gappedSpecialChars =  seperator
 
 pNormal = do
   text <- manyTill (noneOf ['_']) $ lookAhead $ try $ gappedSpecialChars <|> eof'
-  return (Normal text)
+  return (Normal (dropWhileEnd isSpace' text))
 
 pDef = do
   header <- pHeader
   many eol
   descr <- manyTill chars $ lookAhead $ try $ seperator <|> eof'
-  return (header, descr)
+  return (header, dropWhileEnd isSpace' descr)
 
 eof' = eof >> return [] <?> "end of file"
 
@@ -140,16 +142,20 @@ makeMultipleChoice options = makeMultipleChoice' [] [] 0 options
     makeMultipleChoice' [] _ _ [] = Left ("multiple choice had no correct answer: \n" ++ showPretty options)
     makeMultipleChoice' [c] ics _ [] = Right (c, reverse ics)
     makeMultipleChoice' _ _ _ [] = Left ("multiple choice had multiple correct answers: \n" ++ showPretty options)
-    makeMultipleChoice' cs ics i (('-', text) : opts) = makeMultipleChoice' cs (IncorrectOption text : ics) (i+1) opts
-    makeMultipleChoice' cs ics i (('*', text) : opts) = makeMultipleChoice' (CorrectOption i text : cs) ics (i+1) opts
+    makeMultipleChoice' cs ics i (('-', text) : opts) = makeMultipleChoice' cs (IncorrectOption (dropWhileEnd isSpace' text) : ics) (i+1) opts
+    makeMultipleChoice' cs ics i (('*', text) : opts) = makeMultipleChoice' (CorrectOption i (dropWhileEnd isSpace' text) : cs) ics (i+1) opts
     makeMultipleChoice' _  _   _ _ = Left "impossible"
 
     showPretty :: [(Char, String)] -> String
     showPretty = foldr ((<>) . showOne) ""
 
-    showOne (c, s) = [c] <> " " <> s
+    showOne (c, s) = [c] <> " " <>  s
 
 makeOption :: Char -> String -> Option
 makeOption kind text
   | kind `elem` ['*','x'] = Option Correct text
   | otherwise             = Option Incorrect text
+
+isSpace' :: Char -> Bool
+isSpace' '\r' = True
+isSpace' a    = isSpace a
