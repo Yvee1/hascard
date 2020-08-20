@@ -1,4 +1,8 @@
 # hascard
+[![Build Status](https://travis-ci.org/Yvee1/hascard.svg?branch=master)](https://travis-ci.org/Yvee1/hascard) [![Hackage](https://img.shields.io/hackage/v/hascard.svg)](https://hackage.haskell.org/package/hascard) [![GitHub tag](https://img.shields.io/github/tag/Yvee1/hascard.svg)](https://github.com/Yvee1/hascard/releases)
+
+
+
 A minimal commandline utility for reviewing notes. 'Flashcards' can be written in markdown-like syntax.
 
 ![a recording of example usage of the hascard application](./recordings/recording.gif)
@@ -25,7 +29,7 @@ brew install Yvee1/tools/hascard
 ```
 
 ### Binary
-Linux and macOS binaries are available under [releases](https://github.com/Yvee1/hascard/releases/). To be able to run it from any directory, it has to be added to the PATH. This can be done by copying it to e.g. the `/usr/local/bin` directory.
+Ubuntu and macOS binaries are available under [releases](https://github.com/Yvee1/hascard/releases/). To be able to run it from any directory, it has to be added to the PATH. This can be done by copying it to e.g. the `/usr/local/bin` directory.
 
 ### Snapcraft
 Hascard is also on [snapcraft](https://snapcraft.io/hascard). Installation instructions are on that site. If you already have snap installed you can just install hascard via `sudo snap install hascard`. By default snap applications are isolated from the system and run in a sandbox. This means that hascard does not have permission to read or write any files on the system aside from those under `%HOME/snap/hascard`. To be able to read cards also in other directories under the home directory, hascard makes use of the `home` interface which might need to be enabled manually using `sudo snap connect hascard:home :home`.
@@ -41,13 +45,21 @@ cd hascard
 and do `stack install hascard` or `nix-build` respectively.
 
 ## Usage
-Simply run `hascard` to open the main application. Menu navigation can be done with the arrow keys or with the 'j' and 'k' keys. The controls for the different cards can be found at the bottom of the screen by default. This, and a couple other things, can be changed in the settings menu. Currently there is no functionality for making cards inside the hascard application itself, but they can easily be written in your favorite text editor since the syntax is human-friendly. 
+Simply run `hascard` to open the main application. Menu navigation can be done with the arrow keys or with the 'j' and 'k' keys. The controls for the different cards can be found at the bottom of the screen by default. This, and a couple other things, can be changed in the settings menu. A deck of cards can be opened using the built-in filebrowser, and recently selected decks will appear in the selection menu. The application can also be run directly on a file by giving it as an argument. These decks of flashcards are written in plain text, this is explained in section [Cards](#cards).
 
 ### CLI
-The CLI provides some options for running hascard; to see them all run `hascard -h`. As an example, say you have a file `deck.txt` with lots of cards in it and you want to review 5 random ones, you can use `hascard deck -s -a 5`. Here `-s` shuffles the deck and `-a 5` specifies we only want to look at 5 of them.
+The CLI provides some options for running hascard; the most interesting are:
+```
+  -a,--amount n            Use the first n cards in the deck (most useful
+                           combined with shuffle)
+  -c,--chunk i/n           Split the deck into n chunks, and review the i'th
+                           one. Counting starts at 1.
+  -s,--shuffle             Randomize card order
+  ```
+As an example, say you have a file `deck.txt` with lots of cards in it and you want to review 5 random ones, you can use `hascard deck -s -a 5`. Here `-s` shuffles the deck and `-a 5` specifies we only want to look at 5 of them.
 
 ## Cards
-Decks of cards are written in `.txt` files. Cards are seperated with a line containing three dashes `---`. For examples, see the [`/cards`](https://github.com/Yvee1/hascard/tree/master/cards) directory. In this section the 5 different types of cards are listed, with the syntax and how it is represented in the application.
+Decks of cards are written in `.txt` or `.md` files. Cards are seperated with a line containing three dashes `---`. For examples, see the [`/cards`](https://github.com/Yvee1/hascard/tree/master/cards) directory. In this section the 5 different types of cards are listed, with the syntax and how it is represented in the application.
 
 ### Definition
 This is the simplest card, it simply has a title and can be flipped to show the contents. For example the following card
