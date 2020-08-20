@@ -539,7 +539,7 @@ deckMakerPopup = Popup drawer eventHandler initialState
               V.EvKey (V.KChar 'k') [] -> continue' $ s & popup ?~ (p & popupState.popupSelected -~ 1)
               _ -> continue' s
             2 -> case ev of
-              V.EvKey V.KEnter []      -> liftIO (generateDecks (s ^. pathToFile) (s ^. cards) (s ^. correctCards) (state ^?! makeDeckIncorrect) (state ^?! makeDeckIncorrect))
+              V.EvKey V.KEnter []      -> liftIO (generateDecks (s ^. pathToFile) (s ^. cards) (s ^. correctCards) (state ^?! makeDeckCorrect) (state ^?! makeDeckIncorrect))
                                        *> halt' gs
               V.EvKey V.KUp  []        -> continue' $ s & popup ?~ (p & popupState.popupSelected -~ 1)
               V.EvKey (V.KChar 'k') [] -> continue' $ s & popup ?~ (p & popupState.popupSelected -~ 1)

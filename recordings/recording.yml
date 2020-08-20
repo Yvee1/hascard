@@ -9,7 +9,7 @@ config:
   
   # Specify the current working directory path
   # the default is the current working directory path
-  cwd: /home/steven
+  cwd: /media/steven/shared/Documents/Coding/Haskell/hascard
   
   # Export additional ENV variables
   env:
@@ -18,12 +18,12 @@ config:
   # Explicitly set the number of columns
   # or use `auto` to take the current
   # number of columns of your shell
-  cols: 85
+  cols: 67
   
   # Explicitly set the number of rows
   # or use `auto` to take the current
   # number of rows of your shell
-  rows: 22
+  rows: 19
   
   # Amount of times to repeat GIF
   # If value is -1, play once
@@ -111,231 +111,275 @@ config:
   
 # Records, feel free to edit them
 records:
-  - delay: 1128
-    content: "\e[1m\e[7m%\e[27m\e[1m\e[0m                                                                                    \r \r\e]2;~\a"
-  - delay: 28
-    content: "\r\e[0m\e[27m\e[24m\e[J\e[01;32m➜  \e[36m~\e[00m \e[01;34mgit:(\e[31mlinux\e[34m) \e[33m✗\e[00m \e[K\e[?1h\e=\e[?2004h"
-  - delay: 1911
+  - delay: 907
+    content: "\e[1m\e[7m%\e[27m\e[1m\e[0m                                                                  \r \r\e]2;..skell/hascard\a"
+  - delay: 42
+    content: "\r\e[0m\e[27m\e[24m\e[J\e[01;32m➜  \e[36mhascard\e[00m \e[01;34mgit:(\e[31mmaster\e[34m) \e[33m✗\e[00m \e[K\e[?1h\e=\e[?2004h"
+  - delay: 1160
     content: "h\e[90mascard\e[39m\b\b\b\b\b\b"
-  - delay: 124
-    content: "\bh\e[39ma"
-  - delay: 50
-    content: "\e[39ms"
-  - delay: 218
-    content: "\e[39mc"
-  - delay: 159
-    content: "\e[39ma"
-  - delay: 103
-    content: "\e[39mr"
-  - delay: 93
-    content: "\e[39md"
-  - delay: 167
-    content: "\e[?1l\e>\e[?2004l\r\r\n\e]2;hascard\a"
-  - delay: 8
-    content: "\e[5 q\e[?1049h\e[22;0;0t\e[H\e[2J\e[?25l\e[1;1H\e(B\e[m                                                                                     \e[2;1H\e(B\e[m                                                                                     \e[3;1H\e(B\e[m                                                                                     \e[4;1H\e(B\e[m                                                                                     \e[5;1H\e(B\e[m                                                                                     \e[6;1H\e(B\e[m                                                                                     \e[7;1H\e(B\e[m                     ╭────────────────────────────────────────╮                      \e[8;1H\e(B\e[m                     │         \e[33m┬ ┬┌─┐┌─┐┌─┐┌─┐┬─┐┌┬┐\e(B\e[m          │                      \e[9;1H\e(B\e[m                     │         \e[33m├─┤├─┤└─┐│  ├─┤├┬┘ ││\e(B\e[m          │                      \e[10;1H\e(B\e[m                     │         \e[33m┴ ┴┴ ┴└─┘└─┘┴ ┴┴└──┴┘\e(B\e[m          │                      \e[11;1H\e(B\e[m                     ├────────────────────────────────────────┤                      \e[12;1H\e(B\e[m                     │                 \e[4m\e[37mSelect\e(B\e[m                 │                      \e[13;1H\e(B\e[m                     │                  Info                  │                      \e[14;1H\e(B\e[m                     │                Settings                │                      \e[15;1H\e(B\e[m                     │                  Quit                  │                      \e[16;1H\e(B\e[m                     ╰────────────────────────────────────────╯                      \e[17;1H\e(B\e[m                                                                                     \e[18;1H\e(B\e[m                                                                                     \e[19;1H\e(B\e[m                                                                                     \e[20;1H\e(B\e[m                                                                                     \e[21;1H\e(B\e[m                                                                                     \e[22;1H\e(B\e[m                                                                                     "
-  - delay: 1080
-    content: "\e[?1049l\e[23;0;0t\e[?12l\e[?25h\e(B\e[m\e[?12l\e[?25h\e[?1049h\e[22;0;0t\e[H\e[2J"
-  - delay: 7
-    content: "\e[?25l\e[1;1H\e(B\e[m                                                                                     \e[2;1H\e(B\e[m                                                                                     \e[3;1H\e(B\e[m                                                                                     \e[4;1H\e(B\e[m                                                                                     \e[5;1H\e(B\e[m                                                                                     \e[6;1H\e(B\e[m                                                                                     \e[7;1H\e(B\e[m                ╭──────────────────────────────────────────────────╮                 \e[8;1H\e(B\e[m                │\e[33m           Select a deck of flashcards            \e(B\e[m│                 \e[9;1H\e(B\e[m                ├──────────────────────────────────────────────────┤                 \e[10;1H\e(B\e[m                │                      \e[4m\e[37mlight\e(B\e[m                       │                 \e[11;1H\e(B\e[m                │             \e[34mSelect file from system\e(B\e[m              │                 \e[12;1H\e(B\e[m                │                                                  │                 \e[13;1H\e(B\e[m                │                                                  │                 \e[14;1H\e(B\e[m                │                                                  │                 \e[15;1H\e(B\e[m                │                                                  │                 \e[16;1H\e(B\e[m                ╰──────────────────────────────────────────────────╯                 \e[17;1H\e(B\e[m                                                                                     \e[18;1H\e(B\e[m                                                                                     \e[19;1H\e(B\e[m                                                                                     \e[20;1H\e(B\e[m                                                                                     \e[21;1H\e(B\e[m                                                                                     \e[22;1H\e(B\e[m                                                                                     "
-  - delay: 1071
-    content: "\e[?1049l\e[23;0;0t\e[?12l\e[?25h\e(B\e[m\e[?12l\e[?25h"
-  - delay: 6
-    content: "\e[?1049h\e[22;0;0t\e[H\e[2J"
-  - delay: 7
-    content: "\e[?25l\e[1;1H\e(B\e[m                                                                                     \e[2;1H\e(B\e[m                                                                                     \e[3;1H\e(B\e[m                                                                                     \e[4;1H\e(B\e[m                                                                                     \e[5;1H\e(B\e[m                                                                                     \e[6;1H\e(B\e[m                                                                                     \e[7;1H\e(B\e[m                                                                                     \e[8;1H\e(B\e[m                ╭──────────────────────────────────────────────────╮                 \e[9;1H\e(B\e[m                │\e[33m                      ipRGC                       \e(B\e[m│                 \e[10;1H\e(B\e[m                ├──────────────────────────────────────────────────┤                 \e[11;1H\e(B\e[m                │                                                  │                 \e[12;1H\e(B\e[m                │                                                  │                 \e[13;1H\e(B\e[m                │                                                  │                 \e[14;1H\e(B\e[m                │                       1/13                       │                 \e[15;1H\e(B\e[m                ╰──────────────────────────────────────────────────╯                 \e[16;1H\e(B\e[m                                                                                     \e[17;1H\e(B\e[m                                                                                     \e[18;1H\e(B\e[m                                                                                     \e[19;1H\e(B\e[m                                                                                     \e[20;1H\e(B\e[m                                                                                     \e[21;1H\e(B\e[m                                                                                     \e[22;1H\e(B\e[m                                                                                     "
-  - delay: 1327
-    content: "\e[?25l\e[11;1H\e(B\e[m                │ intrinsically photosensitive Retinal Ganglion    │                 \e[12;1H\e(B\e[m                │ Cell                                             │                 \e[13;1H\e(B\e[m                │                                                  │                 "
-  - delay: 1669
-    content: "\e[?25l\e[6;1H\e(B\e[m                ╭──────────────────────────────────────────────────╮                 \e[7;1H\e(B\e[m                │\e[33m     Peak intensity of motopic vision is at a     \e(B\e[m│                 \e[8;1H\e(B\e[m                │\e[33m               wavelength of around               \e(B\e[m│                 \e[9;1H\e(B\e[m                ├──────────────────────────────────────────────────┤                 \e[10;1H\e(B\e[m                │ \e[33m* \e(B\e[m400 nm                                         │                 \e[11;1H\e(B\e[m                │   450 nm                                         │                 \e[12;1H\e(B\e[m                │   500 nm                                         │                 \e[13;1H\e(B\e[m                │   550 nm                                         │                 \e[14;1H\e(B\e[m                │                                                  │                 \e[15;1H\e(B\e[m                │                       2/13                       │                 \e[16;1H\e(B\e[m                ╰──────────────────────────────────────────────────╯                 "
-  - delay: 1075
-    content: "\e[?25l\e[10;1H\e(B\e[m                │   400 nm                                         │                 \e[11;1H\e(B\e[m                │ \e[33m* \e(B\e[m450 nm                                         │                 "
-  - delay: 162
-    content: "\e[?25l\e[11;1H\e(B\e[m                │   450 nm                                         │                 \e[12;1H\e(B\e[m                │ \e[33m* \e(B\e[m500 nm                                         │                 "
-  - delay: 146
-    content: "\e[?25l\e[12;1H\e(B\e[m                │   500 nm                                         │                 \e[13;1H\e(B\e[m                │ \e[33m* \e(B\e[m550 nm                                         │                 "
-  - delay: 389
-    content: "\e[?25l\e[12;1H\e(B\e[m                │ \e[33m* \e(B\e[m500 nm                                         │                 \e[13;1H\e(B\e[m                │   550 nm                                         │                 "
-  - delay: 517
-    content: "\e[?25l\e[12;1H\e(B\e[m                │ \e[33m* \e[31m500 nm                                        \e(B\e[m │                 "
-  - delay: 395
-    content: "\e[?25l\e[12;1H\e(B\e[m                │   \e[31m500 nm                                        \e(B\e[m │                 \e[13;1H\e(B\e[m                │ \e[33m* \e(B\e[m550 nm                                         │                 "
-  - delay: 595
-    content: "\e[?25l\e[13;1H\e(B\e[m                │ \e[33m* \e[32m550 nm                                        \e(B\e[m │                 "
-  - delay: 600
-    content: "\e[?25l\e[6;1H\e(B\e[m                                                                                     \e[7;1H\e(B\e[m                ╭──────────────────────────────────────────────────╮                 \e[8;1H\e(B\e[m                │\e[33m               Layers of the eye 1                \e(B\e[m│                 \e[10;1H\e(B\e[m                │ Light falls onto the  which is covered by the    │                 \e[11;1H\e(B\e[m                │ filter which protects against UV and low         │                 \e[12;1H\e(B\e[m                │ wavelengths.                                     │                 \e[13;1H\e(B\e[m                │                                                  │                 \e[14;1H\e(B\e[m                │                       3/13                       │                 \e[15;1H\e(B\e[m                ╰──────────────────────────────────────────────────╯                 \e[16;1H\e(B\e[m                                                                                     \e[?12l\e[?25h\e[10;40H"
-  - delay: 1490
-    content: "\e[?25l\e[10;1H\e(B\e[m                │ Light falls onto the \e[4mr\e[24m which is covered by the   │                 \e[11;1H\e(B\e[m                │ filter which protects against UV and low         │                 \e[12;1H\e(B\e[m                │ wavelengths.                                     │                 \e[13;1H\e(B\e[m                │                                                  │                 \e[?12l\e[?25h\e[10;41H"
-  - delay: 59
-    content: "\e[?25l\e[10;1H\e(B\e[m                │ Light falls onto the \e[4mre\e[24m which is covered by the  │                 \e[11;1H\e(B\e[m                │ filter which protects against UV and low         │                 \e[12;1H\e(B\e[m                │ wavelengths.                                     │                 \e[13;1H\e(B\e[m                │                                                  │                 \e[?12l\e[?25h\e[10;42H"
-  - delay: 152
-    content: "\e[?25l\e[10;1H\e(B\e[m                │ Light falls onto the \e[4mret\e[24m which is covered by the │                 \e[11;1H\e(B\e[m                │  filter which protects against UV and low        │                 \e[?12l\e[?25h\e[10;43H"
   - delay: 109
-    content: "\e[?25l\e[10;1H\e(B\e[m                │ Light falls onto the \e[4mreti\e[24m which is covered by    │                 \e[11;1H\e(B\e[m                │ the  filter which protects against UV and low    │                 \e[12;1H\e(B\e[m                │ wavelengths.                                     │                 \e[13;1H\e(B\e[m                │                                                  │                 \e[?12l\e[?25h\e[10;44H"
-  - delay: 57
-    content: "\e[?25l\e[10;1H\e(B\e[m                │ Light falls onto the \e[4mretin\e[24m which is covered by   │                 \e[11;1H\e(B\e[m                │ the  filter which protects against UV and low    │                 \e[12;1H\e(B\e[m                │ wavelengths.                                     │                 \e[13;1H\e(B\e[m                │                                                  │                 \e[?12l\e[?25h\e[10;45H"
-  - delay: 106
-    content: "\e[?25l\e[10;1H\e(B\e[m                │ Light falls onto the \e[4mretina\e[24m which is covered by  │                 \e[11;1H\e(B\e[m                │ the  filter which protects against UV and low    │                 \e[12;1H\e(B\e[m                │ wavelengths.                                     │                 \e[13;1H\e(B\e[m                │                                                  │                 \e[?12l\e[?25h\e[10;46H"
-  - delay: 1369
-    content: "\e[?25l\e[?12l\e[?25h\e[11;23H"
-  - delay: 934
-    content: "\e[?25l\e[11;1H\e(B\e[m                │ the \e[4mm\e[24m filter which protects against UV and low   │                 \e[?12l\e[?25h\e[11;24H"
-  - delay: 133
-    content: "\e[?25l\e[11;1H\e(B\e[m                │ the \e[4mma\e[24m filter which protects against UV and low  │                 \e[?12l\e[?25h\e[11;25H"
-  - delay: 94
-    content: "\e[?25l\e[11;1H\e(B\e[m                │ the \e[4mmac\e[24m filter which protects against UV and low │                 \e[12;1H\e(B\e[m                │ wavelengths.                                     │                 \e[13;1H\e(B\e[m                │                                                  │                 \e[?12l\e[?25h\e[11;26H"
-  - delay: 92
-    content: "\e[?25l\e[11;1H\e(B\e[m                │ the \e[4mmacu\e[24m filter which protects against UV and    │                 \e[12;1H\e(B\e[m                │ low wavelengths.                                 │                 \e[13;1H\e(B\e[m                │                                                  │                 \e[?12l\e[?25h\e[11;27H"
-  - delay: 84
-    content: "\e[?25l\e[11;1H\e(B\e[m                │ the \e[4mmacul\e[24m filter which protects against UV and   │                 \e[?12l\e[?25h\e[11;28H"
-  - delay: 118
-    content: "\e[?25l\e[11;1H\e(B\e[m                │ the \e[4mmacula\e[24m filter which protects against UV and  │                 \e[?12l\e[?25h\e[11;29H"
-  - delay: 381
-    content: "\e[?25l\e[10;1H\e(B\e[m                │ Light falls onto the \e[4m\e[32mretina\e(B\e[m which is covered by  │                 \e[11;1H\e(B\e[m                │ the \e[4m\e[32mmacula\e(B\e[m filter which protects against UV and  │                 \e[?12l\e[?25h\e[11;29H"
-  - delay: 703
-    content: "\e[?25l\e[7;1H\e(B\e[m                                                                                     \e[8;1H\e(B\e[m                                                                                     \e[9;1H\e(B\e[m                ╭──────────────────────────────────────────────────╮                 \e[10;1H\e(B\e[m                │\e[33m                       LGN                        \e(B\e[m│                 \e[11;1H\e(B\e[m                ├──────────────────────────────────────────────────┤                 \e[12;1H\e(B\e[m                │                                                  │                 \e[13;1H\e(B\e[m                │                       4/13                       │                 \e[14;1H\e(B\e[m                ╰──────────────────────────────────────────────────╯                 \e[15;1H\e(B\e[m                                                                                     \e[?12l\e[?25h\e[12;19H"
-  - delay: 943
-    content: "\e[?25l\e[8;1H\e(B\e[m                ╭──────────────────────────────────────────────────╮                 \e[9;1H\e(B\e[m                │\e[33m                       LGN                        \e(B\e[m│                 \e[10;1H\e(B\e[m                ├──────────────────────────────────────────────────┤                 \e[11;1H\e(B\e[m                │ \e[4ml\e[24m                                                │                 \e[12;1H\e(B\e[m                │                                                  │                 \e[?12l\e[?25h\e[11;20H"
-  - delay: 196
-    content: "\e[?25l\e[11;1H\e(B\e[m                │ \e[4mla\e[24m                                               │                 \e[12;1H\e(B\e[m                │                                                  │                 \e[?12l\e[?25h\e[11;21H"
+    content: "\bh\e[39ma"
   - delay: 81
-    content: "\e[?25l\e[11;1H\e(B\e[m                │ \e[4mlat\e[24m                                              │                 \e[12;1H\e(B\e[m                │                                                  │                 \e[?12l\e[?25h\e[11;22H"
-  - delay: 157
-    content: "\e[?25l\e[11;1H\e(B\e[m                │ \e[4mlate\e[24m                                             │                 \e[12;1H\e(B\e[m                │                                                  │                 \e[?12l\e[?25h\e[11;23H"
-  - delay: 86
-    content: "\e[?25l\e[11;1H\e(B\e[m                │ \e[4mlater\e[24m                                            │                 \e[12;1H\e(B\e[m                │                                                  │                 \e[?12l\e[?25h\e[11;24H"
-  - delay: 94
-    content: "\e[?25l\e[11;1H\e(B\e[m                │ \e[4mlatera\e[24m                                           │                 \e[12;1H\e(B\e[m                │                                                  │                 \e[?12l\e[?25h\e[11;25H"
-  - delay: 73
-    content: "\e[?25l\e[11;1H\e(B\e[m                │ \e[4mlateral\e[24m                                          │                 \e[12;1H\e(B\e[m                │                                                  │                 \e[?12l\e[?25h\e[11;26H"
-  - delay: 70
-    content: "\e[?25l\e[11;1H\e(B\e[m                │ \e[4mlateral \e[24m                                         │                 \e[12;1H\e(B\e[m                │                                                  │                 \e[?12l\e[?25h\e[11;27H"
-  - delay: 130
-    content: "\e[?25l\e[11;1H\e(B\e[m                │ \e[4mlateral g\e[24m                                        │                 \e[12;1H\e(B\e[m                │                                                  │                 \e[?12l\e[?25h\e[11;28H"
-  - delay: 66
-    content: "\e[?25l\e[11;1H\e(B\e[m                │ \e[4mlateral ge\e[24m                                       │                 \e[12;1H\e(B\e[m                │                                                  │                 \e[?12l\e[?25h\e[11;29H"
-  - delay: 57
-    content: "\e[?25l\e[11;1H\e(B\e[m                │ \e[4mlateral gen\e[24m                                      │                 \e[12;1H\e(B\e[m                │                                                  │                 \e[?12l\e[?25h\e[11;30H"
-  - delay: 72
-    content: "\e[?25l\e[11;1H\e(B\e[m                │ \e[4mlateral geni\e[24m                                     │                 \e[12;1H\e(B\e[m                │                                                  │                 \e[?12l\e[?25h\e[11;31H"
-  - delay: 141
-    content: "\e[?25l\e[11;1H\e(B\e[m                │ \e[4mlateral genic\e[24m                                    │                 \e[12;1H\e(B\e[m                │                                                  │                 \e[?12l\e[?25h\e[11;32H"
-  - delay: 92
-    content: "\e[?25l\e[11;1H\e(B\e[m                │ \e[4mlateral genicu\e[24m                                   │                 \e[12;1H\e(B\e[m                │                                                  │                 \e[?12l\e[?25h\e[11;33H"
-  - delay: 48
-    content: "\e[?25l\e[11;1H\e(B\e[m                │ \e[4mlateral genicul\e[24m                                  │                 \e[12;1H\e(B\e[m                │                                                  │                 \e[?12l\e[?25h\e[11;34H"
-  - delay: 71
-    content: "\e[?25l\e[11;1H\e(B\e[m                │ \e[4mlateral genicula\e[24m                                 │                 \e[12;1H\e(B\e[m                │                                                  │                 \e[?12l\e[?25h\e[11;35H"
-  - delay: 71
-    content: "\e[?25l\e[11;1H\e(B\e[m                │ \e[4mlateral geniculat\e[24m                                │                 \e[12;1H\e(B\e[m                │                                                  │                 \e[?12l\e[?25h\e[11;36H"
-  - delay: 102
-    content: "\e[?25l\e[11;1H\e(B\e[m                │ \e[4mlateral geniculate\e[24m                               │                 \e[12;1H\e(B\e[m                │                                                  │                 \e[?12l\e[?25h\e[11;37H"
-  - delay: 27
-    content: "\e[?25l\e[11;1H\e(B\e[m                │ \e[4mlateral geniculate \e[24m                              │                 \e[12;1H\e(B\e[m                │                                                  │                 \e[?12l\e[?25h\e[11;38H"
-  - delay: 122
-    content: "\e[?25l\e[11;1H\e(B\e[m                │ \e[4mlateral geniculate n\e[24m                             │                 \e[12;1H\e(B\e[m                │                                                  │                 \e[?12l\e[?25h\e[11;39H"
-  - delay: 331
-    content: "\e[?25l\e[11;1H\e(B\e[m                │ \e[4mlateral geniculate nu\e[24m                            │                 \e[12;1H\e(B\e[m                │                                                  │                 \e[?12l\e[?25h\e[11;40H"
-  - delay: 171
-    content: "\e[?25l\e[11;1H\e(B\e[m                │ \e[4mlateral geniculate nuc\e[24m                           │                 \e[12;1H\e(B\e[m                │                                                  │                 \e[?12l\e[?25h\e[11;41H"
-  - delay: 123
-    content: "\e[?25l\e[11;1H\e(B\e[m                │ \e[4mlateral geniculate nucl\e[24m                          │                 \e[12;1H\e(B\e[m                │                                                  │                 \e[?12l\e[?25h\e[11;42H"
-  - delay: 132
-    content: "\e[?25l\e[11;1H\e(B\e[m                │ \e[4mlateral geniculate nucle\e[24m                         │                 \e[12;1H\e(B\e[m                │                                                  │                 \e[?12l\e[?25h\e[11;43H"
-  - delay: 87
-    content: "\e[?25l\e[11;1H\e(B\e[m                │ \e[4mlateral geniculate nuclei\e[24m                        │                 \e[12;1H\e(B\e[m                │                                                  │                 \e[?12l\e[?25h\e[11;44H"
-  - delay: 206
-    content: "\e[?25l\e[11;1H\e(B\e[m                │ \e[4m\e[32mlateral geniculate nuclei\e(B\e[m                        │                 \e[?12l\e[?25h\e[11;44H"
-  - delay: 573
-    content: "\e[?25l\e[7;1H\e(B\e[m                ╭──────────────────────────────────────────────────╮                 \e[8;1H\e(B\e[m                │\e[33m Check the elements that are part of the primary  \e(B\e[m│                 \e[9;1H\e(B\e[m                │\e[33m                   visual path                    \e(B\e[m│                 \e[11;1H\e(B\e[m                │[\e[33m*\e(B\e[m] Optic nerve                                   │                 \e[12;1H\e(B\e[m                │[ ] RHP axis                                      │                 \e[13;1H\e(B\e[m                │[ ] LGN                                           │                 \e[14;1H\e(B\e[m                │                                                  │                 \e[15;1H\e(B\e[m                │                       5/13                       │                 \e[16;1H\e(B\e[m                ╰──────────────────────────────────────────────────╯                 "
-  - delay: 2902
-    content: "\e[?25l\e[11;1H\e(B\e[m                │\e[34m[\e[33m*\e[34m] \e(B\e[mOptic nerve                                   │                 "
-  - delay: 467
-    content: "\e[?25l\e[11;1H\e(B\e[m                │\e[34m[*] \e(B\e[mOptic nerve                                   │                 \e[12;1H\e(B\e[m                │[\e[33m*\e(B\e[m] RHP axis                                      │                 "
-  - delay: 170
-    content: "\e[?25l\e[12;1H\e(B\e[m                │[ ] RHP axis                                      │                 \e[13;1H\e(B\e[m                │[\e[33m*\e(B\e[m] LGN                                           │                 "
-  - delay: 570
-    content: "\e[?25l\e[13;1H\e(B\e[m                │\e[34m[\e[33m*\e[34m] \e(B\e[mLGN                                           │                 "
-  - delay: 868
-    content: "\e[?25l\e[11;1H\e(B\e[m                │\e[32m[*] \e(B\e[mOptic nerve                                   │                 \e[12;1H\e(B\e[m                │\e[32m[ ] \e(B\e[mRHP axis                                      │                 \e[13;1H\e(B\e[m                │\e[32m[*] \e(B\e[mLGN                                           │                 "
-  - delay: 780
-    content: "\e[?25l\e[7;1H\e(B\e[m                                                                                     \e[8;1H\e(B\e[m                ╭──────────────────────────────────────────────────╮                 \e[9;1H\e(B\e[m                │\e[33m               Layers of the eye 2                \e(B\e[m│                 \e[11;1H\e(B\e[m                │ Below the retina is the  containing blood        │                 \e[12;1H\e(B\e[m                │ vessels.                                         │                 \e[13;1H\e(B\e[m                │                                                  │                 \e[14;1H\e(B\e[m                │                       6/13                       │                 \e[15;1H\e(B\e[m                ╰──────────────────────────────────────────────────╯                 \e[16;1H\e(B\e[m                                                                                     \e[?12l\e[?25h\e[11;43H"
-  - delay: 3377
-    content: "\e[?25l\e[11;1H\e(B\e[m                │ Below the retina is the \e[4ms\e[24m containing blood       │                 \e[12;1H\e(B\e[m                │ vessels.                                         │                 \e[13;1H\e(B\e[m                │                                                  │                 \e[?12l\e[?25h\e[11;44H"
-  - delay: 165
-    content: "\e[?25l\e[11;1H\e(B\e[m                │ Below the retina is the \e[4msc\e[24m containing blood      │                 \e[12;1H\e(B\e[m                │ vessels.                                         │                 \e[13;1H\e(B\e[m                │                                                  │                 \e[?12l\e[?25h\e[11;45H"
-  - delay: 175
-    content: "\e[?25l\e[11;1H\e(B\e[m                │ Below the retina is the \e[4mscl\e[24m containing blood     │                 \e[12;1H\e(B\e[m                │ vessels.                                         │                 \e[13;1H\e(B\e[m                │                                                  │                 \e[?12l\e[?25h\e[11;46H"
+    content: "\e[39ms"
+  - delay: 154
+    content: "\e[39mc"
+  - delay: 158
+    content: "\e[39ma"
   - delay: 77
-    content: "\e[?25l\e[11;1H\e(B\e[m                │ Below the retina is the \e[4mscle\e[24m containing blood    │                 \e[12;1H\e(B\e[m                │ vessels.                                         │                 \e[13;1H\e(B\e[m                │                                                  │                 \e[?12l\e[?25h\e[11;47H"
-  - delay: 64
-    content: "\e[?25l\e[11;1H\e(B\e[m                │ Below the retina is the \e[4mscler\e[24m containing blood   │                 \e[12;1H\e(B\e[m                │ vessels.                                         │                 \e[13;1H\e(B\e[m                │                                                  │                 \e[?12l\e[?25h\e[11;48H"
-  - delay: 59
-    content: "\e[?25l\e[11;1H\e(B\e[m                │ Below the retina is the \e[4msclera\e[24m containing blood  │                 \e[12;1H\e(B\e[m                │ vessels.                                         │                 \e[13;1H\e(B\e[m                │                                                  │                 \e[?12l\e[?25h\e[11;49H"
-  - delay: 139
-    content: "\e[?25l\e[11;1H\e(B\e[m                │ Below the retina is the \e[4m\e[31msclera\e(B\e[m containing blood  │                 \e[?12l\e[?25h\e[11;49H"
-  - delay: 915
-    content: "\e[?25l\e[11;1H\e(B\e[m                │ Below the retina is the \e[4m\e[31mscler\e(B\e[m containing blood   │                 \e[12;1H\e(B\e[m                │ vessels.                                         │                 \e[13;1H\e(B\e[m                │                                                  │                 \e[?12l\e[?25h\e[11;48H"
-  - delay: 132
-    content: "\e[?25l\e[11;1H\e(B\e[m                │ Below the retina is the \e[4m\e[31mscle\e(B\e[m containing blood    │                 \e[12;1H\e(B\e[m                │ vessels.                                         │                 \e[13;1H\e(B\e[m                │                                                  │                 \e[?12l\e[?25h\e[11;47H"
+    content: "\e[39mr"
+  - delay: 111
+    content: "\e[39md"
+  - delay: 344
+    content: "\e[?1l\e>\e[?2004l\r\r\n\e]2;hascard\a"
+  - delay: 12
+    content: "\e[5 q\e[?1049h\e[22;0;0t\e[H\e[2J"
+  - delay: 24
+    content: "\e[?25l\e[1;1H\e(B\e[m                                                                   \e[2;1H\e(B\e[m                                                                   \e[3;1H\e(B\e[m                                                                   \e[4;1H\e(B\e[m                                                                   \e[5;1H\e(B\e[m            ╭────────────────────────────────────────╮             \e[6;1H\e(B\e[m            │         \e[33m┬ ┬┌─┐┌─┐┌─┐┌─┐┬─┐┌┬┐\e(B\e[m          │             \e[7;1H\e(B\e[m            │         \e[33m├─┤├─┤└─┐│  ├─┤├┬┘ ││\e(B\e[m          │             \e[8;1H\e(B\e[m            │         \e[33m┴ ┴┴ ┴└─┘└─┘┴ ┴┴└──┴┘\e(B\e[m          │             \e[9;1H\e(B\e[m            ├────────────────────────────────────────┤             \e[10;1H\e(B\e[m            │                 \e[4mSelect\e[24m                 │             \e[11;1H\e(B\e[m            │                  Info                  │             \e[12;1H\e(B\e[m            │                Settings                │             \e[13;1H\e(B\e[m            │                  Quit                  │             \e[14;1H\e(B\e[m            ╰────────────────────────────────────────╯             \e[15;1H\e(B\e[m                                                                   \e[16;1H\e(B\e[m                                                                   \e[17;1H\e(B\e[m                                                                   \e[18;1H\e(B\e[m                                                                   \e[19;1H\e(B\e[m                                                                   "
+  - delay: 999
+    content: "\e[?25l\e[5;1H\e(B\e[m             ╭───────────────────────────────────────╮             \e[6;1H\e(B\e[m             │     \e[33mSelect a deck of flashcards \e(B\e[m      │             \e[7;1H\e(B\e[m             ├───────────────────────────────────────┤             \e[8;1H\e(B\e[m             │               \e[4m\e[37manalysis3\e(B\e[m               │             \e[9;1H\e(B\e[m             │                syntax                 │             \e[10;1H\e(B\e[m             │                 light                 │             \e[11;1H\e(B\e[m             │                example                │             \e[12;1H\e(B\e[m             │        \e[34mSelect file from system\e(B\e[m        │             \e[13;1H\e(B\e[m             │                                       │             \e[14;1H\e(B\e[m             ╰───────────────────────────────────────╯             "
+  - delay: 1292
+    content: "\e[?25l\e[8;1H\e(B\e[m             │               analysis3               │             \e[9;1H\e(B\e[m             │                \e[4m\e[37msyntax\e(B\e[m                 │             "
+  - delay: 250
+    content: "\e[?25l\e[9;1H\e(B\e[m             │                syntax                 │             \e[10;1H\e(B\e[m             │                 \e[4m\e[37mlight\e(B\e[m                 │             "
+  - delay: 194
+    content: "\e[?25l\e[10;1H\e(B\e[m             │                 light                 │             \e[11;1H\e(B\e[m             │                \e[4m\e[37mexample\e(B\e[m                │             "
+  - delay: 432
+    content: "\e[?25l\e[6;1H\e(B\e[m             │\e[33m  Peak intensity of motopic vision is  \e(B\e[m│             \e[7;1H\e(B\e[m             │\e[33m       at a wavelength of around       \e(B\e[m│             \e[8;1H\e(B\e[m             ├───────────────────────────────────────┤             \e[9;1H\e(B\e[m             │ \e[33m* \e(B\e[m400 nm                              │             \e[10;1H\e(B\e[m             │   450 nm                              │             \e[11;1H\e(B\e[m             │   500 nm                              │             \e[12;1H\e(B\e[m             │   550 nm                              │             \e[13;1H\e(B\e[m             │                                       │             \e[14;1H\e(B\e[m             │ \e[31m✗ 0\e(B\e[m              1/6              \e[32m✓ 0\e(B\e[m │             \e[15;1H\e(B\e[m             ╰───────────────────────────────────────╯             "
+  - delay: 1750
+    content: "\e[?25l\e[9;1H\e(B\e[m             │   400 nm                              │             \e[10;1H\e(B\e[m             │ \e[33m* \e(B\e[m450 nm                              │             "
+  - delay: 168
+    content: "\e[?25l\e[10;1H\e(B\e[m             │   450 nm                              │             \e[11;1H\e(B\e[m             │ \e[33m* \e(B\e[m500 nm                              │             "
+  - delay: 175
+    content: "\e[?25l\e[11;1H\e(B\e[m             │   500 nm                              │             \e[12;1H\e(B\e[m             │ \e[33m* \e(B\e[m550 nm                              │             "
+  - delay: 762
+    content: "\e[?25l\e[12;1H\e(B\e[m             │ \e[33m* \e[32m550 nm                             \e(B\e[m │             "
+  - delay: 751
+    content: "\e[?25l\e[5;1H\e(B\e[m                                                                   \e[6;1H\e(B\e[m                                                                   \e[7;1H\e(B\e[m             ╭───────────────────────────────────────╮             \e[8;1H\e(B\e[m             │\e[33m        What does LGN stand for        \e(B\e[m│             \e[9;1H\e(B\e[m             ├───────────────────────────────────────┤             \e[10;1H\e(B\e[m             │                                       │             \e[11;1H\e(B\e[m             │                                       │             \e[12;1H\e(B\e[m             │ \e[31m✗ 0\e(B\e[m              2/6              \e[32m✓ 1\e(B\e[m │             \e[13;1H\e(B\e[m             ╰───────────────────────────────────────╯             \e[14;1H\e(B\e[m                                                                   \e[15;1H\e(B\e[m                                                                   \e[?12l\e[?25h\e[10;16H"
+  - delay: 2010
+    content: "\e[?25l\e[10;1H\e(B\e[m             │ \e[4ml\e[24m                                     │             \e[?12l\e[?25h\e[10;17H"
+  - delay: 105
+    content: "\e[?25l\e[10;1H\e(B\e[m             │ \e[4mla\e[24m                                    │             \e[11;1H\e(B\e[m             │                                       │             \e[?12l\e[?25h\e[10;18H"
+  - delay: 69
+    content: "\e[?25l\e[10;1H\e(B\e[m             │ \e[4mlat\e[24m                                   │             \e[11;1H\e(B\e[m             │                                       │             \e[?12l\e[?25h\e[10;19H"
+  - delay: 151
+    content: "\e[?25l\e[10;1H\e(B\e[m             │ \e[4mlate\e[24m                                  │             \e[11;1H\e(B\e[m             │                                       │             \e[?12l\e[?25h\e[10;20H"
+  - delay: 53
+    content: "\e[?25l\e[10;1H\e(B\e[m             │ \e[4mlater\e[24m                                 │             \e[11;1H\e(B\e[m             │                                       │             \e[?12l\e[?25h\e[10;21H"
+  - delay: 94
+    content: "\e[?25l\e[10;1H\e(B\e[m             │ \e[4mlatera\e[24m                                │             \e[11;1H\e(B\e[m             │                                       │             \e[?12l\e[?25h\e[10;22H"
+  - delay: 117
+    content: "\e[?25l\e[10;1H\e(B\e[m             │ \e[4mlateral\e[24m                               │             \e[11;1H\e(B\e[m             │                                       │             \e[?12l\e[?25h\e[10;23H"
+  - delay: 63
+    content: "\e[?25l\e[10;1H\e(B\e[m             │ \e[4mlateral \e[24m                              │             \e[11;1H\e(B\e[m             │                                       │             \e[?12l\e[?25h\e[10;24H"
   - delay: 122
-    content: "\e[?25l\e[11;1H\e(B\e[m                │ Below the retina is the \e[4m\e[31mscl\e(B\e[m containing blood     │                 \e[12;1H\e(B\e[m                │ vessels.                                         │                 \e[13;1H\e(B\e[m                │                                                  │                 \e[?12l\e[?25h\e[11;46H"
-  - delay: 125
-    content: "\e[?25l\e[11;1H\e(B\e[m                │ Below the retina is the \e[4m\e[31msc\e(B\e[m containing blood      │                 \e[12;1H\e(B\e[m                │ vessels.                                         │                 \e[13;1H\e(B\e[m                │                                                  │                 \e[?12l\e[?25h\e[11;45H"
-  - delay: 140
-    content: "\e[?25l\e[11;1H\e(B\e[m                │ Below the retina is the \e[4m\e[31ms\e(B\e[m containing blood       │                 \e[12;1H\e(B\e[m                │ vessels.                                         │                 \e[13;1H\e(B\e[m                │                                                  │                 \e[?12l\e[?25h\e[11;44H"
+    content: "\e[?25l\e[10;1H\e(B\e[m             │ \e[4mlateral g\e[24m                             │             \e[11;1H\e(B\e[m             │                                       │             \e[?12l\e[?25h\e[10;25H"
+  - delay: 65
+    content: "\e[?25l\e[10;1H\e(B\e[m             │ \e[4mlateral ge\e[24m                            │             \e[11;1H\e(B\e[m             │                                       │             \e[?12l\e[?25h\e[10;26H"
+  - delay: 112
+    content: "\e[?25l\e[10;1H\e(B\e[m             │ \e[4mlateral gen\e[24m                           │             \e[11;1H\e(B\e[m             │                                       │             \e[?12l\e[?25h\e[10;27H"
+  - delay: 108
+    content: "\e[?25l\e[10;1H\e(B\e[m             │ \e[4mlateral geni\e[24m                          │             \e[11;1H\e(B\e[m             │                                       │             \e[?12l\e[?25h\e[10;28H"
+  - delay: 113
+    content: "\e[?25l\e[10;1H\e(B\e[m             │ \e[4mlateral genic\e[24m                         │             \e[11;1H\e(B\e[m             │                                       │             \e[?12l\e[?25h\e[10;29H"
+  - delay: 101
+    content: "\e[?25l\e[10;1H\e(B\e[m             │ \e[4mlateral genicu\e[24m                        │             \e[11;1H\e(B\e[m             │                                       │             \e[?12l\e[?25h\e[10;30H"
+  - delay: 87
+    content: "\e[?25l\e[10;1H\e(B\e[m             │ \e[4mlateral genicul\e[24m                       │             \e[11;1H\e(B\e[m             │                                       │             \e[?12l\e[?25h\e[10;31H"
+  - delay: 120
+    content: "\e[?25l\e[10;1H\e(B\e[m             │ \e[4mlateral genicula\e[24m                      │             \e[11;1H\e(B\e[m             │                                       │             \e[?12l\e[?25h\e[10;32H"
+  - delay: 42
+    content: "\e[?25l\e[10;1H\e(B\e[m             │ \e[4mlateral geniculat\e[24m                     │             \e[11;1H\e(B\e[m             │                                       │             \e[?12l\e[?25h\e[10;33H"
+  - delay: 67
+    content: "\e[?25l\e[10;1H\e(B\e[m             │ \e[4mlateral geniculate\e[24m                    │             \e[11;1H\e(B\e[m             │                                       │             \e[?12l\e[?25h\e[10;34H"
+  - delay: 77
+    content: "\e[?25l\e[10;1H\e(B\e[m             │ \e[4mlateral geniculate \e[24m                   │             \e[11;1H\e(B\e[m             │                                       │             \e[?12l\e[?25h\e[10;35H"
+  - delay: 109
+    content: "\e[?25l\e[10;1H\e(B\e[m             │ \e[4mlateral geniculate n\e[24m                  │             \e[11;1H\e(B\e[m             │                                       │             \e[?12l\e[?25h\e[10;36H"
+  - delay: 201
+    content: "\e[?25l\e[10;1H\e(B\e[m             │ \e[4mlateral geniculate nu\e[24m                 │             \e[11;1H\e(B\e[m             │                                       │             \e[?12l\e[?25h\e[10;37H"
   - delay: 135
-    content: "\e[?25l\e[11;1H\e(B\e[m                │ Below the retina is the  containing blood        │                 \e[12;1H\e(B\e[m                │ vessels.                                         │                 \e[13;1H\e(B\e[m                │                                                  │                 \e[?12l\e[?25h\e[11;43H"
-  - delay: 282
-    content: "\e[?25l\e[11;1H\e(B\e[m                │ Below the retina is the \e[4m\e[31mc\e(B\e[m containing blood       │                 \e[12;1H\e(B\e[m                │ vessels.                                         │                 \e[13;1H\e(B\e[m                │                                                  │                 \e[?12l\e[?25h\e[11;44H"
-  - delay: 247
-    content: "\e[?25l\e[11;1H\e(B\e[m                │ Below the retina is the \e[4m\e[31mch\e(B\e[m containing blood      │                 \e[12;1H\e(B\e[m                │ vessels.                                         │                 \e[13;1H\e(B\e[m                │                                                  │                 \e[?12l\e[?25h\e[11;45H"
-  - delay: 81
-    content: "\e[?25l\e[11;1H\e(B\e[m                │ Below the retina is the \e[4m\e[31mcho\e(B\e[m containing blood     │                 \e[12;1H\e(B\e[m                │ vessels.                                         │                 \e[13;1H\e(B\e[m                │                                                  │                 \e[?12l\e[?25h\e[11;46H"
-  - delay: 183
-    content: "\e[?25l\e[11;1H\e(B\e[m                │ Below the retina is the \e[4m\e[31mchor\e(B\e[m containing blood    │                 \e[12;1H\e(B\e[m                │ vessels.                                         │                 \e[13;1H\e(B\e[m                │                                                  │                 \e[?12l\e[?25h\e[11;47H"
-  - delay: 96
-    content: "\e[?25l\e[11;1H\e(B\e[m                │ Below the retina is the \e[4m\e[31mchoro\e(B\e[m containing blood   │                 \e[12;1H\e(B\e[m                │ vessels.                                         │                 \e[13;1H\e(B\e[m                │                                                  │                 \e[?12l\e[?25h\e[11;48H"
-  - delay: 60
-    content: "\e[?25l\e[11;1H\e(B\e[m                │ Below the retina is the \e[4m\e[31mchoroi\e(B\e[m containing blood  │                 \e[12;1H\e(B\e[m                │ vessels.                                         │                 \e[13;1H\e(B\e[m                │                                                  │                 \e[?12l\e[?25h\e[11;49H"
-  - delay: 108
-    content: "\e[?25l\e[11;1H\e(B\e[m                │ Below the retina is the \e[4m\e[31mchoroid\e(B\e[m containing blood │                 \e[12;1H\e(B\e[m                │ vessels.                                         │                 \e[13;1H\e(B\e[m                │                                                  │                 \e[?12l\e[?25h\e[11;50H"
-  - delay: 167
-    content: "\e[?25l\e[11;1H\e(B\e[m                │ Below the retina is the \e[4m\e[32mchoroid\e(B\e[m containing blood │                 \e[?12l\e[?25h\e[11;50H"
-  - delay: 1171
-    content: "\e[?25l\e[9;1H\e(B\e[m                │\e[33m               Layers of the eye 3                \e(B\e[m│                 \e[11;1H\e(B\e[m                │ The last layer is the . It is white, except in   │                 \e[12;1H\e(B\e[m                │ front where it is transparent.                   │                 \e[13;1H\e(B\e[m                │                                                  │                 \e[14;1H\e(B\e[m                │                       7/13                       │                 \e[?12l\e[?25h\e[11;41H"
-  - delay: 1003
-    content: "\e[?25l\e[11;1H\e(B\e[m                │ The last layer is the \e[4ms\e[24m. It is white, except in  │                 \e[12;1H\e(B\e[m                │ front where it is transparent.                   │                 \e[13;1H\e(B\e[m                │                                                  │                 \e[?12l\e[?25h\e[11;42H"
-  - delay: 184
-    content: "\e[?25l\e[11;1H\e(B\e[m                │ The last layer is the \e[4msc\e[24m. It is white, except in │                 \e[12;1H\e(B\e[m                │ front where it is transparent.                   │                 \e[13;1H\e(B\e[m                │                                                  │                 \e[?12l\e[?25h\e[11;43H"
-  - delay: 149
-    content: "\e[?25l\e[11;1H\e(B\e[m                │ The last layer is the \e[4mscl\e[24m. It is white, except   │                 \e[12;1H\e(B\e[m                │ in front where it is transparent.                │                 \e[13;1H\e(B\e[m                │                                                  │                 \e[?12l\e[?25h\e[11;44H"
-  - delay: 108
-    content: "\e[?25l\e[11;1H\e(B\e[m                │ The last layer is the \e[4mscle\e[24m. It is white, except  │                 \e[12;1H\e(B\e[m                │ in front where it is transparent.                │                 \e[13;1H\e(B\e[m                │                                                  │                 \e[?12l\e[?25h\e[11;45H"
-  - delay: 76
-    content: "\e[?25l\e[11;1H\e(B\e[m                │ The last layer is the \e[4mscler\e[24m. It is white, except │                 \e[12;1H\e(B\e[m                │ in front where it is transparent.                │                 \e[13;1H\e(B\e[m                │                                                  │                 \e[?12l\e[?25h\e[11;46H"
-  - delay: 55
-    content: "\e[?25l\e[11;1H\e(B\e[m                │ The last layer is the \e[4msclera\e[24m. It is white,       │                 \e[12;1H\e(B\e[m                │ except in front where it is transparent.         │                 \e[13;1H\e(B\e[m                │                                                  │                 \e[?12l\e[?25h\e[11;47H"
-  - delay: 143
-    content: "\e[?25l\e[11;1H\e(B\e[m                │ The last layer is the \e[4m\e[32msclera\e(B\e[m. It is white,       │                 \e[?12l\e[?25h\e[11;47H"
-  - delay: 1850
-    content: "\e[?1049l\e[23;0;0t\e[?12l\e[?25h\e(B\e[m\e[?12l\e[?25h\e[?1049h\e[22;0;0t\e[H\e[2J"
-  - delay: 8
-    content: "\e[?25l\e[1;1H\e(B\e[m                                                                                     \e[2;1H\e(B\e[m                                                                                     \e[3;1H\e(B\e[m                                                                                     \e[4;1H\e(B\e[m                                                                                     \e[5;1H\e(B\e[m                                                                                     \e[6;1H\e(B\e[m                                                                                     \e[7;1H\e(B\e[m                ╭──────────────────────────────────────────────────╮                 \e[8;1H\e(B\e[m                │\e[33m           Select a deck of flashcards            \e(B\e[m│                 \e[9;1H\e(B\e[m                ├──────────────────────────────────────────────────┤                 \e[10;1H\e(B\e[m                │                      \e[4m\e[37mlight\e(B\e[m                       │                 \e[11;1H\e(B\e[m                │             \e[34mSelect file from system\e(B\e[m              │                 \e[12;1H\e(B\e[m                │                                                  │                 \e[13;1H\e(B\e[m                │                                                  │                 \e[14;1H\e(B\e[m                │                                                  │                 \e[15;1H\e(B\e[m                │                                                  │                 \e[16;1H\e(B\e[m                ╰──────────────────────────────────────────────────╯                 \e[17;1H\e(B\e[m                                                                                     \e[18;1H\e(B\e[m                                                                                     \e[19;1H\e(B\e[m                                                                                     \e[20;1H\e(B\e[m                                                                                     \e[21;1H\e(B\e[m                                                                                     \e[22;1H\e(B\e[m                                                                                     "
+    content: "\e[?25l\e[10;1H\e(B\e[m             │ \e[4mlateral geniculate nuc\e[24m                │             \e[11;1H\e(B\e[m             │                                       │             \e[?12l\e[?25h\e[10;38H"
+  - delay: 146
+    content: "\e[?25l\e[10;1H\e(B\e[m             │ \e[4mlateral geniculate nucl\e[24m               │             \e[11;1H\e(B\e[m             │                                       │             \e[?12l\e[?25h\e[10;39H"
+  - delay: 162
+    content: "\e[?25l\e[10;1H\e(B\e[m             │ \e[4mlateral geniculate nucle\e[24m              │             \e[11;1H\e(B\e[m             │                                       │             \e[?12l\e[?25h\e[10;40H"
+  - delay: 90
+    content: "\e[?25l\e[10;1H\e(B\e[m             │ \e[4mlateral geniculate nuclei\e[24m             │             \e[11;1H\e(B\e[m             │                                       │             \e[?12l\e[?25h\e[10;41H"
+  - delay: 359
+    content: "\e[?25l\e[10;1H\e(B\e[m             │ \e[4m\e[32mlateral geniculate nuclei\e(B\e[m             │             \e[?12l\e[?25h\e[10;41H"
+  - delay: 473
+    content: "\e[?25l\e[6;1H\e(B\e[m             ╭───────────────────────────────────────╮             \e[7;1H\e(B\e[m             │\e[33m                 ipRGC                 \e(B\e[m│             \e[8;1H\e(B\e[m             ├───────────────────────────────────────┤             \e[9;1H\e(B\e[m             │                                       │             \e[10;1H\e(B\e[m             │                                       │             \e[11;1H\e(B\e[m             │                                       │             \e[12;1H\e(B\e[m             │ \e[31m✗ 0\e(B\e[m              3/6              \e[32m✓ 2\e(B\e[m │             "
+  - delay: 1314
+    content: "\e[?25l\e[9;1H\e(B\e[m             │ intrinsically photosensitive Retinal  │             \e[10;1H\e(B\e[m             │ Ganglion Cell                         │             \e[11;1H\e(B\e[m             │                                       │             "
+  - delay: 1916
+    content: "\e[?25l\e[1;1H\e(B\e[m                                                                   \e[2;1H\e(B\e[m                                                                   \e[3;1H\e(B\e[m                                                                   \e[4;1H\e(B\e[m                                                                   \e[5;1H\e(B\e[m                                                                   \e[6;1H\e(B\e[m             ╭───────────────────────────────────────╮             \e[7;1H\e(B\e[m             │\e[33m                 ipRGC                 \e(B\e[m│             \e[8;1H\e(B\e[m             ├────────┌──────Correct?──────┐─────────┤             \e[9;1H\e(B\e[m             │ intrins│                    │Retinal  │             \e[10;1H\e(B\e[m             │ Ganglio│                    │         │             \e[11;1H\e(B\e[m             │        │     \e[4m\e[31mNo\e(B\e[m     \e[32mYes\e(B\e[m     │         │             \e[12;1H\e(B\e[m             │ \e[31m✗ 0\e(B\e[m    └────────────────────┘     \e[32m✓ 2\e(B\e[m │             \e[13;1H\e(B\e[m             ╰───────────────────────────────────────╯             \e[14;1H\e(B\e[m                                                                   \e[15;1H\e(B\e[m                                                                   \e[16;1H\e(B\e[m                                                                   \e[17;1H\e(B\e[m                                                                   \e[18;1H\e(B\e[m                                                                   \e[19;1H\e(B\e[m                                                                   "
+  - delay: 435
+    content: "\e[?25l\e[11;1H\e(B\e[m             │        │     \e[31mNo\e(B\e[m     \e[4m\e[32mYes\e(B\e[m     │         │             "
   - delay: 434
-    content: "\e[?1049l\e[23;0;0t\e[?12l\e[?25h\e(B\e[m\e[?12l\e[?25h\e[?1049h\e[22;0;0t\e[H\e[2J"
-  - delay: 11
-    content: "\e[?25l\e[1;1H\e(B\e[m                                                                                     \e[2;1H\e(B\e[m                                                                                     \e[3;1H\e(B\e[m                                                                                     \e[4;1H\e(B\e[m                                                                                     \e[5;1H\e(B\e[m                                                                                     \e[6;1H\e(B\e[m                                                                                     \e[7;1H\e(B\e[m                     ╭────────────────────────────────────────╮                      \e[8;1H\e(B\e[m                     │         \e[33m┬ ┬┌─┐┌─┐┌─┐┌─┐┬─┐┌┬┐\e(B\e[m          │                      \e[9;1H\e(B\e[m                     │         \e[33m├─┤├─┤└─┐│  ├─┤├┬┘ ││\e(B\e[m          │                      \e[10;1H\e(B\e[m                     │         \e[33m┴ ┴┴ ┴└─┘└─┘┴ ┴┴└──┴┘\e(B\e[m          │                      \e[11;1H\e(B\e[m                     ├────────────────────────────────────────┤                      \e[12;1H\e(B\e[m                     │                 \e[4m\e[37mSelect\e(B\e[m                 │                      \e[13;1H\e(B\e[m                     │                  Info                  │                      \e[14;1H\e(B\e[m                     │                Settings                │                      \e[15;1H\e(B\e[m                     │                  Quit                  │                      \e[16;1H\e(B\e[m                     ╰────────────────────────────────────────╯                      \e[17;1H\e(B\e[m                                                                                     \e[18;1H\e(B\e[m                                                                                     \e[19;1H\e(B\e[m                                                                                     \e[20;1H\e(B\e[m                                                                                     \e[21;1H\e(B\e[m                                                                                     \e[22;1H\e(B\e[m                                                                                     "
-  - delay: 1297
-    content: "\e[?25l\e[12;1H\e(B\e[m                     │                 Select                 │                      \e[13;1H\e(B\e[m                     │                  \e[4m\e[37mInfo\e(B\e[m                  │                      "
-  - delay: 170
-    content: "\e[?25l\e[13;1H\e(B\e[m                     │                  Info                  │                      \e[14;1H\e(B\e[m                     │                \e[4m\e[37mSettings\e(B\e[m                │                      "
-  - delay: 160
-    content: "\e[?25l\e[14;1H\e(B\e[m                     │                Settings                │                      \e[15;1H\e(B\e[m                     │                  \e[4m\e[37mQuit\e(B\e[m                  │                      "
-  - delay: 945
+    content: "\e[?25l\e[1;1H\e(B\e[m                                                                   \e[2;1H\e(B\e[m                                                                   \e[3;1H\e(B\e[m                                                                   \e[4;1H\e(B\e[m                                                                   \e[5;1H\e(B\e[m                                                                   \e[6;1H\e(B\e[m             ╭───────────────────────────────────────╮             \e[7;1H\e(B\e[m             │\e[33m          Layers of the eye 1          \e(B\e[m│             \e[8;1H\e(B\e[m             ├───────────────────────────────────────┤             \e[9;1H\e(B\e[m             │ Light falls onto the  which is        │             \e[10;1H\e(B\e[m             │ covered by the  filter which protects │             \e[11;1H\e(B\e[m             │ against UV and low wavelengths.       │             \e[12;1H\e(B\e[m             │                                       │             \e[13;1H\e(B\e[m             │ \e[31m✗ 0\e(B\e[m              4/6              \e[32m✓ 3\e(B\e[m │             \e[14;1H\e(B\e[m             ╰───────────────────────────────────────╯             \e[15;1H\e(B\e[m                                                                   \e[16;1H\e(B\e[m                                                                   \e[17;1H\e(B\e[m                                                                   \e[18;1H\e(B\e[m                                                                   \e[19;1H\e(B\e[m                                                                   \e[?12l\e[?25h\e[9;37H"
+  - delay: 1618
+    content: "\e[?25l\e[9;1H\e(B\e[m             │ Light falls onto the \e[4mr\e[24m which is       │             \e[?12l\e[?25h\e[9;38H"
+  - delay: 94
+    content: "\e[?25l\e[9;1H\e(B\e[m             │ Light falls onto the \e[4mre\e[24m which is      │             \e[?12l\e[?25h\e[9;39H"
+  - delay: 130
+    content: "\e[?25l\e[9;1H\e(B\e[m             │ Light falls onto the \e[4mret\e[24m which is     │             \e[?12l\e[?25h\e[9;40H"
+  - delay: 116
+    content: "\e[?25l\e[9;1H\e(B\e[m             │ Light falls onto the \e[4mreti\e[24m which is    │             \e[?12l\e[?25h\e[9;41H"
+  - delay: 86
+    content: "\e[?25l\e[9;1H\e(B\e[m             │ Light falls onto the \e[4mretin\e[24m which is   │             \e[?12l\e[?25h\e[9;42H"
+  - delay: 66
+    content: "\e[?25l\e[9;1H\e(B\e[m             │ Light falls onto the \e[4mretina\e[24m which is  │             \e[?12l\e[?25h\e[9;43H"
+  - delay: 337
+    content: "\e[?25l\e[?12l\e[?25h\e[10;31H"
+  - delay: 1236
+    content: "\e[?25l\e[5;1H\e(B\e[m             ╭───────────────────────────────────────╮             \e[6;1H\e(B\e[m             │\e[33m          Layers of the eye 1          \e(B\e[m│             \e[7;1H\e(B\e[m             ├───────────────────────────────────────┤             \e[8;1H\e(B\e[m             │ Light falls onto the \e[4mretina\e[24m which is  │             \e[9;1H\e(B\e[m             │ covered by the \e[4mm\e[24m filter which         │             \e[10;1H\e(B\e[m             │ protects against UV and low           │             \e[11;1H\e(B\e[m             │ wavelengths.                          │             \e[12;1H\e(B\e[m             │                                       │             \e[?12l\e[?25h\e[9;32H"
+  - delay: 118
+    content: "\e[?25l\e[9;1H\e(B\e[m             │ covered by the \e[4mma\e[24m filter which        │             \e[?12l\e[?25h\e[9;33H"
+  - delay: 136
+    content: "\e[?25l\e[9;1H\e(B\e[m             │ covered by the \e[4mmac\e[24m filter which       │             \e[?12l\e[?25h\e[9;34H"
+  - delay: 120
+    content: "\e[?25l\e[9;1H\e(B\e[m             │ covered by the \e[4mmacu\e[24m filter which      │             \e[?12l\e[?25h\e[9;35H"
+  - delay: 80
+    content: "\e[?25l\e[9;1H\e(B\e[m             │ covered by the \e[4mmacul\e[24m filter which     │             \e[?12l\e[?25h\e[9;36H"
+  - delay: 76
+    content: "\e[?25l\e[9;1H\e(B\e[m             │ covered by the \e[4mmacula\e[24m filter which    │             \e[?12l\e[?25h\e[9;37H"
+  - delay: 1131
+    content: "\e[?25l\e[8;1H\e(B\e[m             │ Light falls onto the \e[4m\e[32mretina\e(B\e[m which is  │             \e[9;1H\e(B\e[m             │ covered by the \e[4m\e[32mmacula\e(B\e[m filter which    │             \e[?12l\e[?25h\e[9;37H"
+  - delay: 1033
+    content: "\e[?25l\e[6;1H\e(B\e[m             │\e[33m  Check the elements that are part of  \e(B\e[m│             \e[7;1H\e(B\e[m             │\e[33m        the primary visual path        \e(B\e[m│             \e[8;1H\e(B\e[m             ├───────────────────────────────────────┤             \e[9;1H\e(B\e[m             │[\e[33m*\e(B\e[m] Optic nerve                        │             \e[10;1H\e(B\e[m             │[ ] RHP axis                           │             \e[11;1H\e(B\e[m             │[ ] LGN                                │             \e[12;1H\e(B\e[m             │                                       │             \e[13;1H\e(B\e[m             │ \e[31m✗ 0\e(B\e[m              5/6              \e[32m✓ 4\e(B\e[m │             "
+  - delay: 1542
+    content: "\e[?25l\e[9;1H\e(B\e[m             │\e[34m[\e[33m*\e[34m] \e(B\e[mOptic nerve                        │             "
+  - delay: 344
+    content: "\e[?25l\e[9;1H\e(B\e[m             │\e[34m[*] \e(B\e[mOptic nerve                        │             \e[10;1H\e(B\e[m             │[\e[33m*\e(B\e[m] RHP axis                           │             "
+  - delay: 161
+    content: "\e[?25l\e[10;1H\e(B\e[m             │[ ] RHP axis                           │             \e[11;1H\e(B\e[m             │[\e[33m*\e(B\e[m] LGN                                │             "
+  - delay: 515
+    content: "\e[?25l\e[11;1H\e(B\e[m             │\e[34m[\e[33m*\e[34m] \e(B\e[mLGN                                │             "
+  - delay: 444
+    content: "\e[?25l\e[9;1H\e(B\e[m             │\e[32m[*] \e(B\e[mOptic nerve                        │             \e[10;1H\e(B\e[m             │\e[32m[ ] \e(B\e[mRHP axis                           │             \e[11;1H\e(B\e[m             │\e[32m[*] \e(B\e[mLGN                                │             "
+  - delay: 512
+    content: "\e[?25l\e[6;1H\e(B\e[m             │\e[33m    Order the colors in increasing     \e(B\e[m│             \e[7;1H\e(B\e[m             │\e[33m               frequency               \e(B\e[m│             \e[9;1H\e(B\e[m             │ 1. \e[33mBlue                              \e(B\e[m │             \e[10;1H\e(B\e[m             │ 2. Yellow                             │             \e[11;1H\e(B\e[m             │ 3. Green                              │             \e[12;1H\e(B\e[m             │ 4. Red                                │             \e[13;1H\e(B\e[m             │                                       │             \e[14;1H\e(B\e[m             │ \e[31m✗ 0\e(B\e[m              6/6              \e[32m✓ 5\e(B\e[m │             \e[15;1H\e(B\e[m             ╰───────────────────────────────────────╯             "
+  - delay: 2122
+    content: "\e[?25l\e[9;1H\e(B\e[m             │ 1. Blue                               │             \e[10;1H\e(B\e[m             │ 2. \e[33mYellow                            \e(B\e[m │             "
+  - delay: 208
+    content: "\e[?25l\e[10;1H\e(B\e[m             │ 2. Yellow                             │             \e[11;1H\e(B\e[m             │ 3. \e[33mGreen                             \e(B\e[m │             "
+  - delay: 275
+    content: "\e[?25l\e[11;1H\e(B\e[m             │ 3. Green                              │             \e[12;1H\e(B\e[m             │ 4. \e[33mRed                               \e(B\e[m │             "
+  - delay: 301
+    content: "\e[?25l\e[12;1H\e(B\e[m             │ 4. \e[34mRed                               \e(B\e[m │             "
+  - delay: 265
+    content: "\e[?25l\e[11;1H\e(B\e[m             │ 3. \e[34mRed                               \e(B\e[m │             \e[12;1H\e(B\e[m             │ 4. Green                              │             "
+  - delay: 192
+    content: "\e[?25l\e[10;1H\e(B\e[m             │ 2. \e[34mRed                               \e(B\e[m │             \e[11;1H\e(B\e[m             │ 3. Yellow                             │             "
+  - delay: 245
+    content: "\e[?25l\e[9;1H\e(B\e[m             │ 1. \e[34mRed                               \e(B\e[m │             \e[10;1H\e(B\e[m             │ 2. Blue                               │             "
+  - delay: 327
+    content: "\e[?25l\e[9;1H\e(B\e[m             │ 1. \e[33mRed                               \e(B\e[m │             "
+  - delay: 446
+    content: "\e[?25l\e[9;1H\e(B\e[m             │ 1. Red                                │             \e[10;1H\e(B\e[m             │ 2. \e[33mBlue                              \e(B\e[m │             "
+  - delay: 350
+    content: "\e[?25l\e[10;1H\e(B\e[m             │ 2. Blue                               │             \e[11;1H\e(B\e[m             │ 3. \e[33mYellow                            \e(B\e[m │             "
+  - delay: 367
+    content: "\e[?25l\e[11;1H\e(B\e[m             │ 3. \e[34mYellow                            \e(B\e[m │             "
+  - delay: 286
+    content: "\e[?25l\e[10;1H\e(B\e[m             │ 2. \e[34mYellow                            \e(B\e[m │             \e[11;1H\e(B\e[m             │ 3. Blue                               │             "
+  - delay: 469
+    content: "\e[?25l\e[10;1H\e(B\e[m             │ 2. \e[33mYellow                            \e(B\e[m │             "
+  - delay: 1059
+    content: "\e[?25l\e[9;1H\e(B\e[m             │ \e[32m1. \e(B\e[mRed                                │             \e[10;1H\e(B\e[m             │ \e[32m2. \e[33mYellow                            \e(B\e[m │             \e[11;1H\e(B\e[m             │ \e[31m4. \e(B\e[mBlue                               │             \e[12;1H\e(B\e[m             │ \e[31m3. \e(B\e[mGreen                              │             "
+  - delay: 1677
+    content: "\e[?25l\e[1;1H\e(B\e[m                                                                   \e[2;1H\e(B\e[m                                                                   \e[3;1H\e(B\e[m                                                                   \e[4;1H\e(B\e[m                                                                   \e[5;1H\e(B\e[m             ╭───────────────────────────────────────╮             \e[6;1H\e(B\e[m             │\e[33m    Order the colors in increasing     \e(B\e[m│             \e[7;1H\e(B\e[m             │\e[33m        \e(B\e[m┌───Generate decks───┐\e[33m         \e(B\e[m│             \e[8;1H\e(B\e[m             ├────────│                    │─────────┤             \e[9;1H\e(B\e[m             │ \e[32m1. \e(B\e[mRed │[\e[33m*\e(B\e[m]\e[31m Incorrect: 1    \e(B\e[m│         │             \e[10;1H\e(B\e[m             │ \e[32m2. \e[33mYell\e(B\e[m│[\e[34m \e(B\e[m]\e[32m Correct:   5    \e(B\e[m│\e[33m        \e(B\e[m │             \e[11;1H\e(B\e[m             │ \e[31m4. \e(B\e[mBlue│                    │         │             \e[12;1H\e(B\e[m             │ \e[31m3. \e(B\e[mGree│         Ok         │         │             \e[13;1H\e(B\e[m             │        └────────────────────┘         │             \e[14;1H\e(B\e[m             │ \e[31m✗ 1\e(B\e[m              6/6              \e[32m✓ 5\e(B\e[m │             \e[15;1H\e(B\e[m             ╰───────────────────────────────────────╯             \e[16;1H\e(B\e[m                                                                   \e[17;1H\e(B\e[m                                                                   \e[18;1H\e(B\e[m                                                                   \e[19;1H\e(B\e[m                                                                   "
+  - delay: 1251
+    content: "\e[?25l\e[9;1H\e(B\e[m             │ \e[32m1. \e(B\e[mRed │[\e[34m \e(B\e[m]\e[31m Incorrect: 1    \e(B\e[m│         │             \e[10;1H\e(B\e[m             │ \e[32m2. \e[33mYell\e(B\e[m│[\e[33m*\e(B\e[m]\e[32m Correct:   5    \e(B\e[m│\e[33m        \e(B\e[m │             "
+  - delay: 312
+    content: "\e[?25l\e[9;1H\e(B\e[m             │ \e[32m1. \e(B\e[mRed │[\e[33m*\e(B\e[m]\e[31m Incorrect: 1    \e(B\e[m│         │             \e[10;1H\e(B\e[m             │ \e[32m2. \e[33mYell\e(B\e[m│[\e[34m \e(B\e[m]\e[32m Correct:   5    \e(B\e[m│\e[33m        \e(B\e[m │             "
+  - delay: 810
+    content: "\e[?25l\e[9;1H\e(B\e[m             │ \e[32m1. \e(B\e[mRed │\e[34m[\e[33m*\e[34m]\e[31m Incorrect: 1    \e(B\e[m│         │             "
+  - delay: 291
+    content: "\e[?25l\e[9;1H\e(B\e[m             │ \e[32m1. \e(B\e[mRed │\e[34m[*]\e[31m Incorrect: 1    \e(B\e[m│         │             \e[10;1H\e(B\e[m             │ \e[32m2. \e[33mYell\e(B\e[m│[\e[33m*\e(B\e[m]\e[32m Correct:   5    \e(B\e[m│\e[33m        \e(B\e[m │             "
+  - delay: 233
+    content: "\e[?25l\e[10;1H\e(B\e[m             │ \e[32m2. \e[33mYell\e(B\e[m│[\e[34m \e(B\e[m]\e[32m Correct:   5    \e(B\e[m│\e[33m        \e(B\e[m │             \e[12;1H\e(B\e[m             │ \e[31m3. \e(B\e[mGree│         \e[4mOk\e[24m         │         │             "
+  - delay: 695
+    content: "\e[?25l\e[1;1H\e(B\e[m                                                                   \e[2;1H\e(B\e[m                                                                   \e[3;1H\e(B\e[m                                                                   \e[4;1H\e(B\e[m                                                                   \e[5;1H\e(B\e[m             ╭───────────────────────────────────────╮             \e[6;1H\e(B\e[m             │     \e[33mSelect a deck of flashcards \e(B\e[m      │             \e[7;1H\e(B\e[m             ├───────────────────────────────────────┤             \e[8;1H\e(B\e[m             │                \e[4m\e[37mexample\e(B\e[m                │             \e[9;1H\e(B\e[m             │               analysis3               │             \e[10;1H\e(B\e[m             │                syntax                 │             \e[11;1H\e(B\e[m             │                 light                 │             \e[12;1H\e(B\e[m             │        \e[34mSelect file from system\e(B\e[m        │             \e[13;1H\e(B\e[m             │                                       │             \e[14;1H\e(B\e[m             ╰───────────────────────────────────────╯             \e[15;1H\e(B\e[m                                                                   \e[16;1H\e(B\e[m                                                                   \e[17;1H\e(B\e[m                                                                   \e[18;1H\e(B\e[m                                                                   \e[19;1H\e(B\e[m                                                                   "
+  - delay: 739
+    content: "\e[?25l\e[8;1H\e(B\e[m             │                example                │             \e[9;1H\e(B\e[m             │               \e[4m\e[37manalysis3\e(B\e[m               │             "
+  - delay: 155
+    content: "\e[?25l\e[9;1H\e(B\e[m             │               analysis3               │             \e[10;1H\e(B\e[m             │                \e[4m\e[37msyntax\e(B\e[m                 │             "
+  - delay: 139
+    content: "\e[?25l\e[10;1H\e(B\e[m             │                syntax                 │             \e[11;1H\e(B\e[m             │                 \e[4m\e[37mlight\e(B\e[m                 │             "
+  - delay: 133
+    content: "\e[?25l\e[11;1H\e(B\e[m             │                 light                 │             \e[12;1H\e(B\e[m             │        \e[4m\e[34mSelect file from system\e(B\e[m        │             "
+  - delay: 255
+    content: "\e[?25l\e[1;1H\e(B\e[m        ┌──────────────────Choose a file─────────────────┐         \e[2;1H\e(B\e[m        │\e[37m\e[44m/media/steven/shared/Documents/Coding/Haskell/ha\e(B\e[m│         \e[3;1H\e(B\e[m        │\e[30m\e[43m../                                             \e(B\e[m│         \e[4;1H\e(B\e[m        │\e[34mapp/               \e(B\e[m                             │         \e[5;1H\e(B\e[m        │\e[34mcards/             \e(B\e[m                             │         \e[6;1H\e(B\e[m        │\e[34mimages/            \e(B\e[m                             │         \e[7;1H\e(B\e[m        │\e[34mrecordings/        \e(B\e[m                             │         \e[8;1H\e(B\e[m        │\e[34msnap/              \e(B\e[m                             │         \e[9;1H\e(B\e[m        │\e[34msrc/               \e(B\e[m                             │         \e[10;1H\e(B\e[m        │\e[34mtest/              \e(B\e[m                             │         \e[11;1H\e(B\e[m        │\e[34mtravis/            \e(B\e[m                             │         \e[12;1H\e(B\e[m        │ChangeLog.md                                    │         \e[13;1H\e(B\e[m        │README.md                                       │         \e[14;1H\e(B\e[m        │\e[37m\e[44m..: directory                                   \e(B\e[m│         \e[15;1H\e(B\e[m        └────────────────────────────────────────────────┘         \e[16;1H\e(B\e[m                                                                   \e[17;1H\e(B\e[m           Up/Down: select, h: toggle show hidden files            \e[18;1H\e(B\e[m              /: search, Ctrl-C or Esc: cancel search              \e[19;1H\e(B\e[m              Enter: change directory or select file               "
+  - delay: 422
+    content: "\e[?25l\e[3;1H\e(B\e[m        │\e[34m../                \e(B\e[m                             │         \e[4;1H\e(B\e[m        │\e[30m\e[43mapp/                                            \e(B\e[m│         \e[14;1H\e(B\e[m        │\e[37m\e[44mapp: directory                                  \e(B\e[m│         "
+  - delay: 150
+    content: "\e[?25l\e[4;1H\e(B\e[m        │\e[34mapp/               \e(B\e[m                             │         \e[5;1H\e(B\e[m        │\e[30m\e[43mcards/                                          \e(B\e[m│         \e[14;1H\e(B\e[m        │\e[37m\e[44mcards: directory                                \e(B\e[m│         "
+  - delay: 255
+    content: "\e[?25l\e[3;1H\e(B\e[m        │\e[30m\e[43m../                                             \e(B\e[m│         \e[4;1H\e(B\e[m        │analysis3.txt                                   │         \e[5;1H\e(B\e[m        │example-.txt                                    │         \e[6;1H\e(B\e[m        │example.txt                                     │         \e[7;1H\e(B\e[m        │light.txt                                       │         \e[8;1H\e(B\e[m        │syntax.txt                                      │         \e[9;1H\e(B\e[m        │                                                │         \e[10;1H\e(B\e[m        │                                                │         \e[11;1H\e(B\e[m        │                                                │         \e[12;1H\e(B\e[m        │                                                │         \e[13;1H\e(B\e[m        │                                                │         \e[14;1H\e(B\e[m        │\e[37m\e[44m..: directory                                   \e(B\e[m│         "
+  - delay: 417
+    content: "\e[?25l\e[3;1H\e(B\e[m        │\e[34m../           \e(B\e[m                                  │         \e[4;1H\e(B\e[m        │\e[30m\e[43manalysis3.txt                                   \e(B\e[m│         \e[14;1H\e(B\e[m        │\e[37m\e[44manalysis3.txt: file, 865 bytes                  \e(B\e[m│         "
+  - delay: 198
+    content: "\e[?25l\e[4;1H\e(B\e[m        │analysis3.txt                                   │         \e[5;1H\e(B\e[m        │\e[30m\e[43mexample-.txt                                    \e(B\e[m│         \e[14;1H\e(B\e[m        │\e[37m\e[44mexample-.txt: file, 77 bytes                    \e(B\e[m│         "
+  - delay: 1010
+    content: "\e[?25l\e[1;1H\e(B\e[m                                                                   \e[2;1H\e(B\e[m                                                                   \e[3;1H\e(B\e[m                                                                   \e[4;1H\e(B\e[m                                                                   \e[5;1H\e(B\e[m             ╭───────────────────────────────────────╮             \e[6;1H\e(B\e[m             │\e[33m    Order the colors in increasing     \e(B\e[m│             \e[7;1H\e(B\e[m             │\e[33m               frequency               \e(B\e[m│             \e[8;1H\e(B\e[m             ├───────────────────────────────────────┤             \e[9;1H\e(B\e[m             │ 1. \e[33mBlue                              \e(B\e[m │             \e[10;1H\e(B\e[m             │ 2. Yellow                             │             \e[11;1H\e(B\e[m             │ 3. Green                              │             \e[12;1H\e(B\e[m             │ 4. Red                                │             \e[13;1H\e(B\e[m             │                                       │             \e[14;1H\e(B\e[m             │ \e[31m✗ 0\e(B\e[m              1/1              \e[32m✓ 0\e(B\e[m │             \e[15;1H\e(B\e[m             ╰───────────────────────────────────────╯             \e[16;1H\e(B\e[m                                                                   \e[17;1H\e(B\e[m                                                                   \e[18;1H\e(B\e[m                                                                   \e[19;1H\e(B\e[m                                                                   "
+  - delay: 1016
+    content: "\e[?25l\e[9;1H\e(B\e[m             │ 1. Blue                               │             \e[10;1H\e(B\e[m             │ 2. \e[33mYellow                            \e(B\e[m │             "
+  - delay: 146
+    content: "\e[?25l\e[10;1H\e(B\e[m             │ 2. Yellow                             │             \e[11;1H\e(B\e[m             │ 3. \e[33mGreen                             \e(B\e[m │             "
+  - delay: 153
+    content: "\e[?25l\e[11;1H\e(B\e[m             │ 3. Green                              │             \e[12;1H\e(B\e[m             │ 4. \e[33mRed                               \e(B\e[m │             "
+  - delay: 218
+    content: "\e[?25l\e[12;1H\e(B\e[m             │ 4. \e[34mRed                               \e(B\e[m │             "
+  - delay: 244
+    content: "\e[?25l\e[11;1H\e(B\e[m             │ 3. \e[34mRed                               \e(B\e[m │             \e[12;1H\e(B\e[m             │ 4. Green                              │             "
+  - delay: 161
+    content: "\e[?25l\e[10;1H\e(B\e[m             │ 2. \e[34mRed                               \e(B\e[m │             \e[11;1H\e(B\e[m             │ 3. Yellow                             │             "
+  - delay: 159
+    content: "\e[?25l\e[9;1H\e(B\e[m             │ 1. \e[34mRed                               \e(B\e[m │             \e[10;1H\e(B\e[m             │ 2. Blue                               │             "
+  - delay: 189
+    content: "\e[?25l\e[9;1H\e(B\e[m             │ 1. \e[33mRed                               \e(B\e[m │             "
+  - delay: 345
+    content: "\e[?25l\e[9;1H\e(B\e[m             │ 1. Red                                │             \e[10;1H\e(B\e[m             │ 2. \e[33mBlue                              \e(B\e[m │             "
+  - delay: 503
+    content: "\e[?25l\e[10;1H\e(B\e[m             │ 2. Blue                               │             \e[11;1H\e(B\e[m             │ 3. \e[33mYellow                            \e(B\e[m │             "
+  - delay: 341
+    content: "\e[?25l\e[11;1H\e(B\e[m             │ 3. Yellow                             │             \e[12;1H\e(B\e[m             │ 4. \e[33mGreen                             \e(B\e[m │             "
+  - delay: 638
+    content: "\e[?25l\e[11;1H\e(B\e[m             │ 3. \e[33mYellow                            \e(B\e[m │             \e[12;1H\e(B\e[m             │ 4. Green                              │             "
+  - delay: 217
+    content: "\e[?25l\e[11;1H\e(B\e[m             │ 3. \e[34mYellow                            \e(B\e[m │             "
+  - delay: 247
+    content: "\e[?25l\e[10;1H\e(B\e[m             │ 2. \e[34mYellow                            \e(B\e[m │             \e[11;1H\e(B\e[m             │ 3. Blue                               │             "
+  - delay: 203
+    content: "\e[?25l\e[10;1H\e(B\e[m             │ 2. \e[33mYellow                            \e(B\e[m │             "
+  - delay: 247
+    content: "\e[?25l\e[10;1H\e(B\e[m             │ 2. Yellow                             │             \e[11;1H\e(B\e[m             │ 3. \e[33mBlue                              \e(B\e[m │             "
+  - delay: 252
+    content: "\e[?25l\e[11;1H\e(B\e[m             │ 3. \e[34mBlue                              \e(B\e[m │             "
+  - delay: 178
+    content: "\e[?25l\e[11;1H\e(B\e[m             │ 3. Green                              │             \e[12;1H\e(B\e[m             │ 4. \e[34mBlue                              \e(B\e[m │             "
+  - delay: 197
+    content: "\e[?25l\e[12;1H\e(B\e[m             │ 4. \e[33mBlue                              \e(B\e[m │             "
+  - delay: 515
+    content: "\e[?25l\e[9;1H\e(B\e[m             │ \e[32m1. \e(B\e[mRed                                │             \e[10;1H\e(B\e[m             │ \e[32m2. \e(B\e[mYellow                             │             \e[11;1H\e(B\e[m             │ \e[32m3. \e(B\e[mGreen                              │             \e[12;1H\e(B\e[m             │ \e[32m4. \e[33mBlue                              \e(B\e[m │             "
+  - delay: 817
+    content: "\e[?25l\e[1;1H\e(B\e[m                                                                   \e[2;1H\e(B\e[m                                                                   \e[3;1H\e(B\e[m                                                                   \e[4;1H\e(B\e[m                                                                   \e[5;1H\e(B\e[m             ╭───────────────────────────────────────╮             \e[6;1H\e(B\e[m             │\e[33m    Order the colors in increasing     \e(B\e[m│             \e[7;1H\e(B\e[m             │\e[33m               frequency               \e(B\e[m│             \e[8;1H\e(B\e[m             ├────────┌──────Finished──────┐─────────┤             \e[9;1H\e(B\e[m             │ \e[32m1. \e(B\e[mRed │                    │         │             \e[10;1H\e(B\e[m             │ \e[32m2. \e(B\e[mYell│\e[31m Incorrect: 0       \e(B\e[m│         │             \e[11;1H\e(B\e[m             │ \e[32m3. \e(B\e[mGree│\e[32m Correct:   1       \e(B\e[m│         │             \e[12;1H\e(B\e[m             │ \e[32m4. \e[33mBlue\e(B\e[m└────────────────────┘\e[33m        \e(B\e[m │             \e[13;1H\e(B\e[m             │                                       │             \e[14;1H\e(B\e[m             │ \e[31m✗ 0\e(B\e[m              1/1              \e[32m✓ 1\e(B\e[m │             \e[15;1H\e(B\e[m             ╰───────────────────────────────────────╯             \e[16;1H\e(B\e[m                                                                   \e[17;1H\e(B\e[m                                                                   \e[18;1H\e(B\e[m                                                                   \e[19;1H\e(B\e[m                                                                   "
+  - delay: 1384
+    content: "\e[?25l\e[1;1H\e(B\e[m                                                                   \e[2;1H\e(B\e[m                                                                   \e[3;1H\e(B\e[m                                                                   \e[4;1H\e(B\e[m                                                                   \e[5;1H\e(B\e[m             ╭───────────────────────────────────────╮             \e[6;1H\e(B\e[m             │     \e[33mSelect a deck of flashcards \e(B\e[m      │             \e[7;1H\e(B\e[m             ├───────────────────────────────────────┤             \e[8;1H\e(B\e[m             │               \e[4m\e[37mexample-\e(B\e[m                │             \e[9;1H\e(B\e[m             │                example                │             \e[10;1H\e(B\e[m             │               analysis3               │             \e[11;1H\e(B\e[m             │                syntax                 │             \e[12;1H\e(B\e[m             │                 light                 │             \e[13;1H\e(B\e[m             │        \e[34mSelect file from system\e(B\e[m        │             \e[14;1H\e(B\e[m             ╰───────────────────────────────────────╯             \e[15;1H\e(B\e[m                                                                   \e[16;1H\e(B\e[m                                                                   \e[17;1H\e(B\e[m                                                                   \e[18;1H\e(B\e[m                                                                   \e[19;1H\e(B\e[m                                                                   "
+  - delay: 831
+    content: "\e[?25l\e[5;1H\e(B\e[m            ╭────────────────────────────────────────╮             \e[6;1H\e(B\e[m            │         \e[33m┬ ┬┌─┐┌─┐┌─┐┌─┐┬─┐┌┬┐\e(B\e[m          │             \e[7;1H\e(B\e[m            │         \e[33m├─┤├─┤└─┐│  ├─┤├┬┘ ││\e(B\e[m          │             \e[8;1H\e(B\e[m            │         \e[33m┴ ┴┴ ┴└─┘└─┘┴ ┴┴└──┴┘\e(B\e[m          │             \e[9;1H\e(B\e[m            ├────────────────────────────────────────┤             \e[10;1H\e(B\e[m            │                 \e[4mSelect\e[24m                 │             \e[11;1H\e(B\e[m            │                  Info                  │             \e[12;1H\e(B\e[m            │                Settings                │             \e[13;1H\e(B\e[m            │                  Quit                  │             \e[14;1H\e(B\e[m            ╰────────────────────────────────────────╯             "
+  - delay: 400
+    content: "\e[?25l\e[10;1H\e(B\e[m            │                 Select                 │             \e[11;1H\e(B\e[m            │                  \e[4mInfo\e[24m                  │             "
+  - delay: 164
+    content: "\e[?25l\e[11;1H\e(B\e[m            │                  Info                  │             \e[12;1H\e(B\e[m            │                \e[4mSettings\e[24m                │             "
+  - delay: 452
+    content: "\e[?25l\e[12;1H\e(B\e[m            │                Settings                │             \e[13;1H\e(B\e[m            │                  \e[4mQuit\e[24m                  │             "
+  - delay: 664
     content: "\e[?1049l\e[23;0;0t\e[?12l\e[?25h\e(B\e[m\e[?12l\e[?25h"
-  - delay: 13
-    content: "\e[1m\e[7m%\e[27m\e[1m\e[0m                                                                                    \r \r\e]2;~\a"
-  - delay: 48
-    content: "\r\e[0m\e[27m\e[24m\e[J\e[01;32m➜  \e[36m~\e[00m \e[01;34mgit:(\e[31mlinux\e[34m) \e[33m✗\e[00m \e[K\e[?1h\e=\e[?2004h"
-  - delay: 1361
+  - delay: 9
+    content: "\e[1m\e[7m%\e[27m\e[1m\e[0m                                                                  \r \r\e]2;..skell/hascard\a"
+  - delay: 42
+    content: "\r\e[0m\e[27m\e[24m\e[J\e[01;32m➜  \e[36mhascard\e[00m \e[01;34mgit:(\e[31mmaster\e[34m) \e[33m✗\e[00m \e[K\e[?1h\e=\e[?2004h"
+  - delay: 690
     content: "\e[?2004l\r\r\n"

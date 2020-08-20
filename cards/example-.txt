@@ -1,0 +1,5 @@
+# Order the colors in increasing frequency
+4. Blue
+2. Yellow
+3. Green
+1. Red

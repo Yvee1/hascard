@@ -1,0 +1,31 @@
+# Peak intensity of motopic vision is at a wavelength of around
+- 400 nm
+- 450 nm
+- 500 nm
+* 550 nm
+
+---
+# What does LGN stand for
+_lateral geniculate nuclei_
+
+---
+# ipRGC
+intrinsically photosensitive Retinal Ganglion Cell
+
+---
+# Layers of the eye 1
+Light falls onto the _retina_ which is covered by the _macula_ filter which protects against UV and low wavelengths.
+
+---
+# Check the elements that are part of the primary visual path
+[*] Optic nerve
+[ ] RHP axis
+[*] LGN
+
+---
+# Order the colors in increasing frequency
+4. Blue
+2. Yellow
+3. Green
+1. Red
+
