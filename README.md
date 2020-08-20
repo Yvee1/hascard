@@ -5,7 +5,9 @@
 
 A minimal commandline utility for reviewing notes. 'Flashcards' can be written in markdown-like syntax.
 
-![a recording of example usage of the hascard application](./recordings/recording.gif)
+<p align="center">
+<img alt="a recording of example usage of the hascard application" src="./recordings/recording.gif">
+</p>
 
 ## Contents
 - [Installation](#installation)
@@ -30,6 +32,9 @@ brew install Yvee1/tools/hascard
 
 ### Binary
 Ubuntu and macOS binaries are available under [releases](https://github.com/Yvee1/hascard/releases/). To be able to run it from any directory, it has to be added to the PATH. This can be done by copying it to e.g. the `/usr/local/bin` directory.
+
+### Arch Linux
+Thanks to [loki7990](https://github.com/loki7990), hascard is also on the AUR: https://aur.archlinux.org/packages/hascard/.
 
 ### Snapcraft
 Hascard is also on [snapcraft](https://snapcraft.io/hascard). Installation instructions are on that site. If you already have snap installed you can just install hascard via `sudo snap install hascard`. By default snap applications are isolated from the system and run in a sandbox. This means that hascard does not have permission to read or write any files on the system aside from those under `%HOME/snap/hascard`. To be able to read cards also in other directories under the home directory, hascard makes use of the `home` interface which might need to be enabled manually using `sudo snap connect hascard:home :home`.
@@ -70,7 +75,9 @@ This is the simplest card, it simply has a title and can be flipped to show the 
 Explanation or definition of this word, or the answer to the question.
 ```
 will result in
-![](./recordings/definition.gif)
+<p align="center">
+  <img src="./recordings/definition.gif"></img>
+</p>
 
 ### Multiple choice
 This is a typical multiple choice question. The question starts with a `#` and the choices follow. Only one answer is correct, and is indicated by a `*`, the other questions are preceded by a `-`. As an example, the following text
@@ -84,7 +91,9 @@ This is a typical multiple choice question. The question starts with a `#` and t
 ```
 
 gets rendered as
-![](./recordings/multiple-choice.gif)
+<p align="center">
+  <img src="./recordings/multiple-choice.gif"></img>
+</p>
 
 ### Multiple answer
 Multiple choice questions with multiple possible answers is also possible. Here again the question starts with `#` and the options follow. Preceding each option is a box `[ ]` that is filled with a `*` or a `x` if it is correct. For example
@@ -97,7 +106,10 @@ Multiple choice questions with multiple possible answers is also possible. Here 
 [ ] Option 4
 ```
 results in
-![](./recordings/multiple-answer.gif)
+<p align="center">
+  <img src="./recordings/multiple-answer.gif"></img>
+</p>
+                                                           
 
 ### Open question
 Open questions are also supported. The words that have to be filled in should be surrounded by underscores `_`. Underscores can also be escaped by `\_` if they are part of the text, like is done in [`cards/analysis3.txt`](https://github.com/Yvee1/hascard/blob/48b5c0751ac72df791402b88c033e05488c9350d/cards/analysis3.txt#L34-L37t). Multiple answer possibilities can also be given by seperating them with vertical bars `|`. As an example, the card
@@ -107,7 +119,10 @@ Open questions are also supported. The words that have to be filled in should be
 The symbol € is for the currency named _Euro_, and is used in the _EU|European Union_.
 ```
 behaves like this
-![](./recordings/gapped-question.gif)
+
+<p align="center">
+  <img src="./recordings/gapped-question.gif"></img>
+</p>
 
 ### Reorder question
 This is a question where you have to put the elements in the correct order. Each element is preceded by a number indicating their correct place. The elements are rendered in the same order as they are written. For example the card
@@ -120,7 +135,9 @@ This is a question where you have to put the elements in the correct order. Each
 3. s
 ```
 will look like
-![](./recordings/reordering.gif)
+<p align="center">
+  <img src="./recordings/reordering.gif"></img>
+</p>
 
 ## Miscellaneous info
 Written in Haskell, UI built with [brick](https://github.com/jtdaugherty/brick) and parsing of cards done with [parsec](https://github.com/haskell/parsec). Recordings of the terminal were made using [terminalizer](https://github.com/faressoft/terminalizer). The filebrowser widget was mostly copied from the brick [filebrowser demo program](https://github.com/jtdaugherty/brick/blob/master/programs/FileBrowserDemo.hs). Homebrew and Travis configurations were made much easier by [the tutorial from Chris Penner](https://chrispenner.ca/posts/homebrew-haskell).
