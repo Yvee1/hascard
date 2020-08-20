@@ -1,5 +1,5 @@
 # hascard
-[![Build Status](https://travis-ci.org/Yvee1/hascard.svg?branch=master)](https://travis-ci.org/Yvee1/hascard) [![Hackage](https://img.shields.io/hackage/v/hascard.svg)](https://hackage.haskell.org/package/hascard) [![GitHub tag](https://img.shields.io/github/tag/Yvee1/hascard.svg)](https://github.com/Yvee1/hascard/releases)
+[![Build Status](https://travis-ci.org/Yvee1/hascard.svg?branch=master)](https://travis-ci.org/Yvee1/hascard) [![GitHub tag](https://img.shields.io/github/tag/Yvee1/hascard.svg)](https://github.com/Yvee1/hascard/releases) [![AUR](https://img.shields.io/aur/version/hascard)](https://aur.archlinux.org/packages/hascard/) [![Hackage](https://img.shields.io/hackage/v/hascard.svg)](https://hackage.haskell.org/package/hascard)
 
 
 
