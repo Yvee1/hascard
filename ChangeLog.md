@@ -1,4 +1,9 @@
 # Changelog for hascard
+## 0.3.0.1
+Fixed bugs:
+- Crash on empty recents list
+- Crash on any key other than Enter at FinalPopup
+
 ## 0.3.0.0
 New:
 - When reviewing a deck, the amount of correctly and incorrectly answered cards are now displayed.
