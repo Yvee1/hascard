@@ -45,7 +45,9 @@ cd hascard
 and do `stack install hascard` or `nix-build` respectively.
 
 ## Usage
-Simply run `hascard` to open the main application. Menu navigation can be done with the arrow keys or with the 'j' and 'k' keys. The controls for the different cards can be found at the bottom of the screen by default. This, and a couple other things, can be changed in the settings menu. A deck of cards can be opened using the built-in filebrowser, and recently selected decks will appear in the selection menu. The application can also be run directly on a file by giving it as an argument. These decks of flashcards are written in plain text, this is explained in section [Cards](#cards).
+Simply run `hascard` to open the main application. Menu navigation can be done with the arrow keys or with the 'j' and 'k' keys. The controls for the different cards can be found at the bottom of the screen by default. This, and a couple other things, can be changed in the settings menu. A deck of cards can be opened using the built-in filebrowser, and recently selected decks will appear in the selection menu. The application can also be run directly on a file by giving it as an argument. These decks of flashcards are written in plain text, this is explained in section [Cards](#cards). 
+
+After finishing a deck, there is an option to create new decks from the correctly answered or incorrectly answered cards, or both. The correct cards of a file named `deck.txt` are stored in `deck+.txt` in the same folder, and the incorrect ones in the file `deck-.txt`. Make sure you do not have files of those names that you want to keep since these _will_ be overwritten.
 
 ### CLI
 The CLI provides some options for running hascard; the most interesting are:
@@ -98,7 +100,7 @@ results in
 ![](./recordings/multiple-answer.gif)
 
 ### Open question
-Open questions are also supported. The words that have to be filled in should be surrounded by underscores `_`. Multiple answer possibilities can also be given by seperating them with vertical bars `|`. As an example, the card
+Open questions are also supported. The words that have to be filled in should be surrounded by underscores `_`. Underscores can also be escaped by `\_` if they are part of the text, like is done in [`cards/analysis3.txt`](https://github.com/Yvee1/hascard/blob/48b5c0751ac72df791402b88c033e05488c9350d/cards/analysis3.txt#L34-L37t). Multiple answer possibilities can also be given by seperating them with vertical bars `|`. As an example, the card
 
 ```
 # Fill in the gaps

@@ -1,4 +1,16 @@
 # Changelog for hascard
+## 0.3.0.0
+New:
+- When reviewing a deck, the amount of correctly and incorrectly answered cards are now displayed.
+- After answering a definition card a popup appears asking whether you answered it correctly or not.
+- After finishing a deck, there is an option to create new decks from either the correctly answered or incorrectly answered cards, or both. The correct cards of a file named `deck.txt` are stored in `deck+.txt` in the same folder, and the incorrect ones in the file `deck-.txt`. Make sure you do not have files of those names that you want to keep since these _will_ be overwritten.
+- The `--blank` or `-b` option was added to use the application without the changes listed above.
+- Files with the `.md` extension are also accepted by the application and shown in the filebrowser. 
+
+Fixed bugs:
+- Empty open question now takes up 1 row instead of 0 rows, so does not jump like before.
+- All parse errors now show a popup instead of crashing the application when reviewing a deck.
+
 ## 0.2.1.0
 New:
 - A certain chunk of a deck of cards can be reviewed using the `-c i/n` CLI option. For example `hascard -c 3/5` will split the deck into 5 chunks, and review the 3rd one. These chunks can be used with the shuffle and amount options too.
