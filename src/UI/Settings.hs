@@ -33,13 +33,24 @@ handleEvent :: GlobalState -> SS -> BrickEvent Name Event -> EventM Name (Next G
 handleEvent gs form ev@(VtyEvent e) =
   let update = updateSS gs
       continue' = continue . update
-      halt' global = continue (popState global) <* liftIO (setSettings (formState form))  in
+      halt' global = continue (popState global) <* liftIO (setSettings (formState form))
+      
+      focus = formFocus form
+      (Just n) = focusGetCurrent focus
+      down = if n == MaxRecentsField then continue gs
+        else continue' $ form { formFocus = focusNext focus }
+      up = if n == HintsField then continue gs
+        else continue' $ form { formFocus = focusPrev focus }
+
+      in
     case e of
-      V.EvKey V.KEsc [] -> halt' gs
-      V.EvKey V.KDown [] -> continue' $ form { formFocus = focusNext (formFocus form) }
-      V.EvKey (V.KChar 'j') [] -> continue' $ form { formFocus = focusNext (formFocus form) }
-      V.EvKey V.KUp [] -> continue' $ form { formFocus = focusPrev (formFocus form) }
-      V.EvKey (V.KChar 'k') [] -> continue' $ form { formFocus = focusPrev (formFocus form) }
+      V.EvKey V.KEsc []         -> halt' gs
+      V.EvKey V.KDown []        -> down
+      V.EvKey (V.KChar 'j') []  -> down
+      V.EvKey V.KUp []          -> up
+      V.EvKey (V.KChar 'k') []  -> up
+      V.EvKey (V.KChar '\t') [] -> continue gs
+      V.EvKey V.KBackTab []     -> continue gs
       _ -> continue' =<< handleFormEvent ev form
 
 handleEvent gs _ _ = continue gs
