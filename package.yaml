@@ -38,6 +38,11 @@ dependencies:
 - vector >= 0.12.0 && < 0.13
 - vty >= 5.28.2 && < 5.31
 - word-wrap >= 0.4.1 && < 0.5
+# - QuickCheck >= 2.13 && < 2.14
+# - HUnit >= 1.6.0 && < 1.7
+- tasty
+- tasty-hunit
+- tasty-quickcheck
 
 library:
   source-dirs: src

@@ -17,5 +17,6 @@ before_install:
 script:
 - stack setup
 - stack build
+- stack test
 after_success:
 - sh travis/attach-binary.sh
