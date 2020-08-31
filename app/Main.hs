@@ -10,7 +10,7 @@ import Paths_hascard (version)
 import Parser
 import Options.Applicative
 import System.Directory (makeAbsolute)
-import System.FilePath (takeExtension)
+import System.FilePath (takeExtension, takeBaseName, takeDirectory)
 import System.Process (runCommand)
 import System.Random.MWC (createSystemRandom)
 import qualified Data.Map.Strict as Map (empty)
@@ -67,8 +67,13 @@ cleanFilePath fp = case takeExtension fp of
   ""     -> do existence <- mapM D.doesFileExist [fp <> ".txt", fp <> ".md"]
                return $ case existence of
                  [True, True] -> Left "Both a .txt and .md file of this name exist, and it is unclear which to use. Specify the file extension."
-                 True:_       -> Right $ fp <> ".txt"     
-                 _            -> Right $ fp <> ".md"
+                 [True, _   ] -> Right $ fp <> ".txt"     
+                 [_   , True] -> Right $ fp <> ".md"
+                 _            -> Left $ "No .txt or .md file with the name \""
+                                        <> takeBaseName fp
+                                        <> "\" in the directory \""
+                                        <> takeDirectory (makeAbsolute fp
+                                        <> "\""
               
   _      -> return $ Left "Incorrect file type, provide a .txt file"
   
