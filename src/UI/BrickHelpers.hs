@@ -41,20 +41,13 @@ drawException (Just e) =
 -- | Fill all available space with the specified character. Grows only
 -- horizontally.
 hFill :: Char -> Widget n
-hFill ch =
-    Widget Greedy Fixed $ do
-      c <- getContext
-      return $ emptyResult & imageL .~ charFill (c^.attrL) ch (c^.availWidthL) 1
+hFill = vLimit 1 . fill
 
 -- | Fill all available space with the specified character. Grows only
 -- vertically.
 vFill :: Char -> Widget n
-vFill ch =
-    Widget Fixed Greedy $ do
-      c <- getContext
-      return $ emptyResult & imageL .~ charFill (c^.attrL) ch 1 (c^.availHeightL)
+vFill = hLimit 1 . fill
 
--- | Make widget at least some amount of rows high.
 atLeastV :: Int -> Widget n -> Widget n
 atLeastV n widget = Widget Fixed Fixed $ do
   c <- getContext

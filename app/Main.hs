@@ -72,7 +72,7 @@ cleanFilePath fp = case takeExtension fp of
                  _            -> Left $ "No .txt or .md file with the name \""
                                         <> takeBaseName fp
                                         <> "\" in the directory \""
-                                        <> takeDirectory (makeAbsolute fp
+                                        <> takeDirectory fp
                                         <> "\""
               
   _      -> return $ Left "Incorrect file type, provide a .txt file"

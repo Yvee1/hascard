@@ -42,7 +42,8 @@ pMultChoice = do
   header <- pHeader
   many eol
   choices <- pChoice `sepBy1` lookAhead (try choicePrefix)
-  case makeMultipleChoice choices of
+  msgOrResult <- makeMultipleChoice choices
+  case msgOrResult of
     Left errMsg -> do pos <- getSourcePos
                       return . Left $ sourcePosPretty pos <> "\n" <> errMsg
     Right (correct, incorrects) -> return . Right $ MultipleChoice header correct incorrects
@@ -105,11 +106,11 @@ pPerforated = do
   (pre, gap) <- pGap
   Perforated pre gap <$> pSentence 
 
-chars = escaped <|> anySingle
+chars = try escaped <|> anySingle
 escaped = char '\\' >> char '_'
 
 pGap = do
-  pre <- manyTill chars $ lookAhead (try gappedSpecialChars)
+  pre <- manyTill chars $ lookAhead (try (string "_" <|> seperator))
   char '_'
   gaps <- manyTill (noneOf ['_','|']) (lookAhead (try gappedSpecialChars)) `sepBy1` string "|"
   char '_'
@@ -120,7 +121,7 @@ gappedSpecialChars =  seperator
                   <|> string "_"
 
 pNormal = do
-  text <- manyTill (noneOf ['_']) $ lookAhead $ try $ gappedSpecialChars <|> eof'
+  text <- manyTill (noneOf ['_']) $ lookAhead $ try $ seperator <|> eof'
   return (Normal (dropWhileEnd isSpace' text))
 
 pDef = do
@@ -136,15 +137,17 @@ seperator = do
   many eol
   return sep
 
-makeMultipleChoice :: [(Char, String)] -> Either String (CorrectOption, [IncorrectOption])
+makeMultipleChoice :: [(Char, String)] -> Parser (Either String (CorrectOption, [IncorrectOption]))
 makeMultipleChoice options = makeMultipleChoice' [] [] 0 options
   where
-    makeMultipleChoice' [] _ _ [] = Left ("multiple choice had no correct answer: \n" ++ showPretty options)
-    makeMultipleChoice' [c] ics _ [] = Right (c, reverse ics)
-    makeMultipleChoice' _ _ _ [] = Left ("multiple choice had multiple correct answers: \n" ++ showPretty options)
+    -- makeMultipleChoice' [] _ _ [] = Left ("multiple choice had no correct answer: \n" ++ showPretty options)
+    makeMultipleChoice' :: [CorrectOption] -> [IncorrectOption] -> Int -> [(Char, String)] -> Parser (Either String (CorrectOption, [IncorrectOption]))
+    makeMultipleChoice' [] _ _ [] = fail "woops"
+    makeMultipleChoice' [c] ics _ [] = return $ Right (c, reverse ics)
+    makeMultipleChoice' _ _ _ [] = return $ Left ("multiple choice had multiple correct answers: \n" ++ showPretty options)
     makeMultipleChoice' cs ics i (('-', text) : opts) = makeMultipleChoice' cs (IncorrectOption (dropWhileEnd isSpace' text) : ics) (i+1) opts
     makeMultipleChoice' cs ics i (('*', text) : opts) = makeMultipleChoice' (CorrectOption i (dropWhileEnd isSpace' text) : cs) ics (i+1) opts
-    makeMultipleChoice' _  _   _ _ = Left "impossible"
+    makeMultipleChoice' _  _   _ _ = return $ Left "impossible"
 
     showPretty :: [(Char, String)] -> String
     showPretty = foldr ((<>) . showOne) ""
