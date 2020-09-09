@@ -1,13 +1,29 @@
-module UI (module X, runBrickFlashcards, GlobalState(..), GenIO, Chunk(..), Card, goToState) where
+module UI 
+( module X
+, runBrickFlashcards
+
+, GlobalState(..)
+, GenIO
+, Chunk(..)
+, Card
+, ImportType(..)
+
+, goToState
+
+, cardsToString
+
+, parseImportInput
+) where
 
 import UI.CardSelector as X (addRecent)
 import Settings        as X (getUseEscapeCode)
 import Runners         as X
 import Brick
 import Glue
+import Import
 import States
 import StateManagement
-import Types (Card)
+import Types (Card, cardsToString)
 
 runBrickFlashcards :: GlobalState -> IO ()
 runBrickFlashcards gs = do

@@ -17,16 +17,32 @@ import qualified Data.Map.Strict as Map (empty)
 import qualified System.Directory as D
 import qualified Stack
 
+data Command = Command
+  | Run RunOpts
+  | Import ImportOpts
+
 data Opts = Opts
+  { _optCommand      :: Command
+  , _optVersion      :: Bool
+  }
+
+data RunOpts = RunOpts
   { _optFile         :: Maybe String
   , _optSubset       :: Int
   , _optChunk        :: Chunk
   , _optShuffle      :: Bool
   , _optBlankMode    :: Bool
-  , _optVersion      :: Bool
   }
 
+data ImportOpts = ImportOpts
+  { _optInput         :: String 
+  , _optOutput        :: String
+  , _optImportType    :: ImportType
+  , _optImportReverse :: Bool }
+
 makeLenses ''Opts
+makeLenses ''RunOpts
+makeLenses ''ImportOpts
 
 main :: IO ()
 main = do
@@ -34,18 +50,32 @@ main = do
   when useEscapeCode $ void (runCommand "echo -n \\\\e[5 q")
   
   options <- execParser optsWithHelp
-  if options ^. optVersion
-    then putStrLn (showVersion version)
-    else run options
+  case (options ^. optVersion, options ^. optCommand) of
+    (True, _)         -> putStrLn (showVersion version)
+    (_, Run rOpts)    -> run rOpts
+    (_, Import iOpts) -> doImport iOpts
 
 opts :: Parser Opts
 opts = Opts
+  <$> hsubparser
+    (  command "run" (info (Run <$> runOpts) ( progDesc "Run hascard directly on a file"))
+    <> command "import" (info (Import <$> importOpts) (progDesc "Convert a delimited file to syntax compatible with hascard")))
+  <*> switch (long "version" <> short 'v' <> help "Show version number")
+
+runOpts :: Parser RunOpts
+runOpts = RunOpts
   <$> optional (argument str (metavar "FILE" <> help "A .txt or .md file containing flashcards"))
   <*> option auto (long "amount" <> short 'a' <> metavar "n" <> help "Use the first n cards in the deck (most useful combined with shuffle)" <> value (-1))
   <*> option auto (long "chunk" <> short 'c' <> metavar "i/n" <> help "Split the deck into n chunks, and review the i'th one. Counting starts at 1." <> value (Chunk 1 1))
   <*> switch (long "shuffle" <> short 's' <> help "Randomize card order")
   <*> switch (long "blank" <> short 'b' <> help "Disable review mode: do not keep track of which questions were correctly and incorrectly answered")
-  <*> switch (long "version" <> short 'v' <> help "Show version number")
+
+importOpts :: Parser ImportOpts
+importOpts = ImportOpts
+  <$> argument str (metavar "INPUT" <> help "A file ...")
+  <*> argument str (metavar "DESINATION" <> help "The filename/path to which the output should be saved")
+  <*> option auto (long "type" <> short 't' <> metavar "'open' or 'def'" <> help "The type of card to which the input is transformed, default: open" <> value Open)
+  <*> switch (long "reverse" <> short 'r' <> help "Reverse direction of question and answer, i.e. right part becomes the question.")
 
 optsWithHelp :: ParserInfo Opts
 optsWithHelp = info (opts <**> helper) $
@@ -57,7 +87,7 @@ nothingIf p a
   | p a = Nothing
   | otherwise = Just a
 
-mkGlobalState :: Opts -> GenIO -> GlobalState
+mkGlobalState :: RunOpts -> GenIO -> GlobalState
 mkGlobalState opts gen = GlobalState {_mwc=gen, _doShuffle=opts^.optShuffle, _subset=nothingIf (<0) (opts^.optSubset), _states=Map.empty, _stack=Stack.empty, _chunk=opts^.optChunk, _doReview=not (opts^.optBlankMode) }
 
 cleanFilePath :: FilePath -> IO (Either String FilePath)
@@ -77,7 +107,7 @@ cleanFilePath fp = case takeExtension fp of
               
   _      -> return $ Left "Incorrect file type, provide a .txt file"
   
-run :: Opts -> IO ()
+run :: RunOpts -> IO ()
 run opts = run' (opts ^. optFile)
   where
     run' Nothing = createSystemRandom >>= start Nothing . mkGlobalState opts
@@ -99,3 +129,11 @@ run opts = run' (opts ^. optFile)
 start :: Maybe (FilePath, [Card]) -> GlobalState -> IO ()
 start Nothing gs = runBrickFlashcards (gs `goToState` mainMenuState)
 start (Just (fp, cards)) gs = runBrickFlashcards =<< (gs `goToState`) <$> cardsWithOptionsState gs fp cards
+
+doImport :: ImportOpts -> IO ()
+doImport opts = do
+  valOrExc <- try $ readFile (opts ^. optInput) :: IO (Either IOError String)
+  case valOrExc of
+    Left exc -> putStrLn (displayException exc)
+    Right val -> writeFile (opts ^. optOutput) . cardsToString $
+                  parseImportInput (opts ^. optImportType) (opts ^. optImportReverse) val
