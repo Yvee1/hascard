@@ -135,5 +135,11 @@ doImport opts = do
   valOrExc <- try $ readFile (opts ^. optInput) :: IO (Either IOError String)
   case valOrExc of
     Left exc -> putStrLn (displayException exc)
-    Right val -> writeFile (opts ^. optOutput) . cardsToString $
-                  parseImportInput (opts ^. optImportType) (opts ^. optImportReverse) val
+    Right val -> do
+      let mCards = parseImportInput (opts ^. optImportType) (opts ^. optImportReverse) val
+      case mCards of
+        Just cards -> do
+          writeFile (opts ^. optOutput) . cardsToString $ cards
+          putStrLn "Successfully converted the file."
+        Nothing -> putStrLn "Failed the conversion."
+         

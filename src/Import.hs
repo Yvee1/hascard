@@ -15,13 +15,14 @@ instance Read ImportType where
          | "definition" `isPrefixOf` xs -> [(Def, drop 10 xs)]
          | otherwise -> []
 
-parseImportInput :: ImportType -> Bool -> String -> [Card]
+parseImportInput :: ImportType -> Bool -> String -> Maybe [Card]
 parseImportInput iType reverse input = 
-  let listToTuple = if not reverse then \[q, a] -> (q, a) else \[a, q] -> (q, a)
-      xs = map (listToTuple . splitOn "\t") (lines input)
+  let listToTuple [q, a] = Just $ if not reverse then (q, a) else (a, q)
+      listToTuple _ = Nothing
+      xs = mapM (listToTuple . splitOn "\t") (lines input)
       makeOpen (header, body) = OpenQuestion header 
         (P "" (NE.fromList (map (dropWhile isSpace) (splitOneOf ",/;" body))) (Normal ""))
 
   in case iType of
-    Def  -> map (uncurry Definition) xs
-    Open -> map makeOpen xs 
+    Def  -> map (uncurry Definition) <$> xs
+    Open -> map makeOpen <$> xs 
