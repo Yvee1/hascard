@@ -1,7 +1,7 @@
 module UI.Settings (State, drawUI, handleEvent, theMap) where
 
 import UI.Attributes
-import Brick hiding (mergeWithDefault)
+import Brick
 import Brick.Focus
 import Brick.Forms
 import Brick.Widgets.Border

@@ -9,6 +9,7 @@ import qualified UI.Info          as I
 import qualified UI.CardSelector  as CS
 import qualified UI.FileBrowser   as FB
 import qualified UI.Cards         as C
+import qualified UI.Parameter     as P
 
 globalApp :: App GlobalState Event Name
 globalApp = App
@@ -27,6 +28,7 @@ drawUI gs = case getState gs of
   CardSelectorState s -> CS.drawUI gs s
   FileBrowserState  s -> FB.drawUI s
   CardsState        s ->  C.drawUI s
+  ParameterState    s ->  P.drawUI s
 
 handleEvent :: GlobalState -> BrickEvent Name Event -> EventM Name (Next GlobalState)
 handleEvent gs ev =
@@ -38,6 +40,7 @@ handleEvent gs ev =
     CardSelectorState s -> CS.handleEvent gs s ev
     FileBrowserState  s -> FB.handleEvent gs s ev
     CardsState        s ->  C.handleEvent gs s ev
+    ParameterState    s ->  P.handleEvent gs s ev
 
 handleAttrMap :: GlobalState -> AttrMap
 handleAttrMap gs = case getState gs of
@@ -47,3 +50,4 @@ handleAttrMap gs = case getState gs of
   CardSelectorState _ -> CS.theMap
   FileBrowserState  _ -> FB.theMap
   CardsState        _ ->  C.theMap
+  ParameterState    _ ->  P.theMap

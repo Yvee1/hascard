@@ -83,3 +83,6 @@ entryFilter acceptHidden info = (fileExtensionMatch "txt" info || fileExtensionM
     ".."    -> True
     '.' : _ -> False
     _       -> True)
+
+parameterState :: FilePath -> [Card] -> State
+parameterState fp cards = ParameterState (PS cards fp)

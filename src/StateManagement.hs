@@ -18,6 +18,7 @@ getMode (InfoState         _) = Info
 getMode (CardSelectorState _) = CardSelector
 getMode (FileBrowserState  _) = FileBrowser
 getMode (CardsState        _) = Cards
+getMode (ParameterState    _) = Parameter
 
 getState :: GlobalState -> State
 getState = fromJust . safeGetState
@@ -45,6 +46,9 @@ updateInfo gs s = updateState gs (InfoState s)
 
 updateFBS :: GlobalState -> FBS -> GlobalState
 updateFBS gs s = updateState gs (FileBrowserState s)
+
+updatePS :: GlobalState -> PS -> GlobalState
+updatePS gs s = updateState gs (ParameterState s)
 
 goToState :: GlobalState -> State -> GlobalState
 goToState gs s = gs & states %~ M.insert (getMode s) s

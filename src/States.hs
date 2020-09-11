@@ -29,6 +29,7 @@ data Mode  = MainMenu
            | CardSelector
            | FileBrowser 
            | Cards
+           | Parameter
   deriving (Show, Eq, Ord)
 
 data State = MainMenuState     MMS
@@ -36,6 +37,7 @@ data State = MainMenuState     MMS
            | InfoState         IS
            | CardSelectorState CSS
            | FileBrowserState  FBS
+           | ParameterState    PS
            | CardsState        CS
 
 data Chunk = Chunk Int Int
@@ -176,6 +178,11 @@ data FBS = FBS
   , _showHidden  :: Bool
   }
 
+data PS = PS
+  { _psCards     :: [Card]
+  , _psFp        :: FilePath
+  }
+
 makeLenses ''State
 makeLenses ''MMS
 makeLenses ''GlobalState
@@ -184,5 +191,6 @@ makeLenses ''CS
 makeLenses ''Settings
 makeLenses ''CSS
 makeLenses ''FBS
+makeLenses ''PS
 makeLenses ''Popup
 makeLenses ''PopupState
