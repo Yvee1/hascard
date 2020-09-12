@@ -14,6 +14,8 @@ module UI
 , cardsToString
 
 , parseImportInput
+
+, defaultParameters
 ) where
 
 import UI.CardSelector as X (addRecent)

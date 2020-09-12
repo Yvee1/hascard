@@ -79,7 +79,7 @@ handleEvent gs s@FBS{_fb=b, _exception'=excep} (VtyEvent ev) =
                               Right result -> continue =<< liftIO (do
                                       addRecent fp
                                       let gs' = update s'
-                                      return (gs' `moveToState` parameterState fp result))
+                                      return (gs' `moveToState` parameterState (gs'^.parameters) fp result))
                         _ -> halt' gs
 
                 _ -> continue' s'

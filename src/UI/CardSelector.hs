@@ -92,7 +92,7 @@ handleEvent gs s@CSS{_list=l, _exception=exc} (VtyEvent ev) =
                                     Right result -> continue =<< liftIO (do
                                       s'' <- addRecentInternal s' fp
                                       let gs' = update s''
-                                      return (gs' `goToState` parameterState fp result))
+                                      return (gs' `goToState` parameterState (gs'^.parameters) fp result))
                         _ -> continue' s'
 
 handleEvent gs _ _ = continue gs

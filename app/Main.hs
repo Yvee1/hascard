@@ -22,7 +22,7 @@ data Command = Command
   | Import ImportOpts
 
 data Opts = Opts
-  { _optCommand      :: Command
+  { _optCommand      :: Maybe Command
   , _optVersion      :: Bool
   }
 
@@ -51,15 +51,19 @@ main = do
   
   options <- execParser optsWithHelp
   case (options ^. optVersion, options ^. optCommand) of
-    (True, _)         -> putStrLn (showVersion version)
-    (_, Run rOpts)    -> run rOpts
-    (_, Import iOpts) -> doImport iOpts
+    (True, _)                -> putStrLn (showVersion version)
+    (_, Just (Run rOpts))    -> run rOpts
+    (_, Just (Import iOpts)) -> doImport iOpts
+    (_, Nothing)             ->
+      do g <- createSystemRandom 
+         let gs = GlobalState {_mwc=g, _states=Map.empty, _stack=Stack.empty, _parameters= defaultParameters }
+         start Nothing gs
 
 opts :: Parser Opts
 opts = Opts
-  <$> hsubparser
+  <$> optional (hsubparser
     (  command "run" (info (Run <$> runOpts) ( progDesc "Run hascard directly on a file"))
-    <> command "import" (info (Import <$> importOpts) (progDesc "Convert a delimited file to syntax compatible with hascard")))
+    <> command "import" (info (Import <$> importOpts) (progDesc "Convert a delimited file to syntax compatible with hascard"))))
   <*> switch (long "version" <> short 'v' <> help "Show version number")
 
 runOpts :: Parser RunOpts
