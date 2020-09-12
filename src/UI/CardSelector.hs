@@ -33,10 +33,6 @@ drawUI gs s =
 title :: Widget Name
 title = withAttr titleAttr $ str "Select a deck of flashcards "
 
-shuffledWidget :: Bool -> Widget Name
-shuffledWidget shuffled = withAttr shuffledAttr $ str $ 
-    if shuffled then "(Shuffled)" else ""
-
 drawMenu :: GlobalState -> CSS -> Widget Name
 drawMenu gs s = 
   joinBorders $
@@ -44,7 +40,7 @@ drawMenu gs s =
   withBorderStyle unicodeRounded $
   border $
   hLimitPercent 60 $
-  hCenter (title <+> shuffledWidget (gs^.doShuffle)) <=>
+  hCenter title <=>
   hBorder <=>
   hCenter (drawList s)
 
@@ -77,7 +73,6 @@ handleEvent gs s@CSS{_list=l, _exception=exc} (VtyEvent ev) =
           (Just _, _) -> continue' $ s & exception .~ Nothing
           (_, e) -> case e of
             V.EvKey V.KEsc [] -> halt' gs
-            V.EvKey (V.KChar 's') []  -> continue (gs & doShuffle %~ not)
 
             _ -> do l' <- L.handleListEventVi L.handleListEvent e l
                     let s' = (s & list .~ l') in

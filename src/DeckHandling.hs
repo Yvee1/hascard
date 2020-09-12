@@ -5,10 +5,10 @@ import States
 import Types
 
 doRandomization :: GlobalState -> [Card] -> IO [Card]
-doRandomization state cards = 
+doRandomization gs cards = 
   let n = length cards in do
-    cards' <- if state^.doShuffle then sampleFrom (state^.mwc) (shuffleN n cards) else return cards
-    return $ maybe cards' (`take` cards') (state^.subset)
+    cards' <- if gs^.parameters.pShuffle then sampleFrom (gs^.mwc) (shuffleN n cards) else return cards
+    return $ maybe cards' (`take` cards') (gs^.parameters.pSubset)
 
 doChunking :: Chunk -> [Card] -> [Card]
 doChunking (Chunk i n) cards = 

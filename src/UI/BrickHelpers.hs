@@ -1,12 +1,19 @@
+{-# LANGUAGE OverloadedStrings, RankNTypes #-}
 module UI.BrickHelpers where
 import Text.Wrap
 import Brick
+import Brick.Forms
 import Brick.Widgets.Border
 import Brick.Widgets.Center
+import Data.Char (isDigit)
+import Data.Maybe
 import Data.Text (pack)
 import Graphics.Vty (imageWidth, imageHeight, charFill)
 import Lens.Micro
+import Text.Read (readMaybe)
 import UI.Attributes
+import qualified Data.Text as T
+import qualified Graphics.Vty as V
 
 hCenteredStrWrap :: String -> Widget n
 hCenteredStrWrap = hCenteredStrWrapWithAttr id
@@ -55,3 +62,59 @@ atLeastV n widget = Widget Fixed Fixed $ do
   let h  = result^.imageL.to imageHeight
       dh = n - h
   if dh > 0 then render $ vLimit n (widget <=> vFill ' ') else render widget
+
+yesnoField :: (Ord n, Show n) => Bool -> Lens' s Bool -> n -> T.Text -> s -> FormFieldState s e n
+yesnoField rightAlign stLens name label initialState =
+  let initVal = initialState ^. stLens
+
+      handleEvent (MouseDown n _ _ _) s | n == name = return $ not s
+      handleEvent (VtyEvent (V.EvKey (V.KChar ' ') [])) s  = return $ not s
+      handleEvent (VtyEvent (V.EvKey V.KEnter [])) s  = return $ not s
+      handleEvent _ s = return s
+  
+  in FormFieldState { formFieldState = initVal
+                    , formFields = [ FormField name Just True 
+                                       (renderYesno rightAlign label name)
+                                       handleEvent ]
+                    , formFieldLens = stLens
+                    , formFieldRenderHelper = id
+                    , formFieldConcat = vBox }
+
+renderYesno :: Bool -> T.Text -> n -> Bool -> Bool -> Widget n
+renderYesno rightAlign label n foc val =
+  let addAttr = if foc then withDefAttr focusedFormInputAttr else id
+  in clickable n $
+    (if val 
+      then addAttr (txt "Yes")
+      else if rightAlign 
+        then txt " " <+> addAttr (txt "No")
+        else addAttr (txt "No") <+> txt " ") <+> txt label
+
+naturalNumberField :: (Ord n, Show n) => Int -> Lens' s Int -> n -> T.Text -> s -> FormFieldState s e n
+naturalNumberField bound stLens name postfix initialState =
+  let initVal = initialState ^. stLens
+
+      handleEvent (VtyEvent (V.EvKey (V.KChar c) [])) s | isDigit c = 
+        let newValue = read (show s ++ [c])
+          in return $ if newValue <= bound then newValue else bound
+      handleEvent (VtyEvent (V.EvKey V.KBS [])) s = return $ case show s of
+                                                           "" -> 0
+                                                           xs -> fromMaybe 0 (readMaybe (init xs))
+      handleEvent _ s = return s
+  
+  in FormFieldState { formFieldState = initVal
+                    , formFields = [ FormField name Just True 
+                                       (renderNaturalNumber bound postfix name)
+                                       handleEvent ]
+                    , formFieldLens = stLens
+                    , formFieldRenderHelper = id
+                    , formFieldConcat = vBox }
+
+renderNaturalNumber :: Int -> T.Text -> n -> Bool -> Int -> Widget n
+renderNaturalNumber bound postfix n foc val =
+  let addAttr = if foc then withDefAttr focusedFormInputAttr else id
+      val' = show val
+      csr = if foc then showCursor n (Location (length val',0)) else id
+  in if T.null postfix
+    then hLimit (length (show bound)) (csr (addAttr (str val')) <+> hFill ' ') 
+    else csr (addAttr (str val')) <+> txt postfix

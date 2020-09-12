@@ -1,9 +1,11 @@
 module Runners where
 import Brick.Widgets.FileBrowser
+import Brick.Forms
 import DeckHandling
 import Data.Maybe (fromMaybe)
 import Recents
 import Lens.Micro.Platform
+import Parameters
 import Settings
 import States
 import Types
@@ -65,8 +67,8 @@ cardsState doReview fp deck = do
 
 cardsWithOptionsState :: GlobalState -> FilePath -> [Card] -> IO State
 cardsWithOptionsState gs fp cards =
-  let chunked = doChunking (gs^.chunk) cards
-  in doRandomization gs chunked >>= cardsState (gs^.doReview) fp
+  let chunked = doChunking (gs^.parameters.pChunk) cards
+  in doRandomization gs chunked >>= cardsState (gs^.parameters.pReviewMode) fp
 
 infoState :: State
 infoState = InfoState ()
@@ -85,4 +87,4 @@ entryFilter acceptHidden info = (fileExtensionMatch "txt" info || fileExtensionM
     _       -> True)
 
 parameterState :: FilePath -> [Card] -> State
-parameterState fp cards = ParameterState (PS cards fp)
+parameterState fp cards = ParameterState (PS cards fp (mkParameterForm (length cards) defaultParameters))

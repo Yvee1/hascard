@@ -75,55 +75,8 @@ mkForm =
   let label s w = padBottom (Pad 1) $ padRight (Pad 2) (strWrap s) <+> w
   
   in newForm
-    [ label "Draw hints using underscores for definition cards" @@= yesnoField hints HintsField ""
-    , label "Show controls at the bottom of screen" @@= yesnoField controls ControlsField ""
-    , label "Use the '-n \\e[5 q' escape code to change the cursor to a blinking line on start" @@= yesnoField escapeCode EscapeCodeField ""
-    , label "Maximum number of recently selected files stored" @@= hLimit 3 @@= naturalNumberField maxRecents MaxRecentsField "" ]
+    [ label "Draw hints using underscores for definition cards" @@= yesnoField False hints HintsField ""
+    , label "Show controls at the bottom of screen" @@= yesnoField False controls ControlsField ""
+    , label "Use the '-n \\e[5 q' escape code to change the cursor to a blinking line on start" @@= yesnoField False escapeCode EscapeCodeField ""
+    , label "Maximum number of recently selected files stored" @@= naturalNumberField 999 maxRecents MaxRecentsField "" ]
 
-yesnoField :: (Ord n, Show n) => Lens' s Bool -> n -> T.Text -> s -> FormFieldState s e n
-yesnoField stLens name label initialState =
-  let initVal = initialState ^. stLens
-
-      handleEvent (MouseDown n _ _ _) s | n == name = return $ not s
-      handleEvent (VtyEvent (V.EvKey (V.KChar ' ') [])) s  = return $ not s
-      handleEvent (VtyEvent (V.EvKey V.KEnter [])) s  = return $ not s
-      handleEvent _ s = return s
-  
-  in FormFieldState { formFieldState = initVal
-                    , formFields = [ FormField name Just True 
-                                       (renderYesno label name)
-                                       handleEvent ]
-                    , formFieldLens = stLens
-                    , formFieldRenderHelper = id
-                    , formFieldConcat = vBox }
-
-renderYesno :: T.Text -> n -> Bool -> Bool -> Widget n
-renderYesno label n foc val =
-  let addAttr = if foc then withDefAttr focusedFormInputAttr else id
-  in clickable n $ (if val then addAttr (txt "Yes") else addAttr (txt "No") <+> txt " ") <+> txt label
-
-naturalNumberField :: (Ord n, Show n) => Lens' s Int -> n -> T.Text -> s -> FormFieldState s e n
-naturalNumberField stLens name label initialState =
-  let initVal = initialState ^. stLens
-      -- clamp s = 
-
-      handleEvent (VtyEvent (V.EvKey (V.KChar c) [])) s | isDigit c = return $ if s < 100 then read (show s ++ [c]) else s
-      handleEvent (VtyEvent (V.EvKey V.KBS [])) s = return $ case show s of
-                                                           "" -> 0
-                                                           xs -> fromMaybe 0 (readMaybe (init xs))
-      handleEvent _ s = return s
-  
-  in FormFieldState { formFieldState = initVal
-                    , formFields = [ FormField name Just True 
-                                       (renderNaturalNumber label name)
-                                       handleEvent ]
-                    , formFieldLens = stLens
-                    , formFieldRenderHelper = id
-                    , formFieldConcat = vBox }
-
-renderNaturalNumber :: T.Text -> n -> Bool -> Int -> Widget n
-renderNaturalNumber label n foc val =
-  let addAttr = if foc then withDefAttr focusedFormInputAttr else id
-      val' = show val
-      csr = if foc then showCursor n (Location (length val',0)) else id
-  in csr (addAttr (str val')) <+> txt label <+> hFill ' '

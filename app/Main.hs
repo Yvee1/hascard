@@ -88,7 +88,10 @@ nothingIf p a
   | otherwise = Just a
 
 mkGlobalState :: RunOpts -> GenIO -> GlobalState
-mkGlobalState opts gen = GlobalState {_mwc=gen, _doShuffle=opts^.optShuffle, _subset=nothingIf (<0) (opts^.optSubset), _states=Map.empty, _stack=Stack.empty, _chunk=opts^.optChunk, _doReview=not (opts^.optBlankMode) }
+mkGlobalState opts gen = 
+  let ps = Parameters { _pShuffle = opts^.optShuffle, _pSubset = nothingIf (<0) (opts^.optSubset)
+                      , _pChunk = opts^.optChunk, _pReviewMode = not (opts^.optBlankMode), _pOk = False }
+  in GlobalState {_mwc=gen, _states=Map.empty, _stack=Stack.empty, _parameters=ps }
 
 cleanFilePath :: FilePath -> IO (Either String FilePath)
 cleanFilePath fp = case takeExtension fp of

@@ -15,10 +15,20 @@ import qualified Data.List.NonEmpty as NE
 import qualified Data.Map.Strict as M
 import qualified Graphics.Vty as V
 
-data Name = HintsField
+data Name = 
+          -- Settings
+            HintsField
           | ControlsField
           | EscapeCodeField
           | MaxRecentsField
+
+          -- Parameters
+          | ShuffleField
+          | SubsetField
+          | ChunkField
+          | ReviewModeField
+          | ParametersOkField
+
           | Ordinary
   deriving (Eq, Ord, Show)
 type Event = ()
@@ -56,12 +66,9 @@ instance Read Chunk where
 
 data GlobalState = GlobalState
   { _mwc        :: GenIO
-  , _doShuffle  :: Bool
-  , _subset     :: Maybe Int
-  , _chunk      :: Chunk
   , _stack      :: Stack Mode
   , _states     :: Map Mode State
-  , _doReview   :: Bool
+  , _parameters :: Parameters
   }
 
 data CardState = 
@@ -178,9 +185,24 @@ data FBS = FBS
   , _showHidden  :: Bool
   }
 
+defaultParameters = Parameters
+  { _pShuffle    = False
+  , _pSubset     = Nothing
+  , _pChunk      = Chunk 1 1
+  , _pReviewMode = True
+  , _pOk         = False }
+
+data Parameters = Parameters
+  { _pShuffle    :: Bool
+  , _pSubset     :: Maybe Int
+  , _pChunk      :: Chunk
+  , _pReviewMode :: Bool
+  , _pOk         :: Bool }
+
 data PS = PS
   { _psCards     :: [Card]
   , _psFp        :: FilePath
+  , _psForm      :: Form Parameters Event Name
   }
 
 makeLenses ''State
@@ -192,5 +214,6 @@ makeLenses ''Settings
 makeLenses ''CSS
 makeLenses ''FBS
 makeLenses ''PS
+makeLenses ''Parameters
 makeLenses ''Popup
 makeLenses ''PopupState
