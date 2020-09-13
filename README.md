@@ -60,7 +60,7 @@ The CLI provides two commands, `run` and `import`. The `hascard run` is essentia
 As an example, say you have a file `deck.txt` with lots of cards in it and you want to review 5 random ones, you can use `hascard run deck -s -a 5`. Here `-s` shuffles the deck and `-a 5` specifies we only want to look at 5 of them.
 
 #### Importing decks
-If you have decks in a different format, you might want to convert them into files compatible with hascard. Currently tab-seperated files can be converted to definition or open question cards. For example
+If you have decks in a different format, you might want to convert them into files compatible with hascard. Currently tab-seperated files can be converted to definition or open question cards. For example [Quizlet](https://quizlet.com/) decks can be exported to this format. As an example, the following file
 ```
 aussi	ook
 en outre, de plus	bovendien
