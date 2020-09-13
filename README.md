@@ -50,20 +50,34 @@ cd hascard
 and do `stack install hascard` or `nix-build` respectively.
 
 ## Usage
-Simply run `hascard` to open the main application. Menu navigation can be done with the arrow keys or with the 'j' and 'k' keys. The controls for the different cards can be found at the bottom of the screen by default. This, and a couple other things, can be changed in the settings menu. A deck of cards can be opened using the built-in filebrowser, and recently selected decks will appear in the selection menu. The application can also be run directly on a file by giving it as an argument. These decks of flashcards are written in plain text, this is explained in section [Cards](#cards). 
+Simply run `hascard` to open the main application. Menu navigation can be done with the arrow keys or with the 'j' and 'k' keys. The controls for the different cards can be found at the bottom of the screen by default. This, and a couple other things, can be changed in the settings menu. A deck of cards can be opened using the built-in filebrowser, and recently selected decks will appear in the selection menu. These decks of flashcards are written in plain text, this is explained in section [Cards](#cards). After selecting a deck, some options can be specified, like whether the deck should be shuffled or how many cards should be reviewed.
 
 After finishing a deck, there is an option to create new decks from the correctly answered or incorrectly answered cards, or both. The correct cards of a file named `deck.txt` are stored in `deck+.txt` in the same folder, and the incorrect ones in the file `deck-.txt`. Make sure you do not have files of those names that you want to keep since these _will_ be overwritten.
 
 ### CLI
-The CLI provides some options for running hascard; the most interesting are:
+The CLI provides two commands, `run` and `import`. The `hascard run` is essentially the same as just `hascard`, but the `run` command can be given a file to run the application on directly. Instead of specifying the parameters in a menu, they are CLI options.
+
+As an example, say you have a file `deck.txt` with lots of cards in it and you want to review 5 random ones, you can use `hascard run deck -s -a 5`. Here `-s` shuffles the deck and `-a 5` specifies we only want to look at 5 of them.
+
+#### Importing decks
+If you have decks in a different format, you might want to convert them into files compatible with hascard. Currently tab-seperated files can be converted to definition or open question cards. For example
 ```
-  -a,--amount n            Use the first n cards in the deck (most useful
-                           combined with shuffle)
-  -c,--chunk i/n           Split the deck into n chunks, and review the i'th
-                           one. Counting starts at 1.
-  -s,--shuffle             Randomize card order
-  ```
-As an example, say you have a file `deck.txt` with lots of cards in it and you want to review 5 random ones, you can use `hascard deck -s -a 5`. Here `-s` shuffles the deck and `-a 5` specifies we only want to look at 5 of them.
+aussi	ook
+en outre, de plus	bovendien
+de même	evenals
+```
+will become
+```
+# ook
+_aussi_
+---
+# bovendien
+_en outre|de plus_
+---
+# evenals
+_de même_
+```
+with the command `hascard import input.txt output.txt -r`. More info can be found in the help text at `hascard import --help`.
 
 ## Cards
 Decks of cards are written in `.txt` or `.md` files. Cards are seperated with a line containing three dashes `---`. For examples, see the [`/cards`](https://github.com/Yvee1/hascard/tree/master/cards) directory. In this section the 5 different types of cards are listed, with the syntax and how it is represented in the application.

@@ -1,4 +1,15 @@
 # Changelog for hascard
+## 0.4.0.0
+New:
+- UI menu for setting the parameters like shuffling etc. The CLI options are no longer usable with `hascard`. The CLI options have been moved under `hascard run`. Directly providing a file is now also done with `hascard run`.
+- Convert TSV files to files compatible with hascard, using the `hascard import` command. (suggested by @g-w1)
+
+Fixed bugs:
+- Focus cycling removed in settings menu for consistency with the other menus.
+- Better error for non-existing files
+- Allow | character in text
+- Allow lists with - in definition cards. Previously this was seen as a multiple choice question without any correct answers, and therefore gave an error.
+
 ## 0.3.0.1
 Fixed bugs:
 - Crash on empty recents list
