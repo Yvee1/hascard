@@ -243,7 +243,7 @@ handleEvent gs s (VtyEvent e) =
   let update = updateCS gs
       continue' = continue . update in
     case e of
-      V.EvKey V.KEsc []                -> continue $ popState gs
+      V.EvKey V.KEsc []                -> popStateOrQuit gs
       V.EvKey V.KRight [V.MCtrl]       -> if not (s^.reviewMode) then next gs s else continue gs
       V.EvKey V.KLeft  [V.MCtrl]       -> if not (s^.reviewMode) then previous gs s else continue gs
 

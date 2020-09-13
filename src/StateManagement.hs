@@ -73,6 +73,12 @@ popState gs = let
     gs & states %~ M.delete top
        & stack  .~ s'
 
+popStateOrQuit :: GlobalState -> EventM n (Next GlobalState)
+popStateOrQuit gs = let gs' = popState gs in
+  if Stack.size (gs' ^. stack) == 0 
+   then halt gs'
+   else continue gs'
+
 safeGetState :: GlobalState -> Maybe State
 safeGetState gs = do
   key <- safeHead (gs ^. stack)
