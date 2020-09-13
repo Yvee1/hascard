@@ -33,7 +33,7 @@ drawUI s =  [maybe emptyWidget (`drawPopup` s) (s^.popup), drawCardUI s <=> draw
 
 drawInfo :: CS -> Widget Name
 drawInfo s = if not (s ^. showControls) then emptyWidget else
-  strWrap . ("ESC or q: quit" <>) $ case s ^. cardState of
+  strWrap . ("ESC: quit" <>) $ case s ^. cardState of
     DefinitionState {}     -> ", ENTER: flip card / continue"
     MultipleChoiceState {} -> ", ENTER: submit answer / continue"
     MultipleAnswerState {} -> ", ENTER: select / continue, c: submit selection"
