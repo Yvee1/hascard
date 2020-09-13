@@ -19,7 +19,7 @@ drawUI = (:[]) . ui
 ui :: SS -> Widget Name
 ui f =
   joinBorders $
-  center $ 
+  center $
   withBorderStyle unicodeRounded $
   border $
   hLimitPercent 60 $
@@ -34,7 +34,7 @@ handleEvent gs form ev@(VtyEvent e) =
   let update = updateSS gs
       continue' = continue . update
       halt' global = continue (popState global) <* liftIO (setSettings (formState form))
-      
+
       focus = formFocus form
       (Just n) = focusGetCurrent focus
       down = if n == MaxRecentsField then continue gs
@@ -45,6 +45,7 @@ handleEvent gs form ev@(VtyEvent e) =
       in
     case e of
       V.EvKey V.KEsc []         -> halt' gs
+      V.EvKey (V.KChar 'q') []  -> halt' gs
       V.EvKey V.KDown []        -> down
       V.EvKey (V.KChar 'j') []  -> down
       V.EvKey V.KUp []          -> up

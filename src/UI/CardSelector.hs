@@ -1,4 +1,4 @@
-module UI.CardSelector 
+module UI.CardSelector
   ( State
   , drawUI
   , handleEvent
@@ -27,16 +27,16 @@ import qualified Stack as S
 import qualified UI.Attributes as A
 
 drawUI :: GlobalState -> CSS -> [Widget Name]
-drawUI gs s = 
+drawUI gs s =
   [ drawException (s ^. exception), drawMenu gs s ]
 
 title :: Widget Name
 title = withAttr titleAttr $ str "Select a deck of flashcards "
 
 drawMenu :: GlobalState -> CSS -> Widget Name
-drawMenu gs s = 
+drawMenu gs s =
   joinBorders $
-  center $ 
+  center $
   withBorderStyle unicodeRounded $
   border $
   hLimitPercent 60 $
@@ -73,6 +73,7 @@ handleEvent gs s@CSS{_list=l, _exception=exc} (VtyEvent ev) =
           (Just _, _) -> continue' $ s & exception .~ Nothing
           (_, e) -> case e of
             V.EvKey V.KEsc [] -> halt' gs
+            V.EvKey (V.KChar 'q') []  -> halt' gs
 
             _ -> do l' <- L.handleListEventVi L.handleListEvent e l
                     let s' = (s & list .~ l') in
@@ -80,7 +81,7 @@ handleEvent gs s@CSS{_list=l, _exception=exc} (VtyEvent ev) =
                         V.EvKey V.KEnter [] ->
                           case L.listSelectedElement l' of
                             Nothing -> continue' s'
-                            Just (_, "Select file from system") -> 
+                            Just (_, "Select file from system") ->
                               let gs' = update s' in continue =<< (gs' `goToState`) <$> liftIO fileBrowserState
                             Just (i, _) -> do
                                 let fp = (s' ^. recents) `S.unsafeElemAt` i

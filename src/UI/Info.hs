@@ -14,7 +14,7 @@ drawUI = (:[]) . const ui
 ui :: Widget Name
 ui =
   joinBorders $
-  center $ 
+  center $
   withBorderStyle unicodeRounded $
   border $
   hLimit 40 $
@@ -29,6 +29,7 @@ handleEvent gs s (VtyEvent e) =
       halt' = continue . popState in
     case e of
       V.EvKey V.KEsc [] -> halt' gs
+      V.EvKey (V.KChar 'q') [] -> halt' gs
       V.EvKey V.KEnter [] -> halt' gs
       V.EvKey V.KDown [] -> vScrollBy (viewportScroll Ordinary) 1 >> continue' s
       V.EvKey (V.KChar 'j') [] -> vScrollBy (viewportScroll Ordinary) 1 >> continue' s
@@ -45,7 +46,7 @@ theMap = attrMap V.defAttr
     [ (titleAttr, fg V.yellow) ]
 
 drawInfo :: Widget Name
-drawInfo = 
+drawInfo =
   padLeftRight 1 $
   vLimitPercent 60 $
   viewport Ordinary Vertical (strWrap info)
