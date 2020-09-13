@@ -20,14 +20,14 @@ drawUI = (:[]) . ui
 ui :: PS -> Widget Name
 ui s =
   joinBorders $
-  center $ 
+  center $
   withBorderStyle unicodeRounded $
   border $
   hLimitPercent 60 $
   hLimit 40 $
   hCenter (withAttr titleAttr (str "Select parameters")) <=>
   hBorder <=>
-  padLeftRight 1 
+  padLeftRight 1
   (renderForm (s ^. psForm))
 
 handleEvent :: GlobalState -> PS -> BrickEvent Name Event -> EventM Name (Next GlobalState)
@@ -50,6 +50,7 @@ handleEvent gs s ev@(VtyEvent e) =
   in case e of
     -- continue gs
       V.EvKey V.KEsc []         -> halt' gs
+      V.EvKey (V.KChar 'q') []  -> halt' gs
       V.EvKey V.KDown []        -> down
       V.EvKey (V.KChar 'j') []  -> down
       V.EvKey V.KUp []          -> up
@@ -58,8 +59,8 @@ handleEvent gs s ev@(VtyEvent e) =
       V.EvKey V.KBackTab []     -> continue gs
       _                         -> do f <- handleFormEvent ev form
                                       if formState f ^. pOk
-                                        then continue =<< (gs `goToState`) 
-                                             <$> liftIO (cardsWithOptionsState 
+                                        then continue =<< (gs `goToState`)
+                                             <$> liftIO (cardsWithOptionsState
                                                          (gs & parameters .~ formState f)
                                                          (s ^. psFp)
                                                          (s ^. psCards))

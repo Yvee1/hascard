@@ -19,16 +19,16 @@ title :: Widget Name
 title = withAttr titleAttr $
         str "┬ ┬┌─┐┌─┐┌─┐┌─┐┬─┐┌┬┐" <=>
         str "├─┤├─┤└─┐│  ├─┤├┬┘ ││" <=>
-        str "┴ ┴┴ ┴└─┘└─┘┴ ┴┴└──┴┘" 
+        str "┴ ┴┴ ┴└─┘└─┘┴ ┴┴└──┴┘"
 
 drawUI :: MMS -> [Widget Name]
-drawUI s = 
+drawUI s =
   [ drawMenu s ]
 
 drawMenu :: MMS -> Widget Name
-drawMenu s = 
+drawMenu s =
   joinBorders $
-  center $ 
+  center $
   withBorderStyle unicodeRounded $
   border $
   hLimit 40 $
@@ -49,11 +49,12 @@ handleEvent gs s (VtyEvent e) =
   let update = updateMMS gs in
     case e of
       V.EvKey V.KEsc [] -> halt gs
+      V.EvKey (V.KChar 'q') []  -> halt gs
       V.EvKey V.KEnter [] ->
         case L.listSelected (s^.l) of
           Just 0 -> continue =<< (gs `goToState`) <$> liftIO cardSelectorState
           Just 1 -> continue $ gs `goToState` infoState
-          Just 2 -> continue =<< (gs `goToState`) <$> liftIO settingsState 
+          Just 2 -> continue =<< (gs `goToState`) <$> liftIO settingsState
           Just 3 -> halt gs
           _ -> undefined
 

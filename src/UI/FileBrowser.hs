@@ -46,7 +46,7 @@ drawUI FBS{_fb=b, _exception'=exc} = [drawException exc, center $ ui <=> help]
                vBox [ hCenter $ txt "Up/Down: select, h: toggle show hidden files"
                     , hCenter $ txt "/: search, Ctrl-C or Esc: cancel search"
                     , hCenter $ txt "Enter: change directory or select file"
-                    , hCenter $ txt "Esc: quit"
+                    , hCenter $ txt "Esc or q: quit"
                     ]
 
 handleEvent :: GlobalState -> FBS -> BrickEvent Name Event -> EventM Name (Next GlobalState)
