@@ -75,11 +75,10 @@ handleEvent gs s@FBS{_fb=b, _exception'=excep} (VtyEvent ev) =
                             Left exc -> continue' (s' & exception' ?~ displayException exc)
                             Right file -> case parseCards file of
                               Left parseError -> continue' (s & exception' ?~ parseError)
-                              -- Right result -> halt' (s' & parsedCards .~ result & filePath ?~ fp)
                               Right result -> continue =<< liftIO (do
                                       addRecent fp
-                                      let gs' = update s'
-                                      return (gs' `moveToState` parameterState (gs'^.parameters) fp result))
+                                      gs' <- refreshRecents' gs
+                                      return (gs' `goToState` parameterState (gs'^.parameters) fp result))
                         _ -> halt' gs
 
                 _ -> continue' s'

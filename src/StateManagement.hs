@@ -57,6 +57,14 @@ goToState gs s = gs & states %~ M.insert (getMode s) s
 moveToState :: GlobalState -> State -> GlobalState 
 moveToState gs = goToState (popState gs)
 
+-- popState until at mode of state s.
+removeToState :: GlobalState -> State -> GlobalState
+removeToState gs s = go (popState gs)
+  where go global = 
+          let current = Stack.head (global ^. stack)
+          in if current == getMode s then moveToState global s
+          else go (popState global)
+
 popState :: GlobalState -> GlobalState
 popState gs = let
   s    = gs ^. stack
@@ -75,12 +83,18 @@ goToModeOrQuit gs mode =
   maybe (halt gs) (continue . goToState gs) $ M.lookup mode (gs ^. states) 
 
 moveToModeOrQuit :: GlobalState -> Mode -> EventM n (Next GlobalState)
-moveToModeOrQuit gs mode = 
-  maybe (halt gs) (continue . moveToState gs) $ M.lookup mode (gs ^. states) 
+moveToModeOrQuit = moveToModeOrQuit' return
 
 moveToModeOrQuit' :: (State -> IO State) -> GlobalState -> Mode -> EventM n (Next GlobalState)
 moveToModeOrQuit' f gs mode = 
   maybe (halt gs) (\s -> continue . moveToState gs =<< liftIO (f s)) $ M.lookup mode (gs ^. states) 
+
+removeToModeOrQuit :: GlobalState -> Mode -> EventM n (Next GlobalState)
+removeToModeOrQuit = removeToModeOrQuit' return
+
+removeToModeOrQuit' :: (State -> IO State) -> GlobalState -> Mode -> EventM n (Next GlobalState)
+removeToModeOrQuit' f gs mode = 
+  maybe (halt gs) (\s -> continue . removeToState gs =<< liftIO (f s)) $ M.lookup mode (gs ^. states) 
 
 refreshRecents :: CSS -> IO CSS
 refreshRecents s = do
@@ -89,3 +103,6 @@ refreshRecents s = do
       options       = Vec.fromList (prettyRecents ++ ["Select file from system"])
   return $ s & recents .~ rs
              & list    .~ L.list Ordinary options 1
+
+refreshRecents' :: GlobalState -> IO GlobalState
+refreshRecents' gs = maybe (return gs) ((updateCSS gs <$>) . refreshRecents) ((\(CardSelectorState s) -> s) <$> M.lookup CardSelector (gs^.states))

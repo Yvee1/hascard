@@ -67,4 +67,4 @@ info = unlines
   , ""
   , " * Use F1 to show the answers of a open question"
   , ""
-  , " * Use CTRL+Left and CTRL+Right to move to previous and next cards without having to answer them"]
+  , " * Use CTRL+Left and CTRL+Right to move to previous and next cards without having to answer them; this is disabled in review mode"]

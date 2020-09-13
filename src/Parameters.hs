@@ -15,15 +15,16 @@ import qualified Data.Text as T
 import qualified Graphics.Vty as V
 
 mkParameterForm :: Int -> Parameters -> Form Parameters e Name
-mkParameterForm n =
+mkParameterForm n ps =
   let label s w = padBottom (Pad 1) $ padRight (Pad 2) (strWrap s) <+> w
-  in newForm
-    [ label "Shuffle the deck?" @@= yesnoField True pShuffle ShuffleField ""
-    , label "Number of cards:" @@= naturalNumberField n (subsetLens n) SubsetField ("/" <> pack (show n))
-    , label "Select chunk:" @@= chunkField n pChunk ChunkField
-    , label "Review mode?" @@= yesnoField True pReviewMode ReviewModeField ""
-    , hCenter @@= okField pOk ParametersOkField "Ok"
-    ]
+      form = newForm
+        [ label "Select chunk:" @@= chunkField n pChunk ChunkField
+        , label "Number of cards:" @@= naturalNumberField n (subsetLens n) SubsetField ("/" <> pack (show n))
+        , label "Shuffle the deck?" @@= yesnoField True pShuffle ShuffleField ""
+        , label "Review mode?" @@= yesnoField True pReviewMode ReviewModeField ""
+        , hCenter @@= okField pOk ParametersOkField "Ok"
+        ] ps
+  in setFormFocus ParametersOkField form
 
 subsetLens :: Int -> Lens' Parameters Int
 subsetLens n f ps =

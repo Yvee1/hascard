@@ -62,8 +62,8 @@ main = do
 opts :: Parser Opts
 opts = Opts
   <$> optional (hsubparser
-    (  command "run" (info (Run <$> runOpts) ( progDesc "Run hascard directly on a file"))
-    <> command "import" (info (Import <$> importOpts) (progDesc "Convert a delimited file to syntax compatible with hascard"))))
+    (  command "run" (info (Run <$> runOpts) ( progDesc "Run hascard with CLI options"))
+    <> command "import" (info (Import <$> importOpts) (progDesc "Convert a TAB delimited file to syntax compatible with hascard. So, terms and definitions should be seperated by tabs, and rows by new lines. When converting to 'open' cards, multiple correct answers can be seperated by semicolons (;), backslashes (/) or commas (,)."))))
   <*> switch (long "version" <> short 'v' <> help "Show version number")
 
 runOpts :: Parser RunOpts
@@ -76,14 +76,14 @@ runOpts = RunOpts
 
 importOpts :: Parser ImportOpts
 importOpts = ImportOpts
-  <$> argument str (metavar "INPUT" <> help "A file ...")
+  <$> argument str (metavar "INPUT" <> help "A TSV file")
   <*> argument str (metavar "DESINATION" <> help "The filename/path to which the output should be saved")
   <*> option auto (long "type" <> short 't' <> metavar "'open' or 'def'" <> help "The type of card to which the input is transformed, default: open" <> value Open)
   <*> switch (long "reverse" <> short 'r' <> help "Reverse direction of question and answer, i.e. right part becomes the question.")
 
 optsWithHelp :: ParserInfo Opts
 optsWithHelp = info (opts <**> helper) $
-              fullDesc <> progDesc "Run the normal application without argument, or run it directly on a deck of flashcards by providing a text file. Options work either way."
+              fullDesc <> progDesc "Run the normal application with `hascard`. To run directly on a file, and with CLI options, see `hascard run --help`. For converting TAB seperated files, see `hascard import --help`."
               <> header "Hascard - a TUI for reviewing notes"
 
 nothingIf :: (a -> Bool) -> a -> Maybe a

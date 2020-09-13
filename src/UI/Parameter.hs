@@ -44,7 +44,7 @@ handleEvent gs s ev@(VtyEvent e) =
       (Just n) = focusGetCurrent focus
       down = if n == ParametersOkField then continue gs
         else continue'' $ form { formFocus = focusNext focus }
-      up = if n == ShuffleField then continue gs
+      up = if n == ChunkField then continue gs
         else continue'' $ form { formFocus = focusPrev focus }
 
   in case e of
@@ -58,7 +58,7 @@ handleEvent gs s ev@(VtyEvent e) =
       V.EvKey V.KBackTab []     -> continue gs
       _                         -> do f <- handleFormEvent ev form
                                       if formState f ^. pOk
-                                        then continue =<< (gs `moveToState`) 
+                                        then continue =<< (gs `goToState`) 
                                              <$> liftIO (cardsWithOptionsState 
                                                          (gs & parameters .~ formState f)
                                                          (s ^. psFp)
