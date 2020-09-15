@@ -37,16 +37,17 @@ chunkField bound stLens name initialState =
 
       handleEvent (VtyEvent (V.EvKey (V.KChar c) [])) (Chunk i n, p) | isDigit c =
         if p 
-          then let newValue = read (show n ++ [c])
-            in return $ if newValue <= bound then (Chunk i newValue, p) else (Chunk i bound, p)
-          else let newValue = read (show i ++ [c])
-            in return $ if newValue <= n     then (Chunk newValue n, p) else (Chunk n n, p)
+          then let n' = read (show n ++ [c])
+                   i' = if i <= n' || n' == 0 then i else n'
+            in return $ if n' <= bound then (Chunk i' n', p) else (Chunk i bound, p)
+          else let i' = read (show i ++ [c])
+            in return $ if i' <= n || n == 0 then (Chunk i' n, p) else (Chunk n n, p)
       handleEvent (VtyEvent (V.EvKey V.KBS [])) (Chunk i n, p) = 
         let calcNew x = if null (show x) then 0 else fromMaybe 0 (readMaybe (init (show x)))
         in if p
           then return $
             let newN = calcNew n
-                newI = if i <= newN then i else newN
+                newI = if i <= newN || newN == 0 then i else newN
             in (Chunk newI newN, p)
           else return (Chunk (calcNew i) n, p)
       handleEvent (VtyEvent (V.EvKey V.KRight [])) (c, _) = return (c, True)
