@@ -11,11 +11,13 @@ import Data.Char (isSpace)
 import Data.List.NonEmpty (NonEmpty)
 import Data.Map.Strict (Map)
 import Data.Maybe
+import Data.List.Split
 import Text.Wrap
 import Data.Text (pack)
 import UI.Attributes
 import UI.BrickHelpers
 import System.FilePath
+import Data.List (intercalate)
 import qualified Data.List.NonEmpty as NE
 import qualified Data.Text as T
 import qualified Data.Map.Strict as M
@@ -252,12 +254,13 @@ handleEvent gs s (VtyEvent e) =
           case (s ^. cardState, s ^. currentCard) of
             (DefinitionState{_flipped = f}, _) ->
               case ev of
-                V.EvKey V.KEnter [] ->
+                V.EvKey V.KEnter []  ->
                   if f
                     then if not (s^.reviewMode) then next gs s
                       else continue' (s & popup ?~ correctPopup)
                     else continue' $ s & cardState.flipped %~ not
                 _ -> continue' s
+
 
             (MultipleChoiceState {_highlighted = i, _number = n, _tried = kvs}, MultipleChoice _ (CorrectOption j _) _) ->
               case ev of
@@ -270,8 +273,6 @@ handleEvent gs s (VtyEvent e) =
                     if frozen
                       then next gs $ s & if correctlyAnswered then correctCards %~ (s^.index:) else id
                       else continue' $ s & cardState.tried %~ M.insert i True
-
-
                 _ -> continue' s
 
               where frozen = M.findWithDefault False j kvs
@@ -299,6 +300,11 @@ handleEvent gs s (VtyEvent e) =
                     if frozen
                       then next gs $ s & if correctlyAnswered then correctCards %~ (s^.index:) else id
                       else continue' $ s & cardState.selected %~ M.adjust not i
+                V.EvKey (V.KChar '\t') [] ->
+                    if frozen
+                      then next gs $ s & if correctlyAnswered then correctCards %~ (s^.index:) else id
+                      else continue' $ s & cardState.selected %~ M.adjust not i
+
 
                 _ -> continue' s
 
@@ -340,6 +346,12 @@ handleEvent gs s (VtyEvent e) =
                       then s & (cardState.highlighted) -~ 1
                       else s
 
+                  -- C-w deletes a word back (eg. "test test" -> "test")
+                  V.EvKey (V.KChar 'w') [V.MCtrl] ->  continue' $
+                      if frozen then s else s & cardState.gapInput.ix i %~ backword
+                    where backword "" = ""
+                          backword xs = intercalate " " $ init $ words xs
+
                   V.EvKey (V.KChar c) [] -> continue' $
                     if frozen then s else s & cardState.gapInput.at i.non "" %~ (++[c])
 
@@ -357,6 +369,7 @@ handleEvent gs s (VtyEvent e) =
                             s'' = if M.foldr (&&) True (s' ^. cardState.correctGaps)
                                     then s'
                                     else s' & cardState.failed .~ True
+
 
                   V.EvKey V.KBS [] -> continue' $
                       if frozen then s else s & cardState.gapInput.ix i %~ backspace
@@ -464,6 +477,9 @@ correctPopup = Popup drawer eventHandler initialState
             in case ev of
               V.EvKey V.KLeft  [] -> continue' $ s & popup ?~ (p & popupState.popupSelected .~ 0)
               V.EvKey V.KRight [] -> continue' $ s & popup ?~ (p & popupState.popupSelected .~ 1)
+              -- Adding vim shortcuts here
+              V.EvKey (V.KChar 'h') []-> continue' $ s & popup ?~ (p & popupState.popupSelected .~ 0)
+              V.EvKey (V.KChar 'l') []-> continue' $ s & popup ?~ (p & popupState.popupSelected .~ 1)
               -- V.EvKey V.KRight [] -> s & popup .~ popupState.popupSelected .~ Just 1
               V.EvKey V.KEnter [] -> next gs $ s & popup .~ Nothing
                                                  & if p ^?! popupState.popupSelected == 1 then correctCards %~ (s^.index:) else id
