@@ -63,23 +63,23 @@ drawCardUI :: CS -> Widget Name
 drawCardUI s = let p = 1 in
   joinBorders $ drawCardBox $ (<=> drawFooter s) $
   case (s ^. cards) !! (s ^. index) of
-    Definition title descr -> drawHeader title
+    Definition title _ descr -> drawHeader title
                           <=> B.hBorder
                           <=> padLeftRight p (drawDef s descr <=> str " ")
 
-    MultipleChoice question correct others -> drawHeader question
+    MultipleChoice question _ correct others -> drawHeader question
                                           <=> B.hBorder
                                           <=> padLeftRight p (drawChoices s (listMultipleChoice correct others) <=> str " ")
 
-    OpenQuestion title perforated -> drawHeader title
+    OpenQuestion title _ perforated -> drawHeader title
                                  <=> B.hBorder
                                  <=> padLeftRight p (atLeastV 1 (drawPerforated s perforated) <=> str " ")
 
-    MultipleAnswer question options -> drawHeader question
+    MultipleAnswer question _ options -> drawHeader question
                                    <=> B.hBorder
                                    <=> padRight (Pad p) (drawOptions s options <=> str " ")
 
-    Reorder question _ -> drawHeader question
+    Reorder question _ _ -> drawHeader question
                       <=> B.hBorder
                       <=> padLeftRight p (drawReorder s <=> str " ")
 
@@ -118,7 +118,7 @@ drawNormalDef s def = case s ^. cardState of
 
 drawChoices :: CS -> [String] -> Widget Name
 drawChoices s options = case (s ^. cardState, s ^. currentCard) of
-  (MultipleChoiceState {_highlighted=i, _tried=kvs}, MultipleChoice _ (CorrectOption k _) _)  -> vBox formattedOptions
+  (MultipleChoiceState {_highlighted=i, _tried=kvs}, MultipleChoice _ _ (CorrectOption k _) _)  -> vBox formattedOptions
 
              where formattedOptions :: [Widget Name]
                    formattedOptions = [ prefix <+> coloring (drawDescr opt) |
@@ -214,7 +214,7 @@ wrapStringWithPadding padding w s
 
 drawReorder :: CS -> Widget Name
 drawReorder s = case (s ^. cardState, s ^. currentCard) of
-  (ReorderState {_highlighted=j, _grabbed=g, _order=kvs, _number=n, _entered=submitted}, Reorder _ _) ->
+  (ReorderState {_highlighted=j, _grabbed=g, _order=kvs, _number=n, _entered=submitted}, Reorder{}) ->
     vBox . flip map (map (\i -> (i, kvs M.! i)) [0..n-1]) $
     \(i, (k, text)) ->
       let color = case (i == j,  g) of
@@ -259,7 +259,7 @@ handleEvent gs s (VtyEvent e) =
                     else continue' $ s & cardState.flipped %~ not
                 _ -> continue' s
 
-            (MultipleChoiceState {_highlighted = i, _number = n, _tried = kvs}, MultipleChoice _ (CorrectOption j _) _) ->
+            (MultipleChoiceState {_highlighted = i, _number = n, _tried = kvs}, MultipleChoice _ _ (CorrectOption j _) _) ->
               case ev of
                 V.EvKey V.KUp [] -> continue' up
                 V.EvKey (V.KChar 'k') [] -> continue' up
@@ -286,7 +286,7 @@ handleEvent gs s (VtyEvent e) =
 
                     correctlyAnswered = i == j && M.size (M.filter (==True) kvs) == 1
 
-            (MultipleAnswerState {_highlighted = i, _number = n, _entered = submitted, _selected = kvs}, MultipleAnswer _ opts) ->
+            (MultipleAnswerState {_highlighted = i, _number = n, _entered = submitted, _selected = kvs}, MultipleAnswer _ _ opts) ->
               case ev of
                 V.EvKey V.KUp [] -> continue' up
                 V.EvKey (V.KChar 'k') [] -> continue' up
@@ -315,7 +315,7 @@ handleEvent gs s (VtyEvent e) =
 
                     correctlyAnswered = NE.toList (NE.map isOptionCorrect opts) == map snd (M.toAscList kvs)
 
-            (OpenQuestionState {_highlighted = i, _number = n, _gapInput = kvs, _correctGaps = cGaps, _failed=fail}, OpenQuestion _ perforated) ->
+            (OpenQuestionState {_highlighted = i, _number = n, _gapInput = kvs, _correctGaps = cGaps, _failed=fail}, OpenQuestion _ _ perforated) ->
               let frozen = M.foldr (&&) True cGaps in
                 case ev of
                   V.EvKey (V.KFun 1) [] -> continue' $
@@ -364,7 +364,7 @@ handleEvent gs s (VtyEvent e) =
                           backspace xs = init xs
                   _ -> continue' s
 
-            (ReorderState {_highlighted = i, _entered = submitted, _grabbed=dragging, _number = n, _order = kvs }, Reorder _ elts) ->
+            (ReorderState {_highlighted = i, _entered = submitted, _grabbed=dragging, _number = n, _order = kvs }, Reorder _ _ elts) ->
               case ev of
                 V.EvKey V.KUp [] -> continue' up
                 V.EvKey (V.KChar 'k') [] -> continue' up
@@ -406,7 +406,7 @@ handleEvent gs _ _ = continue gs
 
 next :: GlobalState -> CS -> EventM Name (Next GlobalState)
 next gs s
-  | s ^. index + 1 < length (s ^. cards) = continue . updateCS gs . straightenState $ s & index +~ 1
+  | s ^. index + 1 < length (s ^. cards) = liftIO (openCardImage (takeDirectory (s^.pathToFile)) ((s^.cards) !! (s^.index + 1))) *> (continue . updateCS gs . straightenState $ s & index +~ 1)
   | s ^. reviewMode                      =
       let thePopup =
             if null (s^.correctCards) || length (s^. correctCards) == length (s^.cards)

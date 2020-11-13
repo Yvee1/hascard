@@ -47,7 +47,7 @@ cardsState doReview fp deck = do
   controls <- getShowControls
 
   let mFirstCard = safeHead deck
-      firstCard = fromMaybe (Definition "Empty deck" "Click enter to go back.") mFirstCard
+      firstCard = fromMaybe (Definition "Empty deck" Nothing "Click enter to go back.") mFirstCard
       deck' = maybe [firstCard] (const deck) mFirstCard
 
       initialState = 

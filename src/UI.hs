@@ -6,6 +6,7 @@ module UI
 , GenIO
 , Chunk(..)
 , Card
+, Image
 , ImportType(..)
 , Parameters(..)
 
@@ -26,7 +27,7 @@ import Glue
 import Import
 import States
 import StateManagement
-import Types (Card, cardsToString)
+import Types (Card, Image, cardsToString)
 
 runBrickFlashcards :: GlobalState -> IO ()
 runBrickFlashcards gs = do

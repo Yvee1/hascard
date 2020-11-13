@@ -103,42 +103,49 @@ data CardState =
 
 defaultCardState :: Card -> CardState
 defaultCardState Definition{} = DefinitionState { _flipped = False }
-defaultCardState (MultipleChoice _ _ ics) = MultipleChoiceState 
+defaultCardState MultipleChoice{incorrects = ics} = MultipleChoiceState 
   { _highlighted = 0
   , _number = length ics + 1
   , _tried = M.fromList [(i, False) | i <- [0..length ics]] }
-defaultCardState (OpenQuestion _ perforated) = OpenQuestionState 
+defaultCardState OpenQuestion{perforated=perf} = OpenQuestionState 
   { _gapInput = M.empty
   , _highlighted = 0
-  , _number = nGapsInPerforated perforated
+  , _number = nGapsInPerforated perf
   , _entered = False
-  , _correctGaps = M.fromList [(i, False) | i <- [0..nGapsInPerforated perforated - 1]]
+  , _correctGaps = M.fromList [(i, False) | i <- [0..nGapsInPerforated perf - 1]]
   , _failed = False }
-defaultCardState (MultipleAnswer _ answers) = MultipleAnswerState 
+defaultCardState MultipleAnswer{options=opts} = MultipleAnswerState 
   { _highlighted = 0
-  , _selected = M.fromList [(i, False) | i <- [0..NE.length answers-1]]
+  , _selected = M.fromList [(i, False) | i <- [0..NE.length opts-1]]
   , _entered = False
-  , _number = NE.length answers }
-defaultCardState (Reorder _ elements) = ReorderState
+  , _number = NE.length opts }
+defaultCardState Reorder{elements=elts} = ReorderState
   { _highlighted = 0
   , _grabbed = False
-  , _order = M.fromList (zip [0..] (NE.toList elements))
+  , _order = M.fromList (zip [0..] (NE.toList elts))
   , _entered = False
-  , _number = NE.length elements }
+  , _number = NE.length elts }
 
 data CS = CS
-  { _cards          :: [Card]     -- list of flashcards
-  , _index          :: Int        -- current card index
-  , _nCards         :: Int        -- number of cards
-  , _currentCard    :: Card
-  , _cardState      :: CardState
-  , _showHints      :: Bool
-  , _showControls   :: Bool
-  , _reviewMode     :: Bool
-  , _correctCards   :: [Int]      -- list of indices of correct cards
-  , _popup          :: Maybe (Popup CS)
-  , _pathToFile     :: FilePath
+  { _cards               :: [Card]   -- list of flashcards
+  , _index               :: Int        -- current card index
+  , _nCards              :: Int        -- number of cards
+  , _currentCard         :: Card
+  , _cardState           :: CardState
+  , _showHints           :: Bool
+  , _showControls        :: Bool
+  , _reviewMode          :: Bool
+  , _correctCards        :: [Int]      -- list of indices of correct cards
+  , _popup               :: Maybe (Popup CS)
+  , _pathToFile          :: FilePath
   }
+
+-- -- Lens for just accessing the cards
+-- cards :: Lens' CS [Card]
+-- cards = lens (map snd . _cardsAndImages) (\cs cards -> cs {_cardsAndImages = zip (map fst (_cardsAndImages cs)) cards})
+
+-- currentCard :: Lens' CS Card
+-- currentCard = lens (snd . _currentCardAndImage) (\cs card -> cs {_currentCardAndImage = (fst (_currentCardAndImage cs), card)})
 
 data Popup s = Popup 
   { drawPopup        :: s -> Widget Name

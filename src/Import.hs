@@ -20,9 +20,9 @@ parseImportInput iType reverse input =
   let listToTuple [q, a] = Just $ if not reverse then (q, a) else (a, q)
       listToTuple _ = Nothing
       xs = mapM (listToTuple . splitOn "\t") (lines input)
-      makeOpen (header, body) = OpenQuestion header 
+      makeOpen (header, body) = OpenQuestion header Nothing
         (P "" (NE.fromList (map (dropWhile isSpace) (splitOneOf ",/;" body))) (Normal ""))
 
   in case iType of
-    Def  -> map (uncurry Definition) <$> xs
+    Def  -> map (\(s1, s2) -> Definition s1 Nothing s2) <$> xs
     Open -> map makeOpen <$> xs 

@@ -2,34 +2,75 @@ module Types where
 import Data.Functor
 import Data.List
 import Data.List.NonEmpty (NonEmpty)
+import System.FilePath
+import System.Process (runCommand)
+import System.Info
 import qualified Data.List.NonEmpty as NE
+import qualified System.Directory as D
 
 --                     Word   Description
-data Card = Definition String String
-          | OpenQuestion String Perforated
+data Card = Definition { 
+            question   :: String,
+            image      :: Maybe Image,
+            definition :: String }
+          | OpenQuestion {
+            question   :: String,
+            image      :: Maybe Image,
+            perforated :: Perforated }
           | MultipleChoice {
             question   :: String,
+            image      :: Maybe Image,
             correct    :: CorrectOption,
             incorrects :: [IncorrectOption]}
           | MultipleAnswer {
             question   :: String,
+            image      :: Maybe Image,
             options    :: NonEmpty Option }
           | Reorder {
             question   :: String,
+            image      :: Maybe Image,
             elements   :: NonEmpty (Int, String)
           }
 
 instance Show Card where
   show card = let showHeader h = "# " <> h <> "\n"
     in case card of
-      Definition h descr -> showHeader h <> descr
-      OpenQuestion h p -> showHeader h <> show p
-      MultipleChoice h c inc -> 
-        showHeader h <> showMultipleChoice c inc
-      MultipleAnswer h opts ->
-        showHeader h <> unlines' (NE.toList (NE.map show opts))
-      Reorder h elts -> 
-        showHeader h <> unlines' (NE.toList (NE.map showReorder elts))
+      Definition h img descr -> showHeader h <> show img <> "\n" <> descr
+      OpenQuestion h img p -> showHeader h <> show img <> "\n" <> show p
+      MultipleChoice h img c inc -> 
+        showHeader h <> show img <> "\n" <> showMultipleChoice c inc
+      MultipleAnswer h img opts ->
+        showHeader h <> show img <> "\n" <> unlines' (NE.toList (NE.map show opts))
+      Reorder h img elts -> 
+        showHeader h <> show img<> "\n" <> unlines' (NE.toList (NE.map showReorder elts))
+
+--                 alt    file
+data Image = Image String String
+
+instance Show Image where
+  show (Image alt file) = "![" <> alt <> "]" <> "(" <> file <> ")"
+
+openCommand :: String
+openCommand = case os of
+  "darwin" -> "open"
+  "linux"  -> "xdg-open"
+  _        -> error "Unkown OS for opening images"
+
+openImage :: FilePath -> Image -> IO ()
+openImage origin (Image _ relative) = openImage' (origin </> relative)
+
+openImage' :: FilePath -> IO ()
+openImage' fp = do
+  exists <- D.doesFileExist fp 
+  if exists
+    then void $ runCommand (openCommand <> " \"" <> fp <> "\"")
+    else error $ "The image you were trying to open does not exist: " <> fp
+
+openCardImage :: FilePath -> Card -> IO ()
+openCardImage fp = flip whenJust (openImage fp) . image
+
+whenJust :: Applicative m => Maybe a -> (a -> m ()) -> m ()
+whenJust mg f = maybe (pure ()) f mg 
 
 data Type = Incorrect | Correct
   deriving (Show, Eq)

@@ -4,13 +4,13 @@ import Lens.Micro.Platform
 import States
 import Types
 
-doRandomization :: GlobalState -> [Card] -> IO [Card]
+doRandomization :: GlobalState -> [a] -> IO [a]
 doRandomization gs cards = 
   let n = length cards in do
     cards' <- if gs^.parameters.pShuffle then sampleFrom (gs^.mwc) (shuffleN n cards) else return cards
     return $ maybe cards' (`take` cards') (gs^.parameters.pSubset)
 
-doChunking :: Chunk -> [Card] -> [Card]
+doChunking :: Chunk -> [a] -> [a]
 doChunking (Chunk i n) cards = 
   splitIntoNChunks n cards !! (i-1)
 
