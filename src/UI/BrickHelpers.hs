@@ -1,4 +1,4 @@
-{-# LANGUAGE OverloadedStrings, RankNTypes #-}
+{-# LANGUAGE RankNTypes #-}
 module UI.BrickHelpers where
 import Text.Wrap
 import Brick
@@ -12,7 +12,6 @@ import Graphics.Vty (imageWidth, imageHeight, charFill)
 import Lens.Micro
 import Text.Read (readMaybe)
 import UI.Attributes
-import qualified Data.Text as T
 import qualified Graphics.Vty as V
 
 hCenteredStrWrap :: String -> Widget n
@@ -63,7 +62,7 @@ atLeastV n widget = Widget Fixed Fixed $ do
       dh = n - h
   if dh > 0 then render $ vLimit n (widget <=> vFill ' ') else render widget
 
-yesnoField :: (Ord n, Show n) => Bool -> Lens' s Bool -> n -> T.Text -> s -> FormFieldState s e n
+yesnoField :: (Ord n, Show n) => Bool -> Lens' s Bool -> n -> String -> s -> FormFieldState s e n
 yesnoField rightAlign stLens name label initialState =
   let initVal = initialState ^. stLens
 
@@ -80,17 +79,17 @@ yesnoField rightAlign stLens name label initialState =
                     , formFieldRenderHelper = id
                     , formFieldConcat = vBox }
 
-renderYesno :: Bool -> T.Text -> n -> Bool -> Bool -> Widget n
+renderYesno :: Bool -> String -> n -> Bool -> Bool -> Widget n
 renderYesno rightAlign label n foc val =
   let addAttr = if foc then withDefAttr focusedFormInputAttr else id
   in clickable n $
     (if val 
-      then addAttr (txt "Yes")
+      then addAttr (str "Yes")
       else if rightAlign 
-        then txt " " <+> addAttr (txt "No")
-        else addAttr (txt "No") <+> txt " ") <+> txt label
+        then str " " <+> addAttr (str "No")
+        else addAttr (str "No") <+> str " ") <+> str label
 
-naturalNumberField :: (Ord n, Show n) => Int -> Lens' s Int -> n -> T.Text -> s -> FormFieldState s e n
+naturalNumberField :: (Ord n, Show n) => Int -> Lens' s Int -> n -> String -> s -> FormFieldState s e n
 naturalNumberField bound stLens name postfix initialState =
   let initVal = initialState ^. stLens
 
@@ -110,11 +109,11 @@ naturalNumberField bound stLens name postfix initialState =
                     , formFieldRenderHelper = id
                     , formFieldConcat = vBox }
 
-renderNaturalNumber :: Int -> T.Text -> n -> Bool -> Int -> Widget n
+renderNaturalNumber :: Int -> String -> n -> Bool -> Int -> Widget n
 renderNaturalNumber bound postfix n foc val =
   let addAttr = if foc then withDefAttr focusedFormInputAttr else id
       val' = show val
       csr = if foc then showCursor n (Location (length val',0)) else id
-  in if T.null postfix
+  in if null postfix
     then hLimit (length (show bound)) (csr (addAttr (str val')) <+> hFill ' ') 
-    else csr (addAttr (str val')) <+> txt postfix
+    else csr (addAttr (str val')) <+> str postfix

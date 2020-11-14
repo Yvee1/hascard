@@ -14,6 +14,8 @@ doChunking :: Chunk -> [a] -> [a]
 doChunking (Chunk i n) cards = 
   splitIntoNChunks n cards !! (i-1)
 
+-- Split into chunks that differ a maximum of 1 in size;
+-- the larger chunks are all at the front.
 splitIntoNChunks :: Int -> [a] -> [[a]]
 splitIntoNChunks n xs =
   let (q, r) = length xs `quotRem` n

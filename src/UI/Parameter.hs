@@ -42,13 +42,17 @@ handleEvent gs s ev@(VtyEvent e) =
 
       focus = formFocus form
       (Just n) = focusGetCurrent focus
-      down = if n == ParametersOkField then continue gs
-        else continue'' $ form { formFocus = focusNext focus }
-      up = if n == ChunkField then continue gs
-        else continue'' $ form { formFocus = focusPrev focus }
+      down = case n of
+        ParametersOkField -> continue gs
+        ChunkField1 -> continue'' $ form { formFocus = focusNext (focusNext focus) }
+        _ -> continue'' $ form { formFocus = focusNext focus }
+      up = case n of
+        ChunkField1 -> continue gs
+        ChunkField2 -> continue gs
+        SubsetField -> continue'' $ form { formFocus = focusPrev (focusPrev focus) }
+        _           -> continue'' $ form { formFocus = focusPrev focus }
 
   in case e of
-    -- continue gs
       V.EvKey V.KEsc []         -> halt' gs
       V.EvKey (V.KChar 'q') []  -> halt' gs
       V.EvKey V.KDown []        -> down
@@ -57,13 +61,17 @@ handleEvent gs s ev@(VtyEvent e) =
       V.EvKey (V.KChar 'k') []  -> up
       V.EvKey (V.KChar '\t') [] -> continue gs
       V.EvKey V.KBackTab []     -> continue gs
-      _                         -> do f <- handleFormEvent ev form
-                                      if formState f ^. pOk
-                                        then continue =<< (gs `goToState`)
-                                             <$> liftIO (cardsWithOptionsState
-                                                         (gs & parameters .~ formState f)
-                                                         (s ^. psFp)
-                                                         (s ^. psCards))
-                                        else continue' (s & psForm .~ f)
+    
+      _ -> case (e, n) of
+          (V.EvKey V.KRight [], ChunkField2) -> continue gs
+          (V.EvKey V.KLeft [],  ChunkField1) -> continue gs
+          _ -> do f <- handleFormEvent ev form
+                  if formState f ^. pOk
+                    then continue =<< (gs `goToState`)
+                          <$> liftIO (cardsWithOptionsState
+                                      (gs & parameters .~ formState f)
+                                      (s ^. psFp)
+                                      (s ^. psCards))
+                    else continue' (s & psForm .~ f)
 
 handleEvent gs _ _ = continue gs

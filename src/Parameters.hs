@@ -1,9 +1,10 @@
-{-# LANGUAGE OverloadedStrings, RankNTypes #-}
+{-# LANGUAGE RankNTypes #-}
 module Parameters where
 import UI.Attributes
 import Brick
 import Brick.Widgets.Center
 import Brick.Forms
+import DeckHandling
 import Data.Maybe
 import Data.Char (isDigit)
 import Data.Text (pack)
@@ -18,64 +19,122 @@ mkParameterForm :: Int -> Parameters -> Form Parameters e Name
 mkParameterForm n ps =
   let label s w = padBottom (Pad 1) $ padRight (Pad 2) (strWrap s) <+> w
       form = newForm
-        [ label "Select chunk:" @@= chunkField n pChunk ChunkField
-        , label "Number of cards:" @@= naturalNumberField n (subsetLens n) SubsetField ("/" <> pack (show n))
+        [ chunkSubsetField n (chunkSubsetLens n)
         , label "Shuffle the deck?" @@= yesnoField True pShuffle ShuffleField ""
         , label "Review mode?" @@= yesnoField True pReviewMode ReviewModeField ""
         , hCenter @@= okField pOk ParametersOkField "Ok"
         ] ps
   in setFormFocus ParametersOkField form
 
-subsetLens :: Int -> Lens' Parameters Int
-subsetLens n f ps =
-  (\n -> ps & pSubset ?~ n)
-  <$> f (fromMaybe n (ps ^. pSubset))
+chunkSubsetLens :: Int -> Lens' Parameters (Chunk, Int)
+chunkSubsetLens n = lens getter setter
+  where getter ps = (ps^.pChunk, fromMaybe n (ps^.pSubset))
+        setter ps (c, int) = ps & pChunk.~c & pSubset ?~ int
 
-chunkField :: (Ord n, Show n) => Int -> Lens' s Chunk -> n -> s -> FormFieldState s e n
-chunkField bound stLens name initialState =
-  let initVal = initialState ^. stLens
+chunkSubsetField :: Int -> Lens' s (Chunk, Int) -> s -> FormFieldState s e Name
+chunkSubsetField capacity stLens initialState = 
+  let (initChunk, initInt) = initialState ^. stLens
 
-      handleEvent (VtyEvent (V.EvKey (V.KChar c) [])) (Chunk i n, p) | isDigit c =
-        if p 
-          then let n' = read (show n ++ [c])
-                   i' = if i <= n' || n' == 0 then i else n'
-            in return $ if n' <= bound then (Chunk i' n', p) else (Chunk i bound, p)
-          else let i' = read (show i ++ [c])
-            in return $ if i' <= n || n == 0 then (Chunk i' n, p) else (Chunk n n, p)
-      handleEvent (VtyEvent (V.EvKey V.KBS [])) (Chunk i n, p) = 
-        let calcNew x = if null (show x) then 0 else fromMaybe 0 (readMaybe (init (show x)))
-        in if p
-          then return $
-            let newN = calcNew n
-                newI = if i <= newN || newN == 0 then i else newN
-            in (Chunk newI newN, p)
-          else return (Chunk (calcNew i) n, p)
-      handleEvent (VtyEvent (V.EvKey V.KRight [])) (c, _) = return (c, True)
-      handleEvent (VtyEvent (V.EvKey V.KLeft  [])) (c, _) = return (c, False)
-      handleEvent (VtyEvent (V.EvKey V.KEnter [])) (c, p) = return (c, not p)
-      handleEvent _ s = return s
+      handleChunkEvent1 :: BrickEvent n e -> (Chunk, Int) -> EventM n (Chunk, Int)
+      handleChunkEvent1 (VtyEvent ev) s@(c@(Chunk i n), int) = case ev of
+        V.EvKey (V.KChar c) [] | isDigit c -> 
+          let i' = read (show i ++ [c])
+          in return $ if i' <= n || n == 0 then (Chunk i' n, getSizeOfChunk (Chunk i' n)) else (Chunk n n, getSizeOfChunk (Chunk n n))
+        V.EvKey V.KBS [] ->
+          let calcNew x = if null (show x) then 0 else fromMaybe 0 (readMaybe (init (show x)))
+          in return (Chunk (calcNew i) n, int)
+        _ -> return s
+      handleChunkEvent1 _ s = return s
 
-      validate (c@(Chunk i n), _) = if i >= 1 && n >= 1 && i <= n then Just c else Nothing
-  
-  in FormFieldState { formFieldState = (initVal, False)
-                    , formFields = [ FormField name validate True 
-                                       (renderChunk bound name)
-                                       handleEvent ]
+      handleChunkEvent2 :: BrickEvent n e -> (Chunk, Int) -> EventM n (Chunk, Int)
+      handleChunkEvent2 (VtyEvent ev) s@(c@(Chunk i n), int) = case ev of
+        V.EvKey (V.KChar c) [] | isDigit c -> 
+          let n' = read (show n ++ [c])
+              i' = if i <= n' || n' == 0 then i else n'
+          in return $ if n' <= capacity then (Chunk i' n', getSizeOfChunk (Chunk i' n')) else (Chunk i capacity, getSizeOfChunk (Chunk i capacity))
+        V.EvKey V.KBS [] ->
+          let calcNew x = if null (show x) then 0 else fromMaybe 0 (readMaybe (init (show x)))
+          in return $
+              let newN = calcNew n
+                  newI = if i <= newN || newN == 0 then i else newN
+              in (Chunk newI newN, int)
+        _ -> return s
+      handleChunkEvent2 _ s = return s
+
+      handleSubsetEvent :: BrickEvent n e -> (Chunk, Int) -> EventM n (Chunk, Int)
+      handleSubsetEvent (VtyEvent ev) s@(ch@(Chunk i n), int) = 
+        let bound = getSizeOfChunk ch in
+          case ev of
+          V.EvKey (V.KChar c) [] | isDigit c -> 
+            let newValue = read (show int ++ [c])
+                int' = if newValue <= bound then newValue else bound
+            in return (ch, int')
+          V.EvKey V.KBS [] -> 
+            let int' = case show int of
+                            "" -> 0
+                            xs -> fromMaybe 0 (readMaybe (init xs))
+            in return (ch, int')
+          _ -> return s
+      handleSubsetEvent _ s = return s
+
+      renderChunk1 :: Bool -> (Chunk, Int) -> Widget Name
+      renderChunk1 foc (Chunk i n, _) = 
+        let addAttr = if foc then withDefAttr focusedFormInputAttr else id
+            csr x = if foc then showCursor ChunkField1 (Location (length x,0)) else id
+            val' 0 = ""
+            val' x = show x
+          in addAttr (csr (val' i) (str (val' i))) <+> str "/"
+
+      renderChunk2 :: Bool -> (Chunk, Int) -> Widget Name
+      renderChunk2 foc (Chunk i n, _) = 
+        let addAttr = if foc then withDefAttr focusedFormInputAttr else id
+            csr x = if foc then showCursor ChunkField2 (Location (length x,0)) else id
+            val' 0 = ""
+            val' x = show x
+          in addAttr (csr (val' n) (str (val' n)))
+
+      customConcat :: [Widget Name] -> Widget Name
+      customConcat [chunk1, chunk2, subset] = 
+        (str "Select chunk:" <+> hFill ' ' <+> chunk1 <+> chunk2) 
+        <=>
+        str " "
+        <=>
+        (str "Number of cards:" <+> hFill ' ' <+> subset)
+        <=>
+        str " "
+      customConcat _ = error "chunkSubsetField form field concatenation has gone wrong"
+
+      getSizeOfChunk :: Chunk -> Int
+      getSizeOfChunk (Chunk i n) = 
+        if i >= 1 && n >= 1 && i <= n
+          then length (splitIntoNChunks n [1..capacity] !! (i-1))
+          else capacity
+
+      renderSubset :: Bool -> (Chunk, Int) -> Widget Name
+      renderSubset foc (c, value) = 
+        let cardsInChunk = getSizeOfChunk c
+        in renderNaturalNumber cardsInChunk ("/" <> show cardsInChunk) SubsetField foc value
+      
+      validateChunk (c@(Chunk i n), int) = if i >= 1 && n >= 1 && i <= n then Just (c, int) else Nothing
+      validateSubset = Just
+
+  in FormFieldState { formFieldState = (initChunk, initInt)
+                    , formFields = [ 
+                                     FormField ChunkField1 validateChunk True
+                                       renderChunk1
+                                       handleChunkEvent1,
+                                     FormField ChunkField2 validateChunk True
+                                       renderChunk2
+                                       handleChunkEvent2,
+                                     FormField SubsetField validateSubset True
+                                       renderSubset
+                                       handleSubsetEvent
+                                   ]
                     , formFieldLens = stLens
                     , formFieldRenderHelper = id
-                    , formFieldConcat = vBox }
+                    , formFieldConcat = customConcat }
 
-renderChunk :: Int -> n -> Bool -> (Chunk, Bool) -> Widget n
-renderChunk bound name foc (Chunk i n, p) =
-  let addAttr = if foc then withDefAttr focusedFormInputAttr else id
-      csr x = if foc then showCursor name (Location (length x,0)) else id
-      val' 0 = ""
-      val' x = show x
-    in if p
-      then str (val' i) <+> str "/" <+> addAttr (csr (val' n) (str (val' n)))
-      else addAttr (csr (val' i) (str (val' i))) <+> str "/" <+> str (val' n)
-
-okField :: (Ord n, Show n) => Lens' s Bool -> n -> T.Text -> s -> FormFieldState s e n
+okField :: (Ord n, Show n) => Lens' s Bool -> n -> String -> s -> FormFieldState s e n
 okField stLens name label initialState =
   let initVal = initialState ^. stLens
 
@@ -90,6 +149,6 @@ okField stLens name label initialState =
                     , formFieldRenderHelper = id
                     , formFieldConcat = vBox }
 
-renderOk :: T.Text -> n -> Bool -> Bool -> Widget n
+renderOk :: String -> n -> Bool -> Bool -> Widget n
 renderOk label _ focus _ =
   (if focus then withAttr selectedAttr else id) $ str "Ok"

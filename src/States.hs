@@ -23,9 +23,10 @@ data Name =
           | MaxRecentsField
 
           -- Parameters
-          | ShuffleField
+          | ChunkField1
+          | ChunkField2
           | SubsetField
-          | ChunkField
+          | ShuffleField
           | ReviewModeField
           | ParametersOkField
 
