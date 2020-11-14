@@ -1,15 +1,15 @@
 # What type of fruit is this?
 ![](pear.jpeg)
 - Apple
-- Pear
+* Pear
 - Orange
 - Banana
 ---
-# More tests
+# Fruit 1
 ![](pear.jpeg)
 This is a pear
 ---
-# Again
-![](pear.jpeg)
-This is a pear again
----
+# Is the following statement true?
+![](lp.pdf)
+- No
+* Yes

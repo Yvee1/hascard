@@ -8,6 +8,7 @@ import Lens.Micro.Platform
 import Parameters
 import Settings
 import States
+import System.FilePath (takeDirectory)
 import Types
 import qualified Brick.Widgets.List as L
 import qualified Data.Vector as Vec
@@ -63,6 +64,7 @@ cardsState doReview fp deck = do
            , _popup = Nothing
            , _pathToFile = fp }
  
+  openCardImage (takeDirectory fp) firstCard
   return $ CardsState initialState
 
 cardsWithOptionsState :: GlobalState -> FilePath -> [Card] -> IO State
