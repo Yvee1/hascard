@@ -418,7 +418,7 @@ handleEvent gs _ _ = continue gs
 
 next :: GlobalState -> CS -> EventM Name (Next GlobalState)
 next gs s
-  | s ^. index + 1 < length (s ^. cards) = liftIO (openCardImage (takeDirectory (s^.pathToFile)) ((s^.cards) !! (s^.index + 1))) *> (continue . updateCS gs . straightenState $ s & index +~ 1)
+  | s ^. index + 1 < length (s ^. cards) = liftIO (openCardExternal (takeDirectory (s^.pathToFile)) ((s^.cards) !! (s^.index + 1))) *> (continue . updateCS gs . straightenState $ s & index +~ 1)
   | s ^. reviewMode                      =
       let thePopup =
             if null (s^.correctCards) || length (s^. correctCards) == length (s^.cards)
@@ -428,7 +428,7 @@ next gs s
   | otherwise                            = halt' gs
 
 previous :: GlobalState -> CS -> EventM Name (Next GlobalState)
-previous gs s | s ^. index > 0 = continue . updateCS gs . straightenState $ s & index -~ 1
+previous gs s | s ^. index > 0 = liftIO (openCardExternal (takeDirectory (s^.pathToFile)) ((s^.cards) !! (s^.index - 1))) *> (continue . updateCS gs . straightenState $ s & index -~ 1)
               | otherwise      = continue gs
 
 straightenState :: CS -> CS

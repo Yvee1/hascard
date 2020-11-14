@@ -1,0 +1,18 @@
+# What type of fruit is this?
+![](pear.jpeg)
+- Apple
+* Pear
+- Orange
+- Banana
+---
+# Is the following statement true?
+![](lp.pdf)
+- No
+* Yes
+---
+# The l^p metric space
+```
+The space $(\ell^p, d)$ is a metric space, when $d:\ell^p \times \ell^p \rightarrow \mathbb{R}$ is defined as
+$$d(x, y) = \left(\sum_{n=1}^\infty |x_n-y_n|^p\right)^{1/p}$$
+```
+---

@@ -3,32 +3,33 @@ import Data.Functor
 import Data.List
 import Data.List.NonEmpty (NonEmpty)
 import System.FilePath
-import System.Process (runCommand)
+import System.Process
 import System.Info
+import System.IO
 import qualified Data.List.NonEmpty as NE
 import qualified System.Directory as D
 
 --                     Word   Description
 data Card = Definition { 
             question   :: String,
-            image      :: Maybe Image,
+            external   :: Maybe External,
             definition :: String }
           | OpenQuestion {
             question   :: String,
-            image      :: Maybe Image,
+            external   :: Maybe External,
             perforated :: Perforated }
           | MultipleChoice {
             question   :: String,
-            image      :: Maybe Image,
+            external   :: Maybe External,
             correct    :: CorrectOption,
             incorrects :: [IncorrectOption]}
           | MultipleAnswer {
             question   :: String,
-            image      :: Maybe Image,
+            external   :: Maybe External,
             options    :: NonEmpty Option }
           | Reorder {
             question   :: String,
-            image      :: Maybe Image,
+            external   :: Maybe External,
             elements   :: NonEmpty (Int, String)
           }
 
@@ -44,11 +45,13 @@ instance Show Card where
       Reorder h img elts -> 
         showHeader h <> show img<> "\n" <> unlines' (NE.toList (NE.map showReorder elts))
 
---                 alt    file
-data Image = Image String String
+--              alt   file
+data External = Image String String
+              | Latex String
 
-instance Show Image where
+instance Show External where
   show (Image alt file) = "![" <> alt <> "]" <> "(" <> file <> ")"
+  show (Latex text) = "```\n" <> text <> "```" 
 
 openCommand :: String
 openCommand = case os of
@@ -56,8 +59,8 @@ openCommand = case os of
   "linux"  -> "xdg-open"
   _        -> error "Unkown OS for opening images"
 
-openImage :: FilePath -> Image -> IO ()
-openImage origin (Image _ relative) = openImage' (origin </> relative)
+openImage :: FilePath -> FilePath -> IO ()
+openImage origin relative = openImage' (origin </> relative)
 
 openImage' :: FilePath -> IO ()
 openImage' fp = do
@@ -66,8 +69,28 @@ openImage' fp = do
     then void $ runCommand (openCommand <> " \"" <> fp <> "\"")
     else error $ "The image you were trying to open does not exist: " <> fp
 
-openCardImage :: FilePath -> Card -> IO ()
-openCardImage fp = flip whenJust (openImage fp) . image
+openLatex :: String -> IO ()
+openLatex latex = do
+  let packages = ["amsfonts", "mathtools"]
+      text = unlines $
+          [ "\\documentclass[preview]{standalone}" ]
+          ++ map (\p -> "\\usepackage{"<>p<>"}") packages ++
+          [ "\\begin{document}"
+          , latex
+          , "\\end{document}" ]
+  dir <- D.getTemporaryDirectory
+  (tempfile, temph) <- openTempFile dir "hascard-latex-"
+  hPutStrLn temph text
+  hClose temph
+  callProcess "pdflatex" ["-output-directory", dir, tempfile]
+  openImage' (tempfile <> ".pdf")
+
+openCardExternal :: FilePath -> Card -> IO ()
+openCardExternal origin card =
+  case external card of
+    Nothing -> pure ()
+    Just (Image _ relative) -> openImage origin relative
+    Just (Latex text) -> openLatex text
 
 whenJust :: Applicative m => Maybe a -> (a -> m ()) -> m ()
 whenJust mg f = maybe (pure ()) f mg 

@@ -64,7 +64,7 @@ cardsState doReview fp deck = do
            , _popup = Nothing
            , _pathToFile = fp }
  
-  openCardImage (takeDirectory fp) firstCard
+  openCardExternal (takeDirectory fp) firstCard
   return $ CardsState initialState
 
 cardsWithOptionsState :: GlobalState -> FilePath -> [Card] -> IO State

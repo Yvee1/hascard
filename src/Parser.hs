@@ -41,7 +41,7 @@ pHeader = do
   spaceChar
   many (noneOf ['\n', '\r'])
 
-pImage :: Parser Image
+pImage :: Parser External
 pImage = do
   many eol
   char '!'
@@ -51,14 +51,21 @@ pImage = do
   img <- manyTill anySingle (char ')')
   return $ Image alt img
 
-pMaybeImage :: Parser (Maybe Image)
-pMaybeImage =  Just <$> try pImage
-           <|> pure Nothing
+pLatex :: Parser External
+pLatex = do
+  many eol
+  string "```"
+  Latex <$> manyTill anySingle (try (string "```"))
+
+pMaybeExternal :: Parser (Maybe External)
+pMaybeExternal =  Just <$> try pImage
+              <|> Just <$> try pLatex
+              <|> pure Nothing
 
 pMultChoice :: CardParser
 pMultChoice = do
   header <- pHeader
-  img <- pMaybeImage
+  img <- pMaybeExternal
   many eol
   choices <- pChoice `sepBy1` lookAhead (try choicePrefix)
   msgOrResult <- makeMultipleChoice choices
@@ -81,7 +88,7 @@ choicePrefix =  string "- "
 pMultAnswer :: CardParser
 pMultAnswer = do
   header <- pHeader
-  img <- pMaybeImage
+  img <- pMaybeExternal
   many eol
   options <- pOption `sepBy1` lookAhead (try (char '['))
   return . Right $ MultipleAnswer header img (NE.fromList options)
@@ -97,7 +104,7 @@ pOption = do
 pReorder :: CardParser
 pReorder = do
   header <- pHeader
-  img <- pMaybeImage
+  img <- pMaybeExternal
   many eol
   elements <- pReorderElement `sepBy1` lookAhead (try pReorderPrefix)
   let numbers = map fst elements
@@ -122,7 +129,7 @@ pReorderPrefix = do
 pOpen :: CardParser
 pOpen = do
   header <- pHeader
-  img <- pMaybeImage
+  img <- pMaybeExternal
   many eol
   (pre, gap) <- pGap
   sentence <- pSentence
@@ -161,7 +168,7 @@ pNormal = do
 pDef :: CardParser
 pDef = do
   header <- pHeader
-  img <- pMaybeImage
+  img <- pMaybeExternal
   many eol
   descr <- manyTill chars $ lookAhead $ try $ seperator <|> eof'
   return $ Right (Definition header img (dropWhileEnd isSpace' descr))
