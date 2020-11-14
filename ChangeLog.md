@@ -1,4 +1,19 @@
 # Changelog for hascard
+## 0.5.0.0
+New:
+- References to files can be added inside cards, such that the corresponding files opens when encountering that card. The file opens in a different window using the default application for opening files of that file type configured on your computer. This can be used to add images to questions. The syntax is described [here](https://github.com/Yvee1/hascard#including-files) in the readme.
+- LaTeX can be included in a card, which is first converted to a PDF and then opened with a PDF viewer. More info [here](https://github.com/Yvee1/hascard#latex) in the readme.
+
+UI updates to parameter selection:
+- Selecting the chunks in the parameter selection window is better
+- The deck size visible in the parameter selection window now correctly works together with the chunk option; i.e. the maximum number of cards represents the number of cards in the selected chunk, instead of the total number of cards in the entire deck.
+
+Some other UI updates, thanks to @g-w1:
+- When entering text in an answer Control-w will go back a word
+- In multiple choice, tab will also toggle the option
+- In the flashcard, the "yes or no" prompt can be navigated by 'l' and 'h' for a more vi like experience
+- Quitting can be done with 'q' in addition to 'ESC'
+
 ## 0.4.0.0
 New:
 - UI menu for setting the parameters like shuffling etc. The CLI options are no longer usable with `hascard`. The CLI options have been moved under `hascard run`. Directly providing a file is now also done with `hascard run`.
