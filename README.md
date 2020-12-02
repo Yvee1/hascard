@@ -25,7 +25,7 @@ A minimal commandline utility for reviewing notes. 'Flashcards' can be written i
 - [Miscellaneous info](#miscellaneous-info)
 
 ## Installation
-Installation on Windows is not possible sadly, aside from WSL. This is because hascard depends on vty which only supports unix operating systems (this includes macOS).
+Installation on Windows is not possible sadly, aside from WSL. This is because hascard depends on vty which only supports UNIX-like operating systems (this includes macOS).
 
 ### Homebrew (for macOS)
 For macOS users an installation using homebrew is provided via a custom tap. You can run 
