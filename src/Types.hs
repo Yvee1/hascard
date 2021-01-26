@@ -36,14 +36,14 @@ data Card = Definition {
 instance Show Card where
   show card = let showHeader h = "# " <> h <> "\n"
     in case card of
-      Definition h img descr -> showHeader h <> show img <> "\n" <> descr
-      OpenQuestion h img p -> showHeader h <> show img <> "\n" <> show p
+      Definition h img descr -> showHeader h <> maybe "" show img <> "\n" <> descr
+      OpenQuestion h img p -> showHeader h <> maybe "" show img <> "\n" <> show p
       MultipleChoice h img c inc -> 
-        showHeader h <> show img <> "\n" <> showMultipleChoice c inc
+        showHeader h <> maybe "" show img <> "\n" <> showMultipleChoice c inc
       MultipleAnswer h img opts ->
-        showHeader h <> show img <> "\n" <> unlines' (NE.toList (NE.map show opts))
+        showHeader h <> maybe "" show img <> "\n" <> unlines' (NE.toList (NE.map show opts))
       Reorder h img elts -> 
-        showHeader h <> show img<> "\n" <> unlines' (NE.toList (NE.map showReorder elts))
+        showHeader h <>maybe "" show img <> "\n" <> unlines' (NE.toList (NE.map showReorder elts))
 
 --              alt   file
 data External = Image String String
