@@ -200,9 +200,10 @@ wrapStringWithPadding padding w s
     let startsWithSpace = head s == ' '
         s' = if startsWithSpace then " " <> replicate padding 'X' <> tail s else replicate padding 'X' ++ s
         lastLetter = last s
+        prefix = if head s `elem` ['\n', '\r'] then T.pack " " else T.empty
         postfix = if lastLetter == ' ' then T.pack [lastLetter] else T.empty
         ts = wrapTextToLines wrapSettings w (pack s') & ix 0 %~ (if startsWithSpace then (T.pack " " `T.append`) . T.drop (padding + 1) else T.drop padding)
-        ts' = ts & _last %~ (`T.append` postfix)
+        ts' = prefix : (ts & _last %~ (`T.append` postfix))
         padding' = textWidth (last ts') + (if length ts' == 1 then 1 else 0) * padding in
           (map txt (filter (/=T.empty) ts'), padding', True)
   else
