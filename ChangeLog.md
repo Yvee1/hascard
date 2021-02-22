@@ -1,4 +1,9 @@
 # Changelog for hascard
+## 0.5.0.1
+Fixed bugs:
+- When generating new decks from correct or incorrect cards, 'Nothing' was added as the first line
+- When a gap was the last part of a sentence, the newline was not shown correctly
+
 ## 0.5.0.0
 New:
 - References to files can be added inside cards, such that the corresponding files opens when encountering that card. The file opens in a different window using the default application for opening files of that file type configured on your computer. This can be used to add images to questions. The syntax is described [here](https://github.com/Yvee1/hascard#including-files) in the readme.
