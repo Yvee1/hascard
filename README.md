@@ -20,7 +20,7 @@ A minimal commandline utility for reviewing notes. 'Flashcards' can be written i
     - [Open question](#open-question)
     - [Reorder question](#reorder-question)
   - [Including files](#including-files)
-    - [LaTeX](#latex)
+    - [LaTeX (experimental)](#latex-(experimental))
   
 - [Miscellaneous info](#miscellaneous-info)
 
@@ -59,9 +59,9 @@ Simply run `hascard` to open the main application. Menu navigation can be done w
 After finishing a deck, there is an option to create new decks from the correctly answered or incorrectly answered cards, or both. The correct cards of a file named `deck.txt` are stored in `deck+.txt` in the same folder, and the incorrect ones in the file `deck-.txt`. Make sure you do not have files of those names that you want to keep since these _will_ be overwritten.
 
 ### CLI
-The CLI provides two commands, `run` and `import`. The `hascard run` is essentially the same as just `hascard`, but the `run` command can be given a file to run the application on directly. Instead of specifying the parameters in a menu, they are CLI options.
+The CLI provides two commands, `run` and `import`. The `hascard run` is essentially the same as just `hascard`, but the `run` command can be given a file to run the application on directly. When run on a file directly, parameters like whether to shuffle the deck are specified via CLI options instead of in a menu.
 
-As an example, say you have a file `deck.txt` with lots of cards in it and you want to review 5 random ones, you can use `hascard run deck -s -a 5`. Here `-s` shuffles the deck and `-a 5` specifies we only want to look at 5 of them.
+As an example, say you have a file `deck.txt` with lots of cards in it and you want to review 5 random ones, you can use `hascard run deck -s -a 5`. Here `-s` shuffles the deck and `-a 5` specifies we only want to look at 5 of them. For more info, see `hascard run --help`.
 
 #### Importing decks
 If you have decks in a different format, you might want to convert them into files compatible with hascard. Currently tab-seperated files can be converted to definition or open question cards. For example [Quizlet](https://quizlet.com/) decks can be exported to this format. As an example, the following file
@@ -84,7 +84,7 @@ _de même_
 with the command `hascard import input.txt output.txt -r`. More info can be found in the help text at `hascard import --help`.
 
 ## Cards
-Decks of cards are written in `.txt` or `.md` files. Cards are seperated with a line containing three dashes `---`. For examples, see the [`/cards`](https://github.com/Yvee1/hascard/tree/master/cards) directory. 
+Decks of cards are written in `.txt` or `.md` files. A deck contains multiple cards which are seperated with a line containing three dashes `---`. For examples, see the [`/cards`](https://github.com/Yvee1/hascard/tree/master/cards) directory. 
 
 ### Card Types
 In this section the 5 different types of cards are listed, first the text representation is given and after a gif of it is represented in the application.
@@ -117,7 +117,7 @@ gets rendered as
 </p>
 
 #### Multiple answer
-Multiple choice questions with multiple possible answers is also possible. Here again the question starts with `#` and the options follow. Preceding each option is a box `[ ]` that is filled with a `*` or a `x` if it is correct. For example
+Multiple choice questions with multiple possible answers are also available. Here again the question starts with `#` and the options follow. Preceding each option is a box `[ ]` that is filled with a `*` or a `x` if it is correct. For example
 
 ```
 # Multiple answer question
@@ -170,9 +170,9 @@ You might want to include an image with a question. Rendering images in the term
 - Orange
 - Banana
 ```
-references the image `pear.jpeg` in the directory of the text file containing the cards. Files can be added to any of the previously listed card types.
+references the image `pear.jpeg` in the directory of the text file containing the cards. Files can be added to any of the previously listed card types. Text in the square brackets which in markdown is used for providing alt-text has no function at the moment.
 
-#### LaTeX
+#### LaTeX (experimental)
 For reviewing content with mathematical symbols, functionality is included such that LaTeX can be used. Because LaTeX cannot be rendered in the terminal directly, it is first converted to a pdf file with the `pdflatex` command (the pdf is placed in a temporary directory), and then opened in the default pdf viewer application as if the pdf were included directly like mentioned above. LaTeX can be written between three backticks, and should be placed right below the header. For example, the card
 ``````
 # The l^p metric space
