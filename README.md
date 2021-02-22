@@ -20,7 +20,7 @@ A minimal commandline utility for reviewing notes. 'Flashcards' can be written i
     - [Open question](#open-question)
     - [Reorder question](#reorder-question)
   - [Including files](#including-files)
-    - [LaTeX (experimental)](#latex-(experimental))
+    - [LaTeX (experimental)](#latex-experimental)
   
 - [Miscellaneous info](#miscellaneous-info)
 
