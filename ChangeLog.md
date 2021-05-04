@@ -1,5 +1,5 @@
 # Changelog for hascard
-##
+## 0.5.0.2
 New:
 - Setting for changing case sensitivity of open questions. Default behaviour is case sensitive, which was also the functionality before this setting was added.
 
