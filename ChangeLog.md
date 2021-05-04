@@ -1,4 +1,11 @@
 # Changelog for hascard
+##
+New:
+- Setting for changing case sensitivity of open questions. Default behaviour is case sensitive, which was also the functionality before this setting was added.
+
+Fixed bug:
+- When the open question was gotten right after the first try, it was still counted as correct in review mode
+
 ## 0.5.0.1
 Fixed bugs:
 - When generating new decks from correct or incorrect cards, 'Nothing' was added as the first line
