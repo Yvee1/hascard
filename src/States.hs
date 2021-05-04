@@ -19,6 +19,7 @@ data Name =
           -- Settings
             HintsField
           | ControlsField
+          | CaseSensitiveField
           | EscapeCodeField
           | MaxRecentsField
 
@@ -135,6 +136,7 @@ data CS = CS
   , _cardState           :: CardState
   , _showHints           :: Bool
   , _showControls        :: Bool
+  , _isCaseSensitive     :: Bool      
   , _reviewMode          :: Bool
   , _correctCards        :: [Int]      -- list of indices of correct cards
   , _popup               :: Maybe (Popup CS)
@@ -172,6 +174,7 @@ type IS = ()
 data Settings = FormState
   { _hints           :: Bool
   , _controls        :: Bool
+  , _caseSensitive   :: Bool
   , _escapeCode      :: Bool
   , _maxRecents      :: Int }
   deriving (Read, Show)

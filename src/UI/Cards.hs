@@ -7,7 +7,7 @@ import Lens.Micro.Platform
 import Types
 import States
 import StateManagement
-import Data.Char (isSpace)
+import Data.Char (isSpace, toLower)
 import Data.List.NonEmpty (NonEmpty)
 import Data.Map.Strict (Map)
 import Data.Maybe
@@ -359,11 +359,16 @@ handleEvent gs s (VtyEvent e) =
                     then if fail
                       then next gs s
                       else next gs (s & correctCards %~ (s^.index:))
-                    else continue' s'
+                    else continue' s''
                       where sentence = perforatedToSentence perforated
                             gaps = sentenceToGaps sentence
 
-                            s' = s & (cardState.correctGaps) %~ M.mapWithKey (\j _ -> M.findWithDefault "" j kvs `elem` gaps !! j)
+                            wordIsCorrect :: String -> NonEmpty String -> Bool
+                            wordIsCorrect = if s^.isCaseSensitive
+                              then elem
+                              else (\word possibilites -> map toLower word `elem` NE.map (map toLower) possibilites)
+
+                            s' = s & (cardState.correctGaps) %~ M.mapWithKey (\j _ -> M.findWithDefault "" j kvs `wordIsCorrect` (gaps !! j))
                                   & (cardState.entered) .~ True
 
                             s'' = if M.foldr (&&) True (s' ^. cardState.correctGaps)

@@ -24,6 +24,11 @@ getShowControls = do
   settings <- getSettings
   return $ settings ^. controls
 
+getCaseSensitive :: IO Bool
+getCaseSensitive = do
+  settings <- getSettings
+  return $ settings ^. caseSensitive
+
 getUseEscapeCode :: IO Bool
 getUseEscapeCode = do
   settings <- getSettings
@@ -60,7 +65,7 @@ getSettingsFile = do
   return (dir </> "settings")
 
 defaultSettings :: Settings
-defaultSettings = FormState { _hints=False, _controls=True, _escapeCode=False, _maxRecents=5}
+defaultSettings = FormState { _hints=False, _controls=True, _caseSensitive=True, _escapeCode=False, _maxRecents=5}
 
 setSettings :: Settings -> IO ()
 setSettings settings = do
@@ -77,6 +82,7 @@ mkForm =
   in newForm
     [ label "Draw hints using underscores for definition cards" @@= yesnoField False hints HintsField ""
     , label "Show controls at the bottom of screen" @@= yesnoField False controls ControlsField ""
+    , label "Open questions are case sensitive" @@= yesnoField False caseSensitive CaseSensitiveField ""
     , label "Use the '-n \\e[5 q' escape code to change the cursor to a blinking line on start" @@= yesnoField False escapeCode EscapeCodeField ""
     , label "Maximum number of recently selected files stored" @@= naturalNumberField 999 maxRecents MaxRecentsField "" ]
 

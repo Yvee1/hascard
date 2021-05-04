@@ -46,6 +46,7 @@ cardsState :: Bool -> FilePath -> [Card] -> IO State
 cardsState doReview fp deck = do
   hints    <- getShowHints
   controls <- getShowControls
+  caseSensitive <- getCaseSensitive
 
   let mFirstCard = safeHead deck
       firstCard = fromMaybe (Definition "Empty deck" Nothing "Click enter to go back.") mFirstCard
@@ -59,6 +60,7 @@ cardsState doReview fp deck = do
            , _nCards = length deck'
            , _showHints = hints
            , _showControls = controls
+           , _isCaseSensitive = caseSensitive
            , _reviewMode = maybe False (const doReview) mFirstCard
            , _correctCards = []
            , _popup = Nothing
