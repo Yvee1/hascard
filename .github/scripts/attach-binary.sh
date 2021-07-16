@@ -3,10 +3,6 @@ set -o errexit -o verbose
 if test ! "$GITHUB_REF"
 then
   echo 'This is not a release build.'
-elif test ! "${{ secrets.GITHUB_TOKEN }}"
-then
-  echo 'The GITHUB_TOKEN environment variable is not set!'
-  exit 1
 else
   echo "Attaching binary for $RUNNER_OS to $GITHUB_REF..."
   OWNER="$(echo "$GITHUB_REPOSITORY" | cut -f1 -d/)"
