@@ -1,0 +1,17 @@
+name: build
+on: [push]
+jobs:
+  build:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+      - name: Install ghr
+        run: ./.github/scripts/install-ghr.sh
+      - name: Install stack
+        run: ./.github/scripts/install-stack.sh
+      - run: stack setup
+      - run: stack build
+      - run: stack test
+      - name: Attach binary to release, if this is a release
+        run: ./.github/scripts/attach-binary.sh
