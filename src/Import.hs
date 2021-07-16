@@ -1,11 +1,29 @@
+{-# LANGUAGE TemplateHaskell #-}
 module Import where
+import Control.Monad (void)
 import Data.Char (toLower, isSpace)
 import Data.List
-import Data.List.Split
+-- import Data.List.Split
 import qualified Data.List.NonEmpty as NE
+import Data.Void
+import Lens.Micro.Platform
+import Text.Megaparsec
+import Text.Megaparsec.Char
+import Text.Megaparsec.Debug
 import Types
 
 data ImportType = Def | Open
+
+data ImportOpts = ImportOpts
+  { _optInput            :: String 
+  , _optOutput           :: String
+  , _optImportType       :: ImportType
+  , _optImportReverse    :: Bool
+  , _optRowDelimiter     :: String
+  , _optTermDefDelimiter :: String
+  , _optDefDelimiter     :: Maybe String }
+
+makeLenses ''ImportOpts
 
 instance Read ImportType where
   readsPrec _ input =
@@ -15,14 +33,56 @@ instance Read ImportType where
          | "definition" `isPrefixOf` xs -> [(Def, drop 10 xs)]
          | otherwise -> []
 
-parseImportInput :: ImportType -> Bool -> String -> Maybe [Card]
-parseImportInput iType reverse input = 
-  let listToTuple [q, a] = Just $ if not reverse then (q, a) else (a, q)
-      listToTuple _ = Nothing
-      xs = mapM (listToTuple . splitOn "\t") (lines input)
-      makeOpen (header, body) = OpenQuestion header Nothing
-        (P "" (NE.fromList (map (dropWhile isSpace) (splitOneOf ",/;" body))) (Normal ""))
+type Parser = Parsec Void String
 
-  in case iType of
-    Def  -> map (\(s1, s2) -> Definition s1 Nothing s2) <$> xs
-    Open -> map makeOpen <$> xs 
+rowDelimiter :: String
+rowDelimiter = "\n\n"
+
+termDefDelimiter :: String
+termDefDelimiter = "\t"
+
+defDelimiter :: String
+defDelimiter = ","
+
+parseImportInput :: ImportOpts -> String -> Either String [Card]
+parseImportInput opts s = case parse (pImportInput opts) "failed import parsing" s of
+  Left parseErrorBundle -> Left $ errorBundlePretty (parseErrorBundle :: ParseErrorBundle String Void)
+  Right cards -> Right cards
+
+pImportInput :: ImportOpts -> Parser [Card]
+pImportInput opts = pRow opts `sepEndBy1` (void (try (pRowDelimiter *> eol)) <|> void pRowDelimiter <|> void (many eol) <|> eof)
+  where pRowDelimiter = string (opts ^. optRowDelimiter)
+
+pRow :: ImportOpts -> Parser Card
+pRow opts =
+  let
+    pTermDefDelimiter = string (opts ^. optTermDefDelimiter)
+    pDefDelimiter = string <$> (opts ^. optDefDelimiter)
+    pTerm = manyTill anySingle . lookAhead . try $ pSpecial opts
+    pDefs = maybe (fmap (:[]) (pDef opts)) (pDef opts `sepBy`) pDefDelimiter
+    defBeforeTerm = opts ^. optImportReverse
+  in do
+    (term, defs) <- if defBeforeTerm 
+      then do
+        defs' <- pDefs
+        pTermDefDelimiter
+        term' <- pTerm
+        return (term', defs')
+      else do
+        term' <- pTerm
+        pTermDefDelimiter
+        defs' <- pDefs
+        return (term', defs')
+
+    return $ OpenQuestion (filter (/= '\n') term) Nothing (P "" (NE.fromList (map (dropWhile isSpace) defs)) (Normal ""))
+
+pDef :: ImportOpts -> Parser String
+pDef opts = maybe
+  (manyTill anySingle . lookAhead . try $ pSpecial opts)
+  (\pDefDelimiter -> manyTill anySingle . lookAhead . try $ void pDefDelimiter <|> pSpecial opts)
+  (string <$> (opts ^. optDefDelimiter))
+
+pSpecial :: ImportOpts -> Parser ()
+pSpecial opts = void pTermDefDelimiter <|> void pRowDelimiter <|> (eol *> eof) <> eof
+  where pTermDefDelimiter = string (opts ^. optTermDefDelimiter)
+        pRowDelimiter = string (opts ^. optRowDelimiter)

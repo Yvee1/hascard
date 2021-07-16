@@ -8,6 +8,7 @@ module UI
 , Card
 , External
 , ImportType(..)
+, ImportOpts(..)
 , Parameters(..)
 
 , goToState
