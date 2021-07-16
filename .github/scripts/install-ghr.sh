@@ -1,6 +1,6 @@
 set -o errexit -o verbose
 
-if test ! "$GITHUB_REF"
+if test ! "$RELEASE_VERSION"
 then
   echo 'This is not a release build.'
 else
