@@ -1,5 +1,5 @@
 # hascard
-[![Build Status](https://travis-ci.org/Yvee1/hascard.svg?branch=master)](https://travis-ci.org/Yvee1/hascard) [![GitHub tag](https://img.shields.io/github/tag/Yvee1/hascard.svg)](https://github.com/Yvee1/hascard/releases) [![AUR](https://img.shields.io/aur/version/hascard)](https://aur.archlinux.org/packages/hascard/) [![Hackage](https://img.shields.io/hackage/v/hascard.svg)](https://hackage.haskell.org/package/hascard)
+[![Build Status]()](https://github.com/Yvee1/hascard/actions/workflows/build.yml/badge.svg) [![GitHub tag](https://img.shields.io/github/tag/Yvee1/hascard.svg)](https://github.com/Yvee1/hascard/releases) [![AUR](https://img.shields.io/aur/version/hascard)](https://aur.archlinux.org/packages/hascard/) [![Hackage](https://img.shields.io/hackage/v/hascard.svg)](https://hackage.haskell.org/package/hascard)
 
 
 
@@ -64,7 +64,7 @@ The CLI provides two commands, `run` and `import`. The `hascard run` is essentia
 As an example, say you have a file `deck.txt` with lots of cards in it and you want to review 5 random ones, you can use `hascard run deck -s -a 5`. Here `-s` shuffles the deck and `-a 5` specifies we only want to look at 5 of them. For more info, see `hascard run --help`.
 
 #### Importing decks
-If you have decks in a different format, you might want to convert them into files compatible with hascard. Currently tab-seperated files can be converted to definition or open question cards. For example [Quizlet](https://quizlet.com/) decks can be exported to this format. As an example, the following file
+If you have decks in a different format, you might want to convert them into files compatible with hascard. Currently, delimited text files can be converted to definition or open question cards. For example [Quizlet](https://quizlet.com/) decks can be exported to this format. As an example, the following file
 ```
 aussi	ook
 en outre, de plus	bovendien
