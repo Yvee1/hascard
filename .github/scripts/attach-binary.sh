@@ -3,7 +3,7 @@ set -o errexit -o verbose
 if test ! "$GITHUB_REF"
 then
   echo 'This is not a release build.'
-elif test ! "$GITHUB_TOKEN"
+elif test ! "${{ secrets.GITHUB_TOKEN }}"
 then
   echo 'The GITHUB_TOKEN environment variable is not set!'
   exit 1
@@ -18,5 +18,5 @@ else
   tar -czf "$BUNDLE_NAME" "$REPO"
   echo "SHA256:"
   shasum -a 256 "$BUNDLE_NAME"
-  ghr -t "$GITHUB_TOKEN" -u "$OWNER" -r "$REPO" --replace "$(git describe --tags)" "$BUNDLE_NAME"
+  ghr -t "${{ secrets.GITHUB_TOKEN }}" -u "$OWNER" -r "$REPO" --replace "$(git describe --tags)" "$BUNDLE_NAME"
 fi
