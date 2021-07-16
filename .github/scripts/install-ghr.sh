@@ -4,7 +4,7 @@ if test ! "$GITHUB_REF"
 then
   echo 'This is not a release build.'
 else
-    if [ "$RUNNER_OS" = "linux" ] 
+    if [ "$RUNNER_OS" = "Linux" ] 
     then
         ARCH="linux"
     else

@@ -5,6 +5,12 @@ then
   echo 'Stack is already installed.'
 else
   echo "Installing Stack for $RUNNER_OS..."
+  if [ "$RUNNER_OS" = "Linux" ] 
+  then
+      ARCH="linux"
+  else
+      ARCH="osx"
+  fi
   URL="https://www.stackage.org/stack/$RUNNER_OS-x86_64"
   curl --location "$URL" > stack.tar.gz
   gunzip stack.tar.gz
