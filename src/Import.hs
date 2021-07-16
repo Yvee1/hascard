@@ -61,20 +61,28 @@ pRow opts =
     pTerm = manyTill anySingle . lookAhead . try $ pSpecial opts
     pDefs = maybe (fmap (:[]) (pDef opts)) (pDef opts `sepBy`) pDefDelimiter
     defBeforeTerm = opts ^. optImportReverse
-  in do
-    (term, defs) <- if defBeforeTerm 
-      then do
-        defs' <- pDefs
+  in
+    case (defBeforeTerm, opts ^. optImportType) of
+      (False, Open) -> do
+        term <- pTerm
         pTermDefDelimiter
-        term' <- pTerm
-        return (term', defs')
-      else do
-        term' <- pTerm
+        defs <- pDefs
+        return $ OpenQuestion (filter (/= '\n') term) Nothing (P "" (NE.fromList (map (dropWhile isSpace) defs)) (Normal ""))
+      (True, Open) -> do
+        defs <- pDefs
         pTermDefDelimiter
-        defs' <- pDefs
-        return (term', defs')
-
-    return $ OpenQuestion (filter (/= '\n') term) Nothing (P "" (NE.fromList (map (dropWhile isSpace) defs)) (Normal ""))
+        term <- pTerm
+        return $ OpenQuestion (filter (/= '\n') term) Nothing (P "" (NE.fromList (map (dropWhile isSpace) defs)) (Normal ""))
+      (False, Def) -> do
+        term <- pTerm
+        pTermDefDelimiter
+        def <- pDef opts
+        return $ Definition (filter (/= '\n') term) Nothing def
+      (True, Def) -> do
+        def <- pDef opts
+        pTermDefDelimiter
+        term <- pTerm
+        return $ Definition (filter (/= '\n') term) Nothing def
 
 pDef :: ImportOpts -> Parser String
 pDef opts = maybe
