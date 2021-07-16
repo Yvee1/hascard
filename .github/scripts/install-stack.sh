@@ -11,7 +11,7 @@ else
   else
       ARCH="osx"
   fi
-  URL="https://www.stackage.org/stack/$RUNNER_OS-x86_64"
+  URL="https://www.stackage.org/stack/$ARCH-x86_64"
   curl --location "$URL" > stack.tar.gz
   gunzip stack.tar.gz
   tar -x -f stack.tar --strip-components 1
