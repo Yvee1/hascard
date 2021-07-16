@@ -1,8 +1,24 @@
 name: build
 on: [push]
 jobs:
-  build:
+  build-macos:
     runs-on: macos-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+      - name: Set tag environment
+        run: if [[ "$GITHUB_REF" == refs/tags/* ]]; then echo "RELEASE_VERSION=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV; else echo "not a release build"; fi
+      - name: Install ghr
+        run: ./.github/scripts/install-ghr.sh
+      - name: Install stack
+        run: ./.github/scripts/install-stack.sh
+      - run: stack setup
+      - run: stack build
+      - run: stack test
+      - name: Attach binary to release, if this is a release
+        run: ./.github/scripts/attach-binary.sh
+  build-ubuntu:
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
