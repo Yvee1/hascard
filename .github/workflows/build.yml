@@ -32,4 +32,6 @@ jobs:
       - run: stack build
       - run: stack test
       - name: Attach binary to release, if this is a release
+        env: 
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: ./.github/scripts/attach-binary.sh
