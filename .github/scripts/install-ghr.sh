@@ -16,4 +16,5 @@ else
   mkdir -p "$HOME/.local/bin"
   unzip ghr.zip -d "$HOME/.local/bin/"
   rm ghr.zip
+  ls "$HOME/.local/bin/"
 fi
