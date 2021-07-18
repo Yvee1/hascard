@@ -12,7 +12,7 @@ else
         URL="https://github.com/tcnksm/ghr/releases/download/v0.14.0/ghr_v0.14.0_${ARCH}_amd64.tar.gz"
         curl -L ${URL} > ghr.tar.gz
         gunzip ghr.tar.gz
-        tar -x -f stack.tar --strip-components 1
+        tar -x -f ghr.tar --strip-components 1
         mv ghr "$HOME/.local/bin/"
         rm ghr.tar
     else
