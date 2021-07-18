@@ -21,9 +21,9 @@ else
         curl -L ${URL} > ghr.zip
         unzip ghr.zip
         GHR_DIR="ghr_v0.14.0_${ARCH}_amd64"
-        mv GHR_DIR/ghr "$HOME/.local/bin/"
+        mv $GHR_DIR/ghr "$HOME/.local/bin/"
         rm ghr.zip
-        rm GHR_DIR -r
+        rm $GHR_DIR -r
     fi
   ls "$HOME/.local/bin/"
 fi
