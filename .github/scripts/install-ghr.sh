@@ -4,17 +4,23 @@ if test ! "$RELEASE_VERSION"
 then
   echo 'This is not a release build.'
 else
+  mkdir -p "$HOME/.local/bin"
+  echo "Installing ghr"
     if [ "$RUNNER_OS" = "Linux" ] 
     then
         ARCH="linux"
+        URL="https://github.com/tcnksm/ghr/releases/download/v0.14.0/ghr_v0.14.0_${ARCH}_amd64.tar.gz"
+        curl -L ${URL} > ghr.tar.gz
+        gunzip ghr.tar.gz
+        tar -x -f stack.tar --strip-components 1
+        mv ghr "$HOME/.local/bin/"
+        rm ghr.tar
     else
         ARCH="darwin"
+        URL="https://github.com/tcnksm/ghr/releases/download/v0.14.0/ghr_v0.14.0_${ARCH}_amd64.zip"
+        curl -L ${URL} > ghr.zip
+        unzip ghr.zip -d "$HOME/.local/bin/"
+        rm ghr.zip
     fi
-  echo "Installing ghr"
-  URL="https://github.com/tcnksm/ghr/releases/download/v0.5.4/ghr_v0.5.4_${ARCH}_386.zip"
-  curl -L ${URL} > ghr.zip
-  mkdir -p "$HOME/.local/bin"
-  unzip ghr.zip -d "$HOME/.local/bin/"
-  rm ghr.zip
   ls "$HOME/.local/bin/"
 fi
