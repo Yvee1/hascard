@@ -20,5 +20,7 @@ else
   tar -czf "$BUNDLE_NAME" "$REPO"
   echo "SHA256:"
   shasum -a 256 "$BUNDLE_NAME"
-  ghr -t "$GITHUB_TOKEN" -u "$OWNER" -r "$REPO" --replace "$(git describe --tags)" "$BUNDLE_NAME"
+  ls $HOME/.local/bin/
+  echo $PATH
+  $HOME/.local/bin/ghr -t "$GITHUB_TOKEN" -u "$OWNER" -r "$REPO" --replace "$(git describe --tags)" "$BUNDLE_NAME"
 fi
