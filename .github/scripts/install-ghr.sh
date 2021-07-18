@@ -18,11 +18,12 @@ else
     else
         ARCH="darwin"
         URL="https://github.com/tcnksm/ghr/releases/download/v0.14.0/ghr_v0.14.0_${ARCH}_amd64.zip"
-        curl -L ${URL} > ghr-dir.zip
-        unzip ghr-dir.zip
-        mv ghr-dir/ghr "$HOME/.local/bin/"
-        rm ghr-dir.zip
-        rm ghr-dir -r
+        curl -L ${URL} > ghr.zip
+        unzip ghr.zip
+        GHR_DIR="ghr_v0.14.0_${ARCH}_amd64"
+        mv GHR_DIR/ghr "$HOME/.local/bin/"
+        rm ghr.zip
+        rm GHR_DIR -r
     fi
   ls "$HOME/.local/bin/"
 fi
