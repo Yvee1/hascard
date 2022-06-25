@@ -22,7 +22,7 @@ parseCards :: String -> Either String [Card]
 parseCards s = case parse pCards "failed when parsing cards" s of
   Left parseErrorBundle -> Left $ errorBundlePretty (parseErrorBundle :: ParseErrorBundle String Void)
   Right msgOrCards -> left wrap (sequence msgOrCards)
-    where wrap = unlines . map unpack . wrapTextToLines (WrapSettings {preserveIndentation=False, breakLongWords=True}) 40 . pack
+    where wrap = unlines . map unpack . wrapTextToLines (defaultWrapSettings {preserveIndentation=False, breakLongWords=True}) 40 . pack
 
 pCards :: Parser [Either String Card]
 pCards = (pCard `sepEndBy1` seperator) <* eof

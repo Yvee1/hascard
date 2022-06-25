@@ -21,7 +21,7 @@ hCenteredStrWrapWithAttr :: (Widget n -> Widget n) -> String -> Widget n
 hCenteredStrWrapWithAttr attr p = Widget Greedy Fixed $ do
   c <- getContext
   let w = c^.availWidthL
-  let result = vBox $ map (hCenter . attr . txt) $ wrapTextToLines (WrapSettings {preserveIndentation=False, breakLongWords=True}) w (pack p)
+  let result = vBox $ map (hCenter . attr . txt) $ wrapTextToLines (defaultWrapSettings {preserveIndentation=False, breakLongWords=True}) w (pack p)
   render result
 
 -- Somewhat inefficient because rendering is done just to
@@ -79,7 +79,7 @@ yesnoField rightAlign stLens name label initialState =
                     , formFieldRenderHelper = id
                     , formFieldConcat = vBox }
 
-renderYesno :: Bool -> String -> n -> Bool -> Bool -> Widget n
+renderYesno :: Ord n => Bool -> String -> n -> Bool -> Bool -> Widget n
 renderYesno rightAlign label n foc val =
   let addAttr = if foc then withDefAttr focusedFormInputAttr else id
   in clickable n $

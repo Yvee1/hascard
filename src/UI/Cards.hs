@@ -91,7 +91,7 @@ drawHeader title = withAttr titleAttr $
                    hCenteredStrWrap title
 
 wrapSettings :: WrapSettings
-wrapSettings = WrapSettings {preserveIndentation=False, breakLongWords=True}
+wrapSettings = defaultWrapSettings {preserveIndentation=False, breakLongWords=True}
 
 drawDescr :: String -> Widget Name
 drawDescr = strWrapWith wrapSettings
