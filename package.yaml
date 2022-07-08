@@ -1,10 +1,10 @@
 name:                hascard
-version:             0.5.0.3
+version:             0.5.0.3.1
 github:              "Yvee1/hascard"
 license:             BSD3
 author:              "Steven van den Broek"
 maintainer:          "stevenvdb@live.nl"
-copyright:           "2020 Steven van den Broek"
+copyright:           "2022 Steven van den Broek"
 
 extra-source-files:
 - README.md

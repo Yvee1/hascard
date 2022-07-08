@@ -1,4 +1,7 @@
 # Changelog for hascard
+## 0.5.0.3.1
+Update versions and information
+
 ## 0.5.0.3
 New:
 - Improved `hascard import` functionality: delimiters can be specified via CLI options (fixes issue #17).
