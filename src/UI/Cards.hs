@@ -8,10 +8,12 @@ import Types
 import States
 import StateManagement
 import Data.Char (isSpace, toLower)
+import Data.List (sortOn)
 import Data.List.NonEmpty (NonEmpty)
 import Data.Map.Strict (Map)
 import Data.Maybe
 import Data.List.Split
+import Debug
 import Text.Wrap
 import Data.Text (pack)
 import UI.Attributes
@@ -64,7 +66,7 @@ drawFooter s = if s^.reviewMode
 drawCardUI :: CS -> Widget Name
 drawCardUI s = let p = 1 in
   joinBorders $ drawCardBox $ (<=> drawFooter s) $
-  case (s ^. cards) !! (s ^. index) of
+  case (s ^. shownCards) !! (s ^. index) of
     Definition title _ descr -> drawHeader title
                           <=> B.hBorder
                           <=> padLeftRight p (drawDef s descr <=> str " ")
@@ -424,22 +426,22 @@ handleEvent gs _ _ = continue gs
 
 next :: GlobalState -> CS -> EventM Name (Next GlobalState)
 next gs s
-  | s ^. index + 1 < length (s ^. cards) = liftIO (openCardExternal (takeDirectory (s^.pathToFile)) ((s^.cards) !! (s^.index + 1))) *> (continue . updateCS gs . straightenState $ s & index +~ 1)
+  | s ^. index + 1 < length (s ^. shownCards) = liftIO (openCardExternal (takeDirectory (s^.pathToFile)) ((s^.shownCards) !! (s^.index + 1))) *> (continue . updateCS gs . straightenState $ s & index +~ 1)
   | s ^. reviewMode                      =
       let thePopup =
-            if null (s^.correctCards) || length (s^. correctCards) == length (s^.cards)
+            if null (s^.correctCards) || length (s^. correctCards) == length (s^.shownCards)
               then finalPopup
               else deckMakerPopup
       in continue . updateCS gs $ s & popup ?~ thePopup
   | otherwise                            = halt' gs
 
 previous :: GlobalState -> CS -> EventM Name (Next GlobalState)
-previous gs s | s ^. index > 0 = liftIO (openCardExternal (takeDirectory (s^.pathToFile)) ((s^.cards) !! (s^.index - 1))) *> (continue . updateCS gs . straightenState $ s & index -~ 1)
+previous gs s | s ^. index > 0 = liftIO (openCardExternal (takeDirectory (s^.pathToFile)) ((s^.shownCards) !! (s^.index - 1))) *> (continue . updateCS gs . straightenState $ s & index -~ 1)
               | otherwise      = continue gs
 
 straightenState :: CS -> CS
 straightenState s =
-  let card = (s ^. cards) !! (s ^. index) in s
+  let card = (s ^. shownCards) !! (s ^. index) in s
     & currentCard .~ card
     & cardState .~ defaultCardState card
 
@@ -547,6 +549,7 @@ deckMakerPopup = Popup drawer eventHandler initialState
               continue' = continue . update
               p = fromJust (s ^. popup)
               state = p ^. popupState
+              originalCorrects = sortOn negate (map ((s ^. indexMapping) !!) (s ^. correctCards))
           in case state ^?! popupSelected of
             0 -> case ev of
               V.EvKey V.KEnter []      -> continue' $ s & popup ?~ (p & popupState.makeDeckIncorrect %~ not)
@@ -561,7 +564,8 @@ deckMakerPopup = Popup drawer eventHandler initialState
               V.EvKey (V.KChar 'k') [] -> continue' $ s & popup ?~ (p & popupState.popupSelected -~ 1)
               _ -> continue' s
             2 -> case ev of
-              V.EvKey V.KEnter []      -> liftIO (generateDecks (s ^. pathToFile) (s ^. cards) (s ^. correctCards) (state ^?! makeDeckCorrect) (state ^?! makeDeckIncorrect))
+              V.EvKey V.KEnter []      -> liftIO (generateDecks (s ^. pathToFile) 
+                (s ^. originalCards) originalCorrects (state ^?! makeDeckCorrect) (state ^?! makeDeckIncorrect))
                                        *> halt' gs
               V.EvKey V.KUp  []        -> continue' $ s & popup ?~ (p & popupState.popupSelected -~ 1)
               V.EvKey (V.KChar 'k') [] -> continue' $ s & popup ?~ (p & popupState.popupSelected -~ 1)
@@ -574,7 +578,7 @@ generateDecks fp cards corrects makeCorrect makeIncorrect =
        when makeCorrect   $ writeFile (replaceBaseName fp (takeBaseName fp <> "+")) (cardsToString correct)
        when makeIncorrect $ writeFile (replaceBaseName fp (takeBaseName fp <> "-")) (cardsToString incorrect)
 
--- gets list of cards, list of indices of correct cards; returns (correct, incorrect)
+-- gets list of cards, list of indices of correct cards in decreasing order; returns (correct, incorrect)
 splitCorrectIncorrect :: [Card] -> [Int] -> ([Card], [Card])
 splitCorrectIncorrect cards indices = doSplit [] [] (zip [0..] cards) (reverse indices)
   where doSplit cs ws [] _  = (reverse cs, reverse ws)

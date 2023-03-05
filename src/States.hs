@@ -20,6 +20,7 @@ data Name =
             HintsField
           | ControlsField
           | CaseSensitiveField
+          | ShuffleAnswersField
           | EscapeCodeField
           | MaxRecentsField
 
@@ -129,7 +130,9 @@ defaultCardState Reorder{elements=elts} = ReorderState
   , _number = NE.length elts }
 
 data CS = CS
-  { _cards               :: [Card]   -- list of flashcards
+  { _originalCards       :: [Card]     -- the deck as it was parsed
+  , _shownCards          :: [Card]     -- the deck after shuffling answers and cards
+  , _indexMapping        :: [Int]      -- contains the order that shownCards has wrt originalCards
   , _index               :: Int        -- current card index
   , _nCards              :: Int        -- number of cards
   , _currentCard         :: Card
@@ -175,6 +178,7 @@ data Settings = FormState
   { _hints           :: Bool
   , _controls        :: Bool
   , _caseSensitive   :: Bool
+  , _shuffleAnswers  :: Bool
   , _escapeCode      :: Bool
   , _maxRecents      :: Int }
   deriving (Read, Show)

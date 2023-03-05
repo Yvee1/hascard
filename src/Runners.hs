@@ -42,18 +42,20 @@ safeHead :: [a] -> Maybe a
 safeHead [] = Nothing
 safeHead (x:_) = Just x
 
-cardsState :: Bool -> FilePath -> [Card] -> IO State
-cardsState doReview fp deck = do
+cardsState :: Bool -> FilePath -> [Card] -> [Card] -> [Int] -> IO State
+cardsState doReview fp originalDeck shuffledDeck ixs = do
   hints    <- getShowHints
   controls <- getShowControls
   caseSensitive <- getCaseSensitive
 
-  let mFirstCard = safeHead deck
+  let mFirstCard = safeHead shuffledDeck
       firstCard = fromMaybe (Definition "Empty deck" Nothing "Click enter to go back.") mFirstCard
-      deck' = maybe [firstCard] (const deck) mFirstCard
+      deck' = maybe [firstCard] (const shuffledDeck) mFirstCard
 
       initialState = 
-        CS { _cards = deck'
+        CS { _originalCards = originalDeck
+           , _shownCards = deck'
+           , _indexMapping = ixs
            , _index = 0
            , _currentCard = firstCard
            , _cardState = defaultCardState firstCard
@@ -72,7 +74,11 @@ cardsState doReview fp deck = do
 cardsWithOptionsState :: GlobalState -> FilePath -> [Card] -> IO State
 cardsWithOptionsState gs fp cards =
   let chunked = doChunking (gs^.parameters.pChunk) cards
-  in doRandomization gs chunked >>= cardsState (gs^.parameters.pReviewMode) fp
+      trimmed = maybe id take (gs^.parameters.pSubset) chunked
+  in do
+    shuffleAnswers <- getShuffleAnswers
+    (ixs, shuffledCards) <- doRandomization gs shuffleAnswers trimmed
+    cardsState (gs^.parameters.pReviewMode) fp trimmed shuffledCards ixs
 
 infoState :: State
 infoState = InfoState ()

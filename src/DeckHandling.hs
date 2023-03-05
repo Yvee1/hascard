@@ -1,14 +1,34 @@
 module DeckHandling where
+import Control.Monad (forM)
+import qualified Data.List.NonEmpty as NE
 import Data.Random
 import Lens.Micro.Platform
 import States
 import Types
 
-doRandomization :: GlobalState -> [a] -> IO [a]
-doRandomization gs cards = 
-  let n = length cards in do
-    cards' <- if gs^.parameters.pShuffle then sampleFrom (gs^.mwc) (shuffleN n cards) else return cards
-    return $ maybe cards' (`take` cards') (gs^.parameters.pSubset)
+doRandomization :: GlobalState -> Bool -> [Card] -> IO ([Int], [Card])
+doRandomization gs shuffleAnswers cards = do
+    let ixs = [0..length cards - 1]
+    shuffledIxs <- if gs^.parameters.pShuffle then sampleFrom (gs^.mwc) (shuffle ixs) else return ixs
+    let cards' = map (cards !!) shuffledIxs
+    cards'' <- if shuffleAnswers
+      then sampleFrom (gs^.mwc) $ mapM shuffleCard cards'
+      else return cards'
+    return $ (shuffledIxs, cards'')
+
+shuffleCard :: Card -> RVar Card
+shuffleCard (c@MultipleAnswer{}) = do
+  shuffledOptions <- shuffle . NE.toList $ options c
+  return $ c { options = NE.fromList shuffledOptions }
+shuffleCard (c@MultipleChoice{}) = do
+  let CorrectOption ic sc = correct c
+      ixs = [0..length (incorrects c)]
+  shuffledIxs <- shuffle ixs
+  let ic' = shuffledIxs !! ic
+      corrOpt = CorrectOption ic' sc
+      incOpts = map (\i -> (incorrects c !!) $ if i > ic' then i - 1 else i) (filter (/= ic') shuffledIxs)
+  return $ c { correct = corrOpt, incorrects = incOpts } 
+shuffleCard c = return c
 
 doChunking :: Chunk -> [a] -> [a]
 doChunking (Chunk i n) cards = 

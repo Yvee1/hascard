@@ -29,6 +29,11 @@ getCaseSensitive = do
   settings <- getSettings
   return $ settings ^. caseSensitive
 
+getShuffleAnswers :: IO Bool
+getShuffleAnswers = do
+  settings <- getSettings
+  return $ settings ^. shuffleAnswers
+
 getUseEscapeCode :: IO Bool
 getUseEscapeCode = do
   settings <- getSettings
@@ -65,7 +70,8 @@ getSettingsFile = do
   return (dir </> "settings")
 
 defaultSettings :: Settings
-defaultSettings = FormState { _hints=False, _controls=True, _caseSensitive=True, _escapeCode=False, _maxRecents=5}
+defaultSettings = FormState { _hints=False, _controls=True, _caseSensitive=True, 
+  _shuffleAnswers=False, _escapeCode=False, _maxRecents=5}
 
 setSettings :: Settings -> IO ()
 setSettings settings = do
@@ -83,6 +89,7 @@ mkForm =
     [ label "Draw hints using underscores for definition cards" @@= yesnoField False hints HintsField ""
     , label "Show controls at the bottom of screen" @@= yesnoField False controls ControlsField ""
     , label "Open questions are case sensitive" @@= yesnoField False caseSensitive CaseSensitiveField ""
+    , label "Shuffle answers to multiple choice questions" @@= yesnoField False shuffleAnswers ShuffleAnswersField ""
     , label "Use the '-n \\e[5 q' escape code to change the cursor to a blinking line on start" @@= yesnoField False escapeCode EscapeCodeField ""
     , label "Maximum number of recently selected files stored" @@= naturalNumberField 999 maxRecents MaxRecentsField "" ]
 
