@@ -1,6 +1,10 @@
+{-# LANGUAGE FlexibleContexts #-}
 module StateManagement where
 import Brick
 import Control.Monad.IO.Class
+import Control.Monad.State.Class
+import Control.Monad.State.Lazy (execState)
+import Control.Monad (when, (<=<))
 import Data.Maybe (fromJust)
 import Lens.Micro.Platform
 import Recents
@@ -20,95 +24,116 @@ getMode (FileBrowserState  _) = FileBrowser
 getMode (CardsState        _) = Cards
 getMode (ParameterState    _) = Parameter
 
-getState :: GlobalState -> State
-getState = fromJust . safeGetState
+getState :: MonadState GlobalState m => m State
+getState = fromJust <$> safeGetState
 
-updateState :: GlobalState -> State -> GlobalState
-updateState gs s = gs & states %~ M.insert (getMode s) s
+mms :: Lens' GlobalState MMS
+mms = lens (\gs -> mmsCast . fromJust $ M.lookup MainMenu (gs ^. states)) (\gs s -> gs & states %~ M.insert MainMenu (MainMenuState s))
+  where mmsCast s@(MainMenuState mms) = mms
+        mmsCast _ = error "impossible"
 
-updateMMS :: GlobalState -> MMS -> GlobalState
-updateMMS gs s = updateState gs (MainMenuState s)
+ss :: Lens' GlobalState SS
+ss = lens (\gs -> ssCast . fromJust $ M.lookup Settings (gs ^. states)) (\gs s -> gs & states %~ M.insert Settings (SettingsState s))
+  where ssCast s@(SettingsState ss) = ss
+        ssCast _ = error "impossible"
 
-updateSS :: GlobalState -> SS -> GlobalState
-updateSS gs s = updateState gs (SettingsState s)
+is :: Lens' GlobalState IS
+is = lens (\gs -> isCast . fromJust $ M.lookup Info (gs ^. states)) (\gs s -> gs & states %~ M.insert Info (InfoState s))
+  where isCast s@(InfoState ss) = ss
+        isCast _ = error "impossible"
 
-updateIS :: GlobalState -> IS -> GlobalState
-updateIS gs s = updateState gs (InfoState s)
+cs :: Lens' GlobalState CS
+cs = lens (\gs -> csCast . fromJust $ M.lookup Cards (gs ^. states)) (\gs s -> gs & states %~ M.insert Cards (CardsState s))
+  where csCast s@(CardsState cs) = cs
+        csCast _ = error "impossible"
 
-updateCS :: GlobalState -> CS -> GlobalState
-updateCS gs s = updateState gs (CardsState s)
+css :: Lens' GlobalState CSS
+css = lens (\gs -> cssCast . fromJust $ M.lookup CardSelector (gs ^. states)) (\gs s -> gs & states %~ M.insert CardSelector (CardSelectorState s))
+  where cssCast s@(CardSelectorState css) = css
+        cssCast _ = error "impossible"
 
-updateCSS :: GlobalState -> CSS -> GlobalState
-updateCSS gs s = updateState gs (CardSelectorState s)
+fbs :: Lens' GlobalState FBS
+fbs = lens (\gs -> fbsCast . fromJust $ M.lookup FileBrowser (gs ^. states)) (\gs s -> gs & states %~ M.insert FileBrowser (FileBrowserState s))
+  where fbsCast s@(FileBrowserState fbs) = fbs
+        fbsCast _ = error "impossible"
 
-updateInfo :: GlobalState -> IS -> GlobalState
-updateInfo gs s = updateState gs (InfoState s)
+ps :: Lens' GlobalState PS
+ps = lens (\gs -> psCast . fromJust $ M.lookup Parameter (gs ^. states)) (\gs s -> gs & states %~ M.insert Parameter (ParameterState s))
+  where psCast s@(ParameterState ps) = ps
+        psCast _ = error "impossible"
 
-updateFBS :: GlobalState -> FBS -> GlobalState
-updateFBS gs s = updateState gs (FileBrowserState s)
+goToState_ :: GlobalState -> State -> GlobalState
+goToState_ gs s = execState (goToState s) gs
 
-updatePS :: GlobalState -> PS -> GlobalState
-updatePS gs s = updateState gs (ParameterState s)
+goToState :: MonadState GlobalState m => State -> m ()
+goToState s = do states %= M.insert (getMode s) s
+                 stack  %= insert (getMode s)
 
-goToState :: GlobalState -> State -> GlobalState
-goToState gs s = gs & states %~ M.insert (getMode s) s
-                    & stack  %~ insert (getMode s)
-
-moveToState :: GlobalState -> State -> GlobalState 
-moveToState gs = goToState (popState gs)
+moveToState :: MonadState GlobalState m => State -> m ()
+moveToState s = do
+  popState
+  goToState s
 
 -- popState until at mode of state s.
-removeToState :: GlobalState -> State -> GlobalState
-removeToState gs s = go (popState gs)
-  where go global = 
-          let current = Stack.head (global ^. stack)
-          in if current == getMode s then moveToState global s
-          else go (popState global)
+removeToState :: MonadState GlobalState m => State -> m ()
+removeToState s = do
+  popState
+  current <- Stack.head <$> use stack
+  if current == getMode s 
+    then moveToState s
+    else removeToState s
 
-popState :: GlobalState -> GlobalState
-popState gs = let
-  s    = gs ^. stack
-  top  = Stack.head s
-  s'   = Stack.pop s in
-    gs & states %~ M.delete top
-       & stack  .~ s'
+popState :: MonadState GlobalState m => m ()
+popState = do
+  s <- use stack
+  let top = Stack.head s
+      s'  = Stack.pop s
+  states %= M.delete top
+  stack  .= s'
 
-popStateOrQuit :: GlobalState -> EventM n (Next GlobalState)
-popStateOrQuit gs = let gs' = popState gs in
-  if Stack.size (gs' ^. stack) == 0 
-   then halt gs'
-   else continue gs'
+popStateOrQuit :: EventM n GlobalState ()
+popStateOrQuit = 
+  do popState
+     s <- use stack
+     when (Stack.size s == 0) halt
 
-safeGetState :: GlobalState -> Maybe State
-safeGetState gs = do
-  key <- safeHead (gs ^. stack)
-  M.lookup key (gs ^. states)
+safeGetState :: MonadState GlobalState m => m (Maybe State)
+safeGetState = do
+  gs <- get
+  return $ do 
+    key <- safeHead (gs ^. stack)
+    M.lookup key (gs ^. states)
 
-goToModeOrQuit :: GlobalState -> Mode -> EventM n (Next GlobalState)
-goToModeOrQuit gs mode = 
-  maybe (halt gs) (continue . goToState gs) $ M.lookup mode (gs ^. states) 
+goToModeOrQuit :: Mode -> EventM n GlobalState ()
+goToModeOrQuit mode = do
+  mMode <- M.lookup mode <$> use states
+  maybe halt goToState mMode 
 
-moveToModeOrQuit :: GlobalState -> Mode -> EventM n (Next GlobalState)
-moveToModeOrQuit = moveToModeOrQuit' return
+removeToMode :: MonadState GlobalState m => Mode -> m ()
+removeToMode m = do
+  popState
+  current <- Stack.head <$> use stack
+  if current == m
+    then return ()
+    else removeToMode m
 
-moveToModeOrQuit' :: (State -> IO State) -> GlobalState -> Mode -> EventM n (Next GlobalState)
-moveToModeOrQuit' f gs mode = 
-  maybe (halt gs) (\s -> continue . moveToState gs =<< liftIO (f s)) $ M.lookup mode (gs ^. states) 
+removeToModeOrQuit :: Mode -> EventM n GlobalState ()
+removeToModeOrQuit = removeToModeOrQuit' $ return ()
 
-removeToModeOrQuit :: GlobalState -> Mode -> EventM n (Next GlobalState)
-removeToModeOrQuit = removeToModeOrQuit' return
+removeToModeOrQuit' :: EventM n GlobalState () -> Mode -> EventM n GlobalState ()
+removeToModeOrQuit' beforeMoving mode = do
+  mState <- M.lookup mode <$> use states
+  case mState of
+    Nothing -> halt
+    Just m -> do
+      gs <- get
+      beforeMoving
+      removeToMode mode
 
-removeToModeOrQuit' :: (State -> IO State) -> GlobalState -> Mode -> EventM n (Next GlobalState)
-removeToModeOrQuit' f gs mode = 
-  maybe (halt gs) (\s -> continue . removeToState gs =<< liftIO (f s)) $ M.lookup mode (gs ^. states) 
-
-refreshRecents :: CSS -> IO CSS
-refreshRecents s = do
-  rs <- getRecents
+refreshRecents :: (MonadState CSS m, MonadIO m) => m ()
+refreshRecents = do
+  rs <- liftIO getRecents
   let prettyRecents = shortenFilepaths (toList rs)
       options       = Vec.fromList (prettyRecents ++ ["Select file from system"])
-  return $ s & recents .~ rs
-             & list    .~ L.list Ordinary options 1
-
-refreshRecents' :: GlobalState -> IO GlobalState
-refreshRecents' gs = maybe (return gs) ((updateCSS gs <$>) . refreshRecents) ((\(CardSelectorState s) -> s) <$> M.lookup CardSelector (gs^.states))
+  recents .= rs
+  list .= L.list Ordinary options 1

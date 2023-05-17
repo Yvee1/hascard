@@ -11,7 +11,7 @@ module UI
 , ImportOpts(..)
 , Parameters(..)
 
-, goToState
+, goToState_
 
 , cardsToString
 

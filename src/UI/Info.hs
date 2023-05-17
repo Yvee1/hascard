@@ -22,21 +22,18 @@ ui =
   hBorder <=>
   drawInfo
 
-handleEvent :: GlobalState -> IS -> BrickEvent Name Event -> EventM Name (Next GlobalState)
-handleEvent gs s (VtyEvent e) =
-  let update = updateIS gs
-      continue' = continue . update
-      halt' = continue . popState in
-    case e of
-      V.EvKey V.KEsc [] -> halt' gs
-      V.EvKey (V.KChar 'q') [] -> halt' gs
-      V.EvKey V.KEnter [] -> halt' gs
-      V.EvKey V.KDown [] -> vScrollBy (viewportScroll Ordinary) 1 >> continue' s
-      V.EvKey (V.KChar 'j') [] -> vScrollBy (viewportScroll Ordinary) 1 >> continue' s
-      V.EvKey V.KUp [] -> vScrollBy (viewportScroll Ordinary) (-1) >> continue' s
-      V.EvKey (V.KChar 'k') [] -> vScrollBy (viewportScroll Ordinary) (-1) >> continue' s
-      _ -> continue' s
-handleEvent gs _ _ = continue gs
+handleEvent :: BrickEvent Name Event -> EventM Name GlobalState ()
+handleEvent (VtyEvent e) =
+  case e of
+    V.EvKey V.KEsc [] -> popState
+    V.EvKey (V.KChar 'q') [] -> popState
+    V.EvKey V.KEnter [] -> popState
+    V.EvKey V.KDown [] -> vScrollBy (viewportScroll Ordinary) 1
+    V.EvKey (V.KChar 'j') [] -> vScrollBy (viewportScroll Ordinary) 1
+    V.EvKey V.KUp [] -> vScrollBy (viewportScroll Ordinary) (-1)
+    V.EvKey (V.KChar 'k') [] -> vScrollBy (viewportScroll Ordinary) (-1)
+    _ -> return ()
+handleEvent _ = return ()
 
 titleAttr :: AttrName
 titleAttr = attrName "title"

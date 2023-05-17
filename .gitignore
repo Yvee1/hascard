@@ -3,3 +3,4 @@ hascard.cabal
 *~
 *.snap
 images/
+dist-newstyle

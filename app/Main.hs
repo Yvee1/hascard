@@ -138,8 +138,8 @@ run opts = run' (opts ^. optFile)
                    start (Just (fp, result)) (mkGlobalState opts gen)
 
 start :: Maybe (FilePath, [Card]) -> GlobalState -> IO ()
-start Nothing gs = runBrickFlashcards (gs `goToState` mainMenuState)
-start (Just (fp, cards)) gs = runBrickFlashcards =<< (gs `goToState`) <$> cardsWithOptionsState gs fp cards
+start Nothing gs = runBrickFlashcards (gs `goToState_` mainMenuState)
+start (Just (fp, cards)) gs = runBrickFlashcards =<< (gs `goToState_`) <$> cardsWithOptionsState gs fp cards
 
 doImport :: ImportOpts -> IO ()
 doImport opts' = do

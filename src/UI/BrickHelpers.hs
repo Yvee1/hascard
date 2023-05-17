@@ -1,4 +1,4 @@
-{-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE RankNTypes, FlexibleContexts #-}
 module UI.BrickHelpers where
 import Text.Wrap
 import Brick
@@ -66,16 +66,17 @@ yesnoField :: (Ord n, Show n) => Bool -> Lens' s Bool -> n -> String -> s -> For
 yesnoField rightAlign stLens name label initialState =
   let initVal = initialState ^. stLens
 
-      handleEvent (MouseDown n _ _ _) s | n == name = return $ not s
-      handleEvent (VtyEvent (V.EvKey (V.KChar ' ') [])) s  = return $ not s
-      handleEvent (VtyEvent (V.EvKey V.KEnter [])) s  = return $ not s
-      handleEvent _ s = return s
+      handleEvent (MouseDown n _ _ _) | n == name = modify not
+      handleEvent (VtyEvent (V.EvKey (V.KChar ' ') [])) = modify not
+      handleEvent (VtyEvent (V.EvKey V.KEnter [])) = modify not
+      handleEvent _ = return ()
   
   in FormFieldState { formFieldState = initVal
                     , formFields = [ FormField name Just True 
                                        (renderYesno rightAlign label name)
                                        handleEvent ]
                     , formFieldLens = stLens
+                    , formFieldUpdate = const
                     , formFieldRenderHelper = id
                     , formFieldConcat = vBox }
 
@@ -93,19 +94,23 @@ naturalNumberField :: (Ord n, Show n) => Int -> Lens' s Int -> n -> String -> s 
 naturalNumberField bound stLens name postfix initialState =
   let initVal = initialState ^. stLens
 
-      handleEvent (VtyEvent (V.EvKey (V.KChar c) [])) s | isDigit c = 
-        let newValue = read (show s ++ [c])
-          in return $ if newValue <= bound then newValue else bound
-      handleEvent (VtyEvent (V.EvKey V.KBS [])) s = return $ case show s of
-                                                           "" -> 0
-                                                           xs -> fromMaybe 0 (readMaybe (init xs))
-      handleEvent _ s = return s
+      handleEvent (VtyEvent (V.EvKey (V.KChar c) [])) | isDigit c =
+           do s <- get
+              let newValue = read (show s ++ [c])
+              put $ min newValue bound
+      handleEvent (VtyEvent (V.EvKey V.KBS [])) = 
+        do s <- get
+           put $ case show s of
+             "" -> 0
+             xs -> fromMaybe 0 (readMaybe (init xs))
+      handleEvent _ = return ()
   
   in FormFieldState { formFieldState = initVal
                     , formFields = [ FormField name Just True 
                                        (renderNaturalNumber bound postfix name)
                                        handleEvent ]
                     , formFieldLens = stLens
+                    , formFieldUpdate = const
                     , formFieldRenderHelper = id
                     , formFieldConcat = vBox }
 

@@ -7,6 +7,7 @@ import Brick.Forms
 import Brick.Widgets.Border
 import Brick.Widgets.Border.Style
 import Brick.Widgets.Center
+import Control.Monad (when)
 import Control.Monad.IO.Class
 import Lens.Micro.Platform
 import States
@@ -30,48 +31,43 @@ ui s =
   padLeftRight 1
   (renderForm (s ^. psForm))
 
-handleEvent :: GlobalState -> PS -> BrickEvent Name Event -> EventM Name (Next GlobalState)
-handleEvent gs s ev@(VtyEvent e) =
+handleEvent :: BrickEvent Name Event -> EventM Name GlobalState ()
+handleEvent ev@(VtyEvent e) = do
+  s <- use ps
   let form = s ^. psForm
-
-      update = updatePS gs
-      continue' = continue . update
-      continue'' f = continue . update $ s & psForm .~ f
-
-      halt' = continue . popState
-
       focus = formFocus form
       (Just n) = focusGetCurrent focus
-      down = case n of
-        ParametersOkField -> continue gs
-        ChunkField1 -> continue'' $ form { formFocus = focusNext (focusNext focus) }
-        _ -> continue'' $ form { formFocus = focusNext focus }
-      up = case n of
-        ChunkField1 -> continue gs
-        ChunkField2 -> continue gs
-        SubsetField -> continue'' $ form { formFocus = focusPrev (focusPrev focus) }
-        _           -> continue'' $ form { formFocus = focusPrev focus }
+      down = zoom ps $ case n of
+        ParametersOkField -> return ()
+        ChunkField1 -> psForm .= form { formFocus = focusNext (focusNext focus) }
+        _ -> psForm .= form { formFocus = focusNext focus }
+      up = zoom ps $ case n of
+        ChunkField1 -> return ()
+        ChunkField2 -> return ()
+        SubsetField -> psForm .= form { formFocus = focusPrev (focusPrev focus) }
+        _           -> psForm .= form { formFocus = focusPrev focus }
 
-  in case e of
-      V.EvKey V.KEsc []         -> halt' gs
-      V.EvKey (V.KChar 'q') []  -> halt' gs
+  case e of
+      V.EvKey V.KEsc []         -> popState
+      V.EvKey (V.KChar 'q') []  -> popState
       V.EvKey V.KDown []        -> down
       V.EvKey (V.KChar 'j') []  -> down
       V.EvKey V.KUp []          -> up
       V.EvKey (V.KChar 'k') []  -> up
-      V.EvKey (V.KChar '\t') [] -> continue gs
-      V.EvKey V.KBackTab []     -> continue gs
+      V.EvKey (V.KChar '\t') [] -> return ()
+      V.EvKey V.KBackTab []     -> return ()
     
       _ -> case (e, n) of
-          (V.EvKey V.KRight [], ChunkField2) -> continue gs
-          (V.EvKey V.KLeft [],  ChunkField1) -> continue gs
-          _ -> do f <- handleFormEvent ev form
-                  if formState f ^. pOk
-                    then continue =<< (gs `goToState`)
-                          <$> liftIO (cardsWithOptionsState
-                                      (gs & parameters .~ formState f)
-                                      (s ^. psFp)
-                                      (s ^. psCards))
-                    else continue' (s & psForm .~ f)
+          (V.EvKey V.KRight [], ChunkField2) -> return ()
+          (V.EvKey V.KLeft [],  ChunkField1) -> return ()
+          _ -> do zoom (ps.psForm) $ handleFormEvent ev
+                  f <- use $ ps.psForm
+                  when (formState f ^. pOk) $ do
+                    parameters .= formState f
+                    parameters.pOk .= False
+                    paramsWithoutOk <- use parameters
+                    ps.psForm .= updateFormState paramsWithoutOk f
+                    state <- cardsWithOptionsStateM (s ^. psFp) (s ^. psCards)
+                    goToState state
 
-handleEvent gs _ _ = continue gs
+handleEvent _ = return ()

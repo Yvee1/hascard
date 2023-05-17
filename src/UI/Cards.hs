@@ -1,8 +1,11 @@
+{-# LANGUAGE FlexibleContexts #-}
 module UI.Cards (Card, State(..), drawUI, handleEvent, theMap) where
 
 import Brick
 import Control.Monad
+import Control.Monad.Extra (whenM, notM, unlessM)
 import Control.Monad.IO.Class
+import Control.Monad.State.Class
 import Lens.Micro.Platform
 import Types
 import States
@@ -240,210 +243,227 @@ drawReorder s = case (s ^. cardState, s ^. currentCard) of
 ----------------------------------------------------
 ---------------------- Events ----------------------
 ----------------------------------------------------
-halt' :: GlobalState -> EventM n (Next GlobalState)
-halt' = flip (removeToModeOrQuit' (\(CardSelectorState s) -> CardSelectorState <$> refreshRecents s)) CardSelector
+halt' :: EventM n GlobalState ()
+halt' = removeToModeOrQuit' beforeMoving CardSelector
+  where beforeMoving = zoom css refreshRecents
 
-handleEvent :: GlobalState -> CS -> BrickEvent Name Event -> EventM Name (Next GlobalState)
-handleEvent gs s (VtyEvent e) =
-  let update = updateCS gs
-      continue' = continue . update in
-    case e of
-      V.EvKey V.KEsc []                -> popStateOrQuit gs
-      V.EvKey V.KRight [V.MCtrl]       -> if not (s^.reviewMode) then next gs s else continue gs
-      V.EvKey V.KLeft  [V.MCtrl]       -> if not (s^.reviewMode) then previous gs s else continue gs
+handleEvent :: BrickEvent Name Event -> EventM Name GlobalState ()
+handleEvent (VtyEvent e) =
+  -- let update = updateCS gs
+  --     continue' = continue . update in
+  case e of
+    V.EvKey V.KEsc []          -> popStateOrQuit
+    V.EvKey V.KRight [V.MCtrl] -> (whenM.notM.use $ cs.reviewMode) next
+    V.EvKey V.KLeft  [V.MCtrl] -> (whenM.notM.use $ cs.reviewMode) previous
 
-      ev ->
-        flip (`maybe` (\p -> handlePopupEvent p gs s ev)) (s ^. popup) $
-          case (s ^. cardState, s ^. currentCard) of
-            (DefinitionState{_flipped = f}, _) ->
+    ev -> do
+      pUp <- use $ cs.popup
+      s <- use cs
+      flip (`maybe` (`handlePopupEvent` ev)) pUp $
+        case (s ^. cardState, s ^. currentCard) of
+          (DefinitionState{_flipped = f}, _) ->
+            case ev of
+              V.EvKey V.KEnter []  ->
+                if f
+                  then if not (s^.reviewMode) then next
+                    else cs.popup ?= correctPopup
+                  else cs.cardState.flipped %= not
+              _ -> return ()
+
+          (MultipleChoiceState {_highlighted = i, _number = n, _tried = kvs}, MultipleChoice _ _ (CorrectOption j _) _) ->
+            case ev of
+              V.EvKey V.KUp [] -> up
+              V.EvKey (V.KChar 'k') [] -> up
+              V.EvKey V.KDown [] -> down
+              V.EvKey (V.KChar 'j') [] -> down
+
+              V.EvKey V.KEnter [] ->
+                  if frozen
+                    then do when correctlyAnswered $ cs.correctCards %= (s^.index:)
+                            next
+                    else cs.cardState.tried %= M.insert i True
+              _ -> return ()
+
+            where frozen = M.findWithDefault False j kvs
+
+                  down = when (i < n-1 && not frozen) $
+                           cs.cardState.highlighted += 1
+
+                  up = when (i > 0 && not frozen) $
+                         cs.cardState.highlighted -= 1
+
+                  correctlyAnswered = i == j && M.size (M.filter id kvs) == 1
+
+          (MultipleAnswerState {_highlighted = i, _number = n, _entered = submitted, _selected = kvs}, MultipleAnswer _ _ opts) ->
+            case ev of
+              V.EvKey V.KUp [] -> up
+              V.EvKey (V.KChar 'k') [] -> up
+              V.EvKey V.KDown [] -> down
+              V.EvKey (V.KChar 'j') [] -> down
+
+              V.EvKey (V.KChar 'c') [] -> cs.cardState.entered .= True
+
+              V.EvKey V.KEnter [] ->
+                  if frozen
+                    then do when correctlyAnswered $ cs.correctCards %= (s^.index:)
+                            next
+                    else cs.cardState.selected %= M.adjust not i
+              V.EvKey (V.KChar '\t') [] ->
+                  if frozen
+                    then do when correctlyAnswered $ cs.correctCards %= (s^.index:)
+                            next
+                    else cs.cardState.selected %= M.adjust not i
+
+
+              _ -> return ()
+
+
+            where frozen = submitted
+
+                  down = when (i < n-1 && not frozen) $
+                           cs.cardState.highlighted += 1
+
+                  up = when (i > 0 && not frozen) $
+                         cs.cardState.highlighted -= 1
+
+                  correctlyAnswered = NE.toList (NE.map isOptionCorrect opts) == map snd (M.toAscList kvs)
+
+          (OpenQuestionState {_highlighted = i, _number = n, _gapInput = kvs, _correctGaps = cGaps, _failed=fail}, OpenQuestion _ _ perforated) ->
+            let frozen = M.foldr (&&) True cGaps in
               case ev of
-                V.EvKey V.KEnter []  ->
-                  if f
-                    then if not (s^.reviewMode) then next gs s
-                      else continue' (s & popup ?~ correctPopup)
-                    else continue' $ s & cardState.flipped %~ not
-                _ -> continue' s
+                V.EvKey (V.KFun 1) [] -> zoom (cs.cardState) $ do
+                  gapInput .= correctAnswers
+                  entered .= True
+                  failed .= True
+                  correctGaps .= M.fromAscList [(i, True) | i <- [0..n-1]]
+                        where correctAnswers = M.fromAscList $ zip [0..] $ map NE.head (sentenceToGaps (perforatedToSentence perforated))
 
-            (MultipleChoiceState {_highlighted = i, _number = n, _tried = kvs}, MultipleChoice _ _ (CorrectOption j _) _) ->
-              case ev of
-                V.EvKey V.KUp [] -> continue' up
-                V.EvKey (V.KChar 'k') [] -> continue' up
-                V.EvKey V.KDown [] -> continue' down
-                V.EvKey (V.KChar 'j') [] -> continue' down
+                V.EvKey (V.KChar '\t') [] -> zoom (cs.cardState) $ do
+                  if i < n - 1 && not frozen
+                    then highlighted += 1
+                    else highlighted .= 0
 
-                V.EvKey V.KEnter [] ->
-                    if frozen
-                      then next gs $ s & if correctlyAnswered then correctCards %~ (s^.index:) else id
-                      else continue' $ s & cardState.tried %~ M.insert i True
-                _ -> continue' s
+                V.EvKey V.KRight [] -> 
+                  when (i < n - 1 && not frozen) $
+                    cs.cardState.highlighted += 1
 
-              where frozen = M.findWithDefault False j kvs
+                V.EvKey V.KLeft [] ->
+                  when (i > 0 && not frozen) $
+                    cs.cardState.highlighted -= 1
 
-                    down = if i < n-1 && not frozen
-                            then s & (cardState.highlighted) +~ 1
-                            else s
+                -- C-w deletes a word back (eg. "test test" -> "test")
+                V.EvKey (V.KChar 'w') [V.MCtrl] -> zoom (cs.cardState) $ do
+                    unless frozen $ gapInput.ix i %= backword
+                  where backword "" = ""
+                        backword xs = unwords . init . words $ xs
 
-                    up = if i > 0 && not frozen
-                          then s & (cardState.highlighted) -~ 1
-                          else s
+                V.EvKey (V.KChar c) [] -> zoom (cs.cardState) $ do
+                    unless frozen $ gapInput.at i.non "" %= (++[c])
 
-                    correctlyAnswered = i == j && M.size (M.filter (==True) kvs) == 1
+                V.EvKey V.KEnter [] -> case (frozen, fail) of
+                  (False, _) -> zoom cs $ do
+                    let sentence = perforatedToSentence perforated
+                        gaps = sentenceToGaps sentence
 
-            (MultipleAnswerState {_highlighted = i, _number = n, _entered = submitted, _selected = kvs}, MultipleAnswer _ _ opts) ->
-              case ev of
-                V.EvKey V.KUp [] -> continue' up
-                V.EvKey (V.KChar 'k') [] -> continue' up
-                V.EvKey V.KDown [] -> continue' down
-                V.EvKey (V.KChar 'j') [] -> continue' down
+                        wordIsCorrect :: String -> NonEmpty String -> Bool
+                        wordIsCorrect = if s^.isCaseSensitive
+                          then elem
+                          else (\word possibilites -> map toLower word `elem` NE.map (map toLower) possibilites)
 
-                V.EvKey (V.KChar 'c') [] -> continue' $ s & (cardState.entered) .~ True
+                    cardState.correctGaps %= M.mapWithKey (\j _ -> M.findWithDefault "" j kvs `wordIsCorrect` (gaps !! j))
+                    cardState.entered .= True
 
-                V.EvKey V.KEnter [] ->
-                    if frozen
-                      then next gs $ s & if correctlyAnswered then correctCards %~ (s^.index:) else id
-                      else continue' $ s & cardState.selected %~ M.adjust not i
-                V.EvKey (V.KChar '\t') [] ->
-                    if frozen
-                      then next gs $ s & if correctlyAnswered then correctCards %~ (s^.index:) else id
-                      else continue' $ s & cardState.selected %~ M.adjust not i
+                    unlessM (M.foldr (&&) True <$> use (cardState.correctGaps)) $
+                      cardState.failed .= True
 
+                  (_, True) -> next
+                  (_, False) -> do
+                    cs.correctCards %= (s^.index:)
+                    next
 
-                _ -> continue' s
+                V.EvKey V.KBS [] -> unless frozen $
+                    cs.cardState.gapInput.ix i %= backspace
+                  where backspace "" = ""
+                        backspace xs = init xs
+                _ -> return ()
 
+          (ReorderState {_highlighted = i, _entered = submitted, _grabbed=dragging, _number = n, _order = kvs }, Reorder _ _ elts) ->
+            case ev of
+              V.EvKey V.KUp [] -> up
+              V.EvKey (V.KChar 'k') [] -> up
+              V.EvKey V.KDown [] -> down
+              V.EvKey (V.KChar 'j') [] -> down
+              V.EvKey (V.KChar 'c') [] -> cs.cardState.entered .= True
+              V.EvKey V.KEnter [] ->
+                  if frozen
+                    then do when correct $ cs.correctCards %= (s^.index:)
+                            next
+                    else cs.cardState.grabbed %= not
 
-              where frozen = submitted
-
-                    down = if i < n-1 && not frozen
-                            then s & (cardState.highlighted) +~ 1
-                            else s
-
-                    up = if i > 0 && not frozen
-                          then s & (cardState.highlighted) -~ 1
-                          else s
-
-                    correctlyAnswered = NE.toList (NE.map isOptionCorrect opts) == map snd (M.toAscList kvs)
-
-            (OpenQuestionState {_highlighted = i, _number = n, _gapInput = kvs, _correctGaps = cGaps, _failed=fail}, OpenQuestion _ _ perforated) ->
-              let frozen = M.foldr (&&) True cGaps in
-                case ev of
-                  V.EvKey (V.KFun 1) [] -> continue' $
-                    s & cardState.gapInput .~ correctAnswers
-                      & cardState.entered .~ True
-                      & cardState.failed .~ True
-                      & cardState.correctGaps .~ M.fromAscList [(i, True) | i <- [0..n-1]]
-                          where correctAnswers = M.fromAscList $ zip [0..] $ map NE.head (sentenceToGaps (perforatedToSentence perforated))
-
-                  V.EvKey (V.KChar '\t') [] -> continue' $
-                    if i < n - 1 && not frozen
-                      then s & (cardState.highlighted) +~ 1
-                      else s & (cardState.highlighted) .~ 0
-
-                  V.EvKey V.KRight [] -> continue' $
-                    if i < n - 1 && not frozen
-                      then s & (cardState.highlighted) +~ 1
-                      else s
-
-                  V.EvKey V.KLeft [] -> continue' $
-                    if i > 0 && not frozen
-                      then s & (cardState.highlighted) -~ 1
-                      else s
-
-                  -- C-w deletes a word back (eg. "test test" -> "test")
-                  V.EvKey (V.KChar 'w') [V.MCtrl] ->  continue' $
-                      if frozen then s else s & cardState.gapInput.ix i %~ backword
-                    where backword "" = ""
-                          backword xs = intercalate " " $ init $ words xs
-
-                  V.EvKey (V.KChar c) [] -> continue' $
-                    if frozen then s else s & cardState.gapInput.at i.non "" %~ (++[c])
-
-                  V.EvKey V.KEnter [] -> if frozen
-                    then if fail
-                      then next gs s
-                      else next gs (s & correctCards %~ (s^.index:))
-                    else continue' s''
-                      where sentence = perforatedToSentence perforated
-                            gaps = sentenceToGaps sentence
-
-                            wordIsCorrect :: String -> NonEmpty String -> Bool
-                            wordIsCorrect = if s^.isCaseSensitive
-                              then elem
-                              else (\word possibilites -> map toLower word `elem` NE.map (map toLower) possibilites)
-
-                            s' = s & (cardState.correctGaps) %~ M.mapWithKey (\j _ -> M.findWithDefault "" j kvs `wordIsCorrect` (gaps !! j))
-                                  & (cardState.entered) .~ True
-
-                            s'' = if M.foldr (&&) True (s' ^. cardState.correctGaps)
-                                    then s'
-                                    else s' & cardState.failed .~ True
+              _ -> return ()
 
 
-                  V.EvKey V.KBS [] -> continue' $
-                      if frozen then s else s & cardState.gapInput.ix i %~ backspace
-                    where backspace "" = ""
-                          backspace xs = init xs
-                  _ -> continue' s
+            where frozen = submitted
 
-            (ReorderState {_highlighted = i, _entered = submitted, _grabbed=dragging, _number = n, _order = kvs }, Reorder _ _ elts) ->
-              case ev of
-                V.EvKey V.KUp [] -> continue' up
-                V.EvKey (V.KChar 'k') [] -> continue' up
-                V.EvKey V.KDown [] -> continue' down
-                V.EvKey (V.KChar 'j') [] -> continue' down
+                  down = zoom (cs.cardState) $
+                    case (frozen, i < n - 1, dragging) of
+                      (True, _, _)  -> return ()
+                      (_, False, _) -> return ()
+                      (_, _, False) -> highlighted += 1
+                      (_, _, True)  -> do highlighted += 1
+                                          order %= interchange i (i+1)
 
-                V.EvKey (V.KChar 'c') [] -> continue' $ s & (cardState.entered) .~ True
+                  up = zoom (cs.cardState) $
+                    case (frozen, i > 0, dragging) of
+                      (True, _, _)  -> return ()
+                      (_, False, _) -> return ()
+                      (_, _, False) -> highlighted -= 1
+                      (_, _, True)  -> do highlighted -= 1
+                                          order %= interchange i (i-1)
 
-                V.EvKey V.KEnter [] ->
-                    if frozen
-                      then next gs $ s & if correct then correctCards %~ (s^.index:) else id
-                      else continue' $ s & cardState.grabbed %~ not
+                  correct = all (uncurry (==) . (\i -> (i+1, fst (kvs M.! i)))) [0..n-1]
 
-                _ -> continue' s
+          _ -> error "impossible"
+handleEvent _ = return ()
 
-
-              where frozen = submitted
-
-                    down =
-                      case (frozen, i < n - 1, dragging) of
-                        (True, _, _)  -> s
-                        (_, False, _) -> s
-                        (_, _, False) -> s & (cardState.highlighted) +~ 1
-                        (_, _, True)  -> s & (cardState.highlighted) +~ 1
-                                          & (cardState.order) %~ interchange i (i+1)
-
-                    up =
-                      case (frozen, i > 0, dragging) of
-                        (True, _, _)  -> s
-                        (_, False, _) -> s
-                        (_, _, False) -> s & (cardState.highlighted) -~ 1
-                        (_, _, True)  -> s & (cardState.highlighted) -~ 1
-                                          & (cardState.order) %~ interchange i (i-1)
-
-                    correct = all (uncurry (==) . (\i -> (i+1, fst (kvs M.! i)))) [0..n-1]
-
-            _ -> error "impossible"
-handleEvent gs _ _ = continue gs
-
-next :: GlobalState -> CS -> EventM Name (Next GlobalState)
-next gs s
-  | s ^. index + 1 < length (s ^. shownCards) = liftIO (openCardExternal (takeDirectory (s^.pathToFile)) ((s^.shownCards) !! (s^.index + 1))) *> (continue . updateCS gs . straightenState $ s & index +~ 1)
-  | s ^. reviewMode                      =
-      let thePopup =
-            if null (s^.correctCards) || length (s^. correctCards) == length (s^.shownCards)
+next :: EventM Name GlobalState ()
+next = do
+  i <- use $ cs.index
+  sc <- use $ cs.shownCards
+  rm <- use $ cs.reviewMode
+  case (i + 1 < length sc, rm) of
+    (True, _) -> zoom cs $ do
+      fp <- use pathToFile
+      sc <- use shownCards
+      liftIO (openCardExternal (takeDirectory fp) (sc !! (i + 1))) 
+      index += 1
+      straightenState
+    (_, True) -> zoom cs $ do
+      cc <- use correctCards
+      let thePopup = 
+            if null cc || length cc == length sc
               then finalPopup
               else deckMakerPopup
-      in continue . updateCS gs $ s & popup ?~ thePopup
-  | otherwise                            = halt' gs
+      popup ?= thePopup
+    _ -> halt'
 
-previous :: GlobalState -> CS -> EventM Name (Next GlobalState)
-previous gs s | s ^. index > 0 = liftIO (openCardExternal (takeDirectory (s^.pathToFile)) ((s^.shownCards) !! (s^.index - 1))) *> (continue . updateCS gs . straightenState $ s & index -~ 1)
-              | otherwise      = continue gs
+previous :: EventM Name GlobalState ()
+previous = zoom cs $ do
+  i <- use index
+  when (i > 0) $ do
+    fp <- use pathToFile
+    sc <- use shownCards
+    liftIO (openCardExternal (takeDirectory fp) (sc !! (i - 1))) 
+    index -= 1
+    straightenState
 
-straightenState :: CS -> CS
-straightenState s =
-  let card = (s ^. shownCards) !! (s ^. index) in s
-    & currentCard .~ card
-    & cardState .~ defaultCardState card
+straightenState :: MonadState CS m => m ()
+straightenState = do
+  sc <- use shownCards
+  i <- use index
+  let card = sc !! i
+  currentCard .= card
+  cardState .= defaultCardState card
 
 interchange :: (Ord a) => a -> a -> Map a b -> Map a b
 interchange i j kvs =
@@ -460,7 +480,7 @@ isFinalPopup FinalPopup       = True
 isFinalPopup DeckMakerPopup{} = True
 isFinalPopup _                = False
 
-correctPopup :: Popup CS
+correctPopup :: Popup GlobalState CS
 correctPopup = Popup drawer eventHandler initialState
   where drawer s =
           let selected = maybe 0 (^?! popupState.popupSelected) (s^.popup)
@@ -477,22 +497,25 @@ correctPopup = Popup drawer eventHandler initialState
 
         initialState = CorrectPopup 0
 
-        eventHandler gs s ev =
-          let update = updateCS gs
-              continue' = continue . update
-              p = fromJust (s ^. popup)
-            in case ev of
-              V.EvKey V.KLeft  [] -> continue' $ s & popup ?~ (p & popupState.popupSelected .~ 0)
-              V.EvKey V.KRight [] -> continue' $ s & popup ?~ (p & popupState.popupSelected .~ 1)
-              -- Adding vim shortcuts here
-              V.EvKey (V.KChar 'h') []-> continue' $ s & popup ?~ (p & popupState.popupSelected .~ 0)
-              V.EvKey (V.KChar 'l') []-> continue' $ s & popup ?~ (p & popupState.popupSelected .~ 1)
-              -- V.EvKey V.KRight [] -> s & popup .~ popupState.popupSelected .~ Just 1
-              V.EvKey V.KEnter [] -> next gs $ s & popup .~ Nothing
-                                                 & if p ^?! popupState.popupSelected == 1 then correctCards %~ (s^.index:) else id
-              _ -> continue' s
+        eventHandler ev = do
+          p <- fromJust <$> use (cs.popup)
+          let ps = cs.popup._Just.popupState
+          case ev of
+            V.EvKey V.KLeft  [] -> ps.popupSelected .= 0
+            V.EvKey V.KRight [] -> ps.popupSelected .= 1
+            -- Adding vim shortcuts here
+            V.EvKey (V.KChar 'h') [] -> ps.popupSelected .= 0
+            V.EvKey (V.KChar 'l') [] -> ps.popupSelected .= 1
 
-finalPopup :: Popup CS
+            V.EvKey V.KEnter [] -> do
+               cs.popup .= Nothing
+               when (p ^?! popupState.popupSelected == 1) $
+                 do i <- use $ cs.index
+                    cs.correctCards %= (i:) 
+               next
+            _ -> return ()
+
+finalPopup :: Popup GlobalState CS
 finalPopup = Popup drawer eventHandler initialState
   where drawer s =
           let wrong    = withAttr wrongAttr   (str (" Incorrect: " <> show nWrong)   <+> hFill ' ')
@@ -508,13 +531,13 @@ finalPopup = Popup drawer eventHandler initialState
 
         initialState = FinalPopup
 
-        eventHandler gs s (V.EvKey V.KEnter []) = halt' gs
-        eventHandler gs _ _ = continue gs
+        eventHandler (V.EvKey V.KEnter []) = halt'
+        eventHandler _ = return ()
 
-deckMakerPopup :: Popup CS
+deckMakerPopup :: Popup GlobalState CS
 deckMakerPopup = Popup drawer eventHandler initialState
   where drawer s =
-          let state    = fromMaybe initialState $ view popupState <$> s^.popup
+          let state    = maybe initialState (view popupState) (s^.popup)
               j = state ^?! popupSelected
 
               makeSym lens i = case (state ^?! lens, i == j) of
@@ -544,32 +567,37 @@ deckMakerPopup = Popup drawer eventHandler initialState
 
         initialState = DeckMakerPopup 0 False False
 
-        eventHandler gs s ev =
-          let update = updateCS gs
-              continue' = continue . update
-              p = fromJust (s ^. popup)
-              state = p ^. popupState
-              originalCorrects = sortOn negate (map ((s ^. indexMapping) !!) (s ^. correctCards))
-          in case state ^?! popupSelected of
+        eventHandler ev = do
+          im <- use $ cs.indexMapping
+          ccs <- use $ cs.correctCards
+          let originalCorrects = 
+                sortOn negate (map (im !!) ccs)
+          p <- fromJust <$> use (cs.popup)
+          let ps = cs.popup._Just.popupState
+          let state = p ^. popupState
+
+          case state ^?! popupSelected of
             0 -> case ev of
-              V.EvKey V.KEnter []      -> continue' $ s & popup ?~ (p & popupState.makeDeckIncorrect %~ not)
-              V.EvKey V.KDown  []      -> continue' $ s & popup ?~ (p & popupState.popupSelected +~ 1)
-              V.EvKey (V.KChar 'j') [] -> continue' $ s & popup ?~ (p & popupState.popupSelected +~ 1)
-              _ -> continue' s
+              V.EvKey V.KEnter []      -> ps.makeDeckIncorrect %= not
+              V.EvKey V.KDown  []      -> ps.popupSelected += 1
+              V.EvKey (V.KChar 'j') [] -> ps.popupSelected += 1
+              _ -> return ()
             1 -> case ev of
-              V.EvKey V.KEnter []      -> continue' $ s & popup ?~ (p & popupState.makeDeckCorrect %~ not)
-              V.EvKey V.KDown  []      -> continue' $ s & popup ?~ (p & popupState.popupSelected +~ 1)
-              V.EvKey (V.KChar 'j') [] -> continue' $ s & popup ?~ (p & popupState.popupSelected +~ 1)
-              V.EvKey V.KUp  []        -> continue' $ s & popup ?~ (p & popupState.popupSelected -~ 1)
-              V.EvKey (V.KChar 'k') [] -> continue' $ s & popup ?~ (p & popupState.popupSelected -~ 1)
-              _ -> continue' s
+              V.EvKey V.KEnter []      -> ps.makeDeckCorrect %= not
+              V.EvKey V.KDown  []      -> ps.popupSelected += 1
+              V.EvKey (V.KChar 'j') [] -> ps.popupSelected += 1
+              V.EvKey V.KUp  []        -> ps.popupSelected -= 1
+              V.EvKey (V.KChar 'k') [] -> ps.popupSelected -= 1
+              _ -> return ()
             2 -> case ev of
-              V.EvKey V.KEnter []      -> liftIO (generateDecks (s ^. pathToFile) 
-                (s ^. originalCards) originalCorrects (state ^?! makeDeckCorrect) (state ^?! makeDeckIncorrect))
-                                       *> halt' gs
-              V.EvKey V.KUp  []        -> continue' $ s & popup ?~ (p & popupState.popupSelected -~ 1)
-              V.EvKey (V.KChar 'k') [] -> continue' $ s & popup ?~ (p & popupState.popupSelected -~ 1)
-              _ -> continue' s
+              V.EvKey V.KEnter []      -> do
+                fp <- use $ cs.pathToFile
+                ocs <- use $ cs.originalCards
+                liftIO $ generateDecks fp ocs originalCorrects (state ^?! makeDeckCorrect) (state ^?! makeDeckIncorrect)
+                halt'
+              V.EvKey V.KUp  []        -> ps.popupSelected -= 1
+              V.EvKey (V.KChar 'k') [] -> ps.popupSelected -= 1
+              _ -> return ()
 
 generateDecks :: FilePath -> [Card] -> [Int] -> Bool -> Bool -> IO ()
 generateDecks fp cards corrects makeCorrect makeIncorrect =

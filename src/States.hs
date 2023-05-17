@@ -1,7 +1,7 @@
 {-# LANGUAGE TemplateHaskell #-}
 module States (module States, GenIO) where
 
-import Brick (Widget, EventM, Next)
+import Brick (Widget, EventM)
 import Brick.Forms (Form)
 import Brick.Widgets.FileBrowser
 import Brick.Widgets.List (List)
@@ -142,7 +142,7 @@ data CS = CS
   , _isCaseSensitive     :: Bool      
   , _reviewMode          :: Bool
   , _correctCards        :: [Int]      -- list of indices of correct cards
-  , _popup               :: Maybe (Popup CS)
+  , _popup               :: Maybe (Popup GlobalState CS)
   , _pathToFile          :: FilePath
   }
 
@@ -153,9 +153,9 @@ data CS = CS
 -- currentCard :: Lens' CS Card
 -- currentCard = lens (snd . _currentCardAndImage) (\cs card -> cs {_currentCardAndImage = (fst (_currentCardAndImage cs), card)})
 
-data Popup s = Popup 
-  { drawPopup        :: s -> Widget Name
-  , handlePopupEvent :: GlobalState -> s -> V.Event -> EventM Name (Next GlobalState)
+data Popup s d = Popup
+  { drawPopup        :: d -> Widget Name
+  , handlePopupEvent :: V.Event -> EventM Name s ()
   , _popupState      :: PopupState
   }
 

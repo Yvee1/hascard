@@ -49,39 +49,36 @@ drawUI FBS{_fb=b, _exception'=exc} = [drawException exc, center $ ui <=> help]
                     , hCenter $ txt "Esc or q: quit"
                     ]
 
-handleEvent :: GlobalState -> FBS -> BrickEvent Name Event -> EventM Name (Next GlobalState)
-handleEvent gs s@FBS{_fb=b, _exception'=excep} (VtyEvent ev) =
-  let update = updateFBS gs
-      continue' = continue . update
-      halt' = continue . popState in
+handleEvent :: BrickEvent Name Event -> EventM Name GlobalState ()
+handleEvent (VtyEvent ev) = do
+    excep <- use $ fbs.exception'
+    b <- use $ fbs.fb
     case (excep, ev) of
-      (Just _, _) -> continue' $ s & exception' .~ Nothing
+      (Just _, _) -> fbs.exception' .= Nothing
       (_, e) -> case e of
-        V.EvKey V.KEsc [] | not (fileBrowserIsSearching b) ->
-            halt' gs
-        V.EvKey (V.KChar 'q') [] | not (fileBrowserIsSearching b) ->
-            halt' gs
-        V.EvKey (V.KChar 'h') [] | not (fileBrowserIsSearching b) -> let s' = s & showHidden %~ not in
-            continue' $ s' & fb .~ setFileBrowserEntryFilter (Just (entryFilter (s' ^. showHidden))) b
+        V.EvKey V.KEsc [] | not (fileBrowserIsSearching b) -> popState
+        V.EvKey (V.KChar 'q') [] | not (fileBrowserIsSearching b) -> popState
+        V.EvKey (V.KChar 'h') [] | not (fileBrowserIsSearching b) -> do
+            fbs.showHidden %= not
+            eFilter <- Just . entryFilter <$> use (fbs.showHidden)
+            fbs.fb .= setFileBrowserEntryFilter eFilter b
         _ -> do
-            b' <- handleFileBrowserEvent ev b
-            let s' = s & fb .~ b'
-            case ev of
-                V.EvKey V.KEnter [] ->
-                    case fileBrowserSelection b' of
-                        [] -> continue' s'
-                        [fileInfo] -> do
-                          let fp = fileInfoFilePath fileInfo
-                          fileOrExc <- liftIO (try (readFile fp) :: IO (Either IOError String))
-                          case fileOrExc of
-                            Left exc -> continue' (s' & exception' ?~ displayException exc)
-                            Right file -> case parseCards file of
-                              Left parseError -> continue' (s & exception' ?~ parseError)
-                              Right result -> continue =<< liftIO (do
-                                      addRecent fp
-                                      gs' <- refreshRecents' gs
-                                      return (gs' `goToState` parameterState (gs'^.parameters) fp result))
-                        _ -> halt' gs
-
-                _ -> continue' s'
-handleEvent gs _ _ = continue gs
+            zoom (fbs.fb) $ handleFileBrowserEvent ev
+            b' <- use $ fbs.fb
+            case (ev, fileBrowserSelection b') of
+                (V.EvKey V.KEnter [], []) -> return ()
+                (V.EvKey V.KEnter [], [fileInfo]) -> do
+                    let fp = fileInfoFilePath fileInfo
+                    fileOrExc <- liftIO (try (readFile fp) :: IO (Either IOError String))
+                    case fileOrExc of
+                        Left exc -> fbs.exception' ?= displayException exc
+                        Right file -> case parseCards file of
+                            Left parseError -> fbs.exception' ?= parseError
+                            Right result -> do
+                                    liftIO $ addRecent fp
+                                    zoom css refreshRecents
+                                    params <- use parameters
+                                    goToState $ parameterState params fp result
+                (V.EvKey V.KEnter [], _) -> popState
+                _ -> return ()
+handleEvent _ = return ()

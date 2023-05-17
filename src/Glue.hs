@@ -1,5 +1,6 @@
 module Glue where
 import Brick
+import Control.Monad.State.Lazy
 import States
 import StateManagement
 import qualified Graphics.Vty     as V
@@ -16,12 +17,12 @@ globalApp = App
   { appDraw = drawUI
   , appChooseCursor = showFirstCursor
   , appHandleEvent = handleEvent
-  , appStartEvent = return
+  , appStartEvent = return ()
   , appAttrMap = handleAttrMap
   }
 
 drawUI :: GlobalState -> [Widget Name]
-drawUI gs = case getState gs of
+drawUI gs = case evalState getState gs of
   MainMenuState     s -> MM.drawUI s
   SettingsState     s ->  S.drawUI s
   InfoState         s ->  I.drawUI s
@@ -30,20 +31,21 @@ drawUI gs = case getState gs of
   CardsState        s ->  C.drawUI s
   ParameterState    s ->  P.drawUI s
 
-handleEvent :: GlobalState -> BrickEvent Name Event -> EventM Name (Next GlobalState)
-handleEvent gs ev =
-  if ev == VtyEvent (V.EvKey (V.KChar 'c') [V.MCtrl]) then halt gs else
-  case getState gs of
-    MainMenuState     s -> MM.handleEvent gs s ev
-    SettingsState     s ->  S.handleEvent gs s ev
-    InfoState         s ->  I.handleEvent gs s ev
-    CardSelectorState s -> CS.handleEvent gs s ev
-    FileBrowserState  s -> FB.handleEvent gs s ev
-    CardsState        s ->  C.handleEvent gs s ev
-    ParameterState    s ->  P.handleEvent gs s ev
+handleEvent :: BrickEvent Name Event -> EventM Name GlobalState ()
+handleEvent ev = do
+  if ev == VtyEvent (V.EvKey (V.KChar 'c') [V.MCtrl]) then halt else do
+    s <- getState
+    case s of
+      MainMenuState     s -> MM.handleEvent ev
+      SettingsState     s ->  S.handleEvent ev
+      InfoState         s ->  I.handleEvent ev
+      CardSelectorState s -> CS.handleEvent ev
+      FileBrowserState  s -> FB.handleEvent ev
+      CardsState        s ->  C.handleEvent ev
+      ParameterState    s ->  P.handleEvent ev
 
 handleAttrMap :: GlobalState -> AttrMap
-handleAttrMap gs = case getState gs of
+handleAttrMap gs = case evalState getState gs of
   MainMenuState     _ -> MM.theMap
   SettingsState     _ ->  S.theMap
   InfoState         _ ->  I.theMap

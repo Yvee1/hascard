@@ -44,19 +44,18 @@ drawListElement :: Bool -> String -> Widget Name
 drawListElement selected = hCenteredStrWrapWithAttr attr
   where attr = if selected then withAttr selectedAttr else id
 
-handleEvent :: GlobalState -> MMS -> BrickEvent Name Event -> EventM Name (Next GlobalState)
-handleEvent gs s (VtyEvent e) =
-  let update = updateMMS gs in
-    case e of
-      V.EvKey V.KEsc [] -> halt gs
-      V.EvKey (V.KChar 'q') []  -> halt gs
-      V.EvKey V.KEnter [] ->
-        case L.listSelected (s^.l) of
-          Just 0 -> continue =<< (gs `goToState`) <$> liftIO cardSelectorState
-          Just 1 -> continue $ gs `goToState` infoState
-          Just 2 -> continue =<< (gs `goToState`) <$> liftIO settingsState
-          Just 3 -> halt gs
-          _ -> undefined
+handleEvent :: BrickEvent Name Event -> EventM Name GlobalState ()
+handleEvent (VtyEvent e) = case e of
+  V.EvKey V.KEsc [] -> halt
+  V.EvKey (V.KChar 'q') []  -> halt
+  V.EvKey V.KEnter [] -> do
+    list <- use (mms.l)
+    case L.listSelected list of
+      Just 0 -> goToState =<< liftIO cardSelectorState
+      Just 1 -> goToState infoState
+      Just 2 -> goToState =<< liftIO settingsState
+      Just 3 -> halt
+      _ -> undefined
 
-      ev -> continue . update . flip (l .~) s =<< L.handleListEventVi L.handleListEvent ev (s^.l)
-handleEvent gs _ _ = continue gs
+  ev -> zoom (mms.l) $ L.handleListEventVi L.handleListEvent ev
+handleEvent _ = return ()

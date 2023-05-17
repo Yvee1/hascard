@@ -1,3 +1,5 @@
+{-# LANGUAGE FlexibleContexts #-}
+
 module UI.CardSelector
   ( State
   , drawUI
@@ -13,6 +15,7 @@ import Brick.Widgets.Border.Style
 import Brick.Widgets.Center
 import Control.Exception (displayException, try)
 import Control.Monad.IO.Class
+import Control.Monad.State.Class
 import Lens.Micro.Platform
 import Parser
 import Recents
@@ -64,41 +67,40 @@ theMap = applyAttrMappings
     , (titleAttr, fg V.yellow)
     , (lastElementAttr, fg V.blue) ] A.theMap
 
-handleEvent :: GlobalState -> CSS -> BrickEvent Name Event -> EventM Name (Next GlobalState)
-handleEvent gs s@CSS{_list=l, _exception=exc} (VtyEvent ev) =
-  let update = updateCSS gs
-      continue' = continue . update
-      halt' = continue . popState in
-        case (exc, ev) of
-          (Just _, _) -> continue' $ s & exception .~ Nothing
-          (_, e) -> case e of
-            V.EvKey V.KEsc [] -> halt' gs
-            V.EvKey (V.KChar 'q') []  -> halt' gs
+handleEvent :: BrickEvent Name Event -> EventM Name GlobalState ()
+handleEvent (VtyEvent ev) = do
+  l <- use $ css.list
+  exc <- use $ css.exception
+  case (exc, ev) of
+    (Just _, _) -> css.exception .= Nothing
+    (_, e) -> case e of
+      V.EvKey V.KEsc [] -> popState
+      V.EvKey (V.KChar 'q') []  -> popState
 
-            _ -> do l' <- L.handleListEventVi L.handleListEvent e l
-                    let s' = (s & list .~ l') in
-                      case e of
-                        V.EvKey V.KEnter [] ->
-                          case L.listSelectedElement l' of
-                            Nothing -> continue' s'
-                            Just (_, "Select file from system") ->
-                              let gs' = update s' in continue =<< (gs' `goToState`) <$> liftIO fileBrowserState
-                            Just (i, _) -> do
-                                let fp = (s' ^. recents) `S.unsafeElemAt` i
-                                fileOrExc <- liftIO (try (readFile fp) :: IO (Either IOError String))
-                                case fileOrExc of
-                                  Left exc -> continue' (s' & exception ?~ displayException exc)
-                                  Right file -> case parseCards file of
-                                    Left parseError -> continue' (s' & exception ?~ parseError)
-                                    Right result -> continue =<< liftIO (do
-                                      s'' <- addRecentInternal s' fp
-                                      let gs' = update s''
-                                      return (gs' `goToState` parameterState (gs'^.parameters) fp result))
-                        _ -> continue' s'
+      _ -> do zoom (css.list) $ L.handleListEventVi L.handleListEvent e
+              case e of
+                V.EvKey V.KEnter [] -> do
+                  selected <- L.listSelectedElement <$> use (css.list)
+                  case selected of
+                    Just (_, "Select file from system") -> do
+                      fbs <- liftIO fileBrowserState
+                      goToState fbs
+                    Just (i, _) -> do
+                        fp <- (`S.unsafeElemAt` i) <$> use (css.recents)
+                        fileOrExc <- liftIO (try (readFile fp) :: IO (Either IOError String))
+                        case fileOrExc of
+                          Left exc -> css.exception ?= displayException exc
+                          Right file -> case parseCards file of
+                            Left parseError -> css.exception ?= parseError
+                            Right result -> do
+                              zoom css $ addRecentInternal fp
+                              params <- use parameters
+                              goToState (parameterState params fp result)
+                _ -> return ()
 
-handleEvent gs _ _ = continue gs
+handleEvent _ = return ()
 
-addRecentInternal :: CSS -> FilePath -> IO CSS
-addRecentInternal s fp = do
-  addRecent fp
-  refreshRecents s
+addRecentInternal ::(MonadState CSS m, MonadIO m) => FilePath -> m ()
+addRecentInternal fp = do
+  liftIO $ addRecent fp
+  refreshRecents

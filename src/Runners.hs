@@ -1,6 +1,9 @@
+{-# LANGUAGE FlexibleContexts #-}
 module Runners where
 import Brick.Widgets.FileBrowser
 import Brick.Forms
+import Control.Monad.IO.Class
+import Control.Monad.State.Class
 import DeckHandling
 import Data.Maybe (fromMaybe)
 import Recents
@@ -70,6 +73,11 @@ cardsState doReview fp originalDeck shuffledDeck ixs = do
  
   openCardExternal (takeDirectory fp) firstCard
   return $ CardsState initialState
+
+cardsWithOptionsStateM :: (MonadState GlobalState m, MonadIO m) => FilePath -> [Card] -> m State
+cardsWithOptionsStateM fp cards = do
+  gs <- get
+  liftIO $ cardsWithOptionsState gs fp cards
 
 cardsWithOptionsState :: GlobalState -> FilePath -> [Card] -> IO State
 cardsWithOptionsState gs fp cards =

@@ -7,7 +7,9 @@ import Brick.Forms
 import Brick.Widgets.Border
 import Brick.Widgets.Border.Style
 import Brick.Widgets.Center
+import Control.Monad (unless)
 import Control.Monad.IO.Class
+import Lens.Micro.Platform
 import States
 import StateManagement
 import Settings
@@ -29,29 +31,27 @@ ui f =
   padLeftRight 1
   (renderForm f)
 
-handleEvent :: GlobalState -> SS -> BrickEvent Name Event -> EventM Name (Next GlobalState)
-handleEvent gs form ev@(VtyEvent e) =
-  let update = updateSS gs
-      continue' = continue . update
-      halt' global = continue (popState global) <* liftIO (setSettings (formState form))
-
+handleEvent :: BrickEvent Name Event -> EventM Name GlobalState ()
+handleEvent ev@(VtyEvent e) = do
+  form <- use ss
+  let halt' = popState <* liftIO (setSettings (formState form))
       focus = formFocus form
       (Just n) = focusGetCurrent focus
-      down = if n == MaxRecentsField then continue gs
-        else continue' $ form { formFocus = focusNext focus }
-      up = if n == HintsField then continue gs
-        else continue' $ form { formFocus = focusPrev focus }
+      down = unless (n == MaxRecentsField) $
+               ss .= form { formFocus = focusNext focus }
+      up = unless (n == HintsField) $
+             ss .= form { formFocus = focusPrev focus }
 
-      in
-    case e of
-      V.EvKey V.KEsc []         -> halt' gs
-      V.EvKey (V.KChar 'q') []  -> halt' gs
-      V.EvKey V.KDown []        -> down
-      V.EvKey (V.KChar 'j') []  -> down
-      V.EvKey V.KUp []          -> up
-      V.EvKey (V.KChar 'k') []  -> up
-      V.EvKey (V.KChar '\t') [] -> continue gs
-      V.EvKey V.KBackTab []     -> continue gs
-      _ -> continue' =<< handleFormEvent ev form
+      
+  case e of
+    V.EvKey V.KEsc []         -> halt'
+    V.EvKey (V.KChar 'q') []  -> halt'
+    V.EvKey V.KDown []        -> down
+    V.EvKey (V.KChar 'j') []  -> down
+    V.EvKey V.KUp []          -> up
+    V.EvKey (V.KChar 'k') []  -> up
+    V.EvKey (V.KChar '\t') [] -> return ()
+    V.EvKey V.KBackTab []     -> return ()
+    _ -> zoom ss $ handleFormEvent ev
 
-handleEvent gs _ _ = continue gs
+handleEvent _ = return ()
