@@ -46,6 +46,12 @@ handleEvent ev@(VtyEvent e) = do
         ChunkField2 -> return ()
         SubsetField -> psForm .= form { formFocus = focusPrev (focusPrev focus) }
         _           -> psForm .= form { formFocus = focusPrev focus }
+      right = zoom ps $ case n of
+        ChunkField1 -> psForm .= form { formFocus = focusNext focus }
+        _ -> return ()
+      left = zoom ps $ case n of
+        ChunkField2 -> psForm .= form { formFocus = focusPrev focus }
+        _ -> return ()
 
   case e of
       V.EvKey V.KEsc []         -> popState
@@ -56,10 +62,14 @@ handleEvent ev@(VtyEvent e) = do
       V.EvKey (V.KChar 'k') []  -> up
       V.EvKey (V.KChar '\t') [] -> return ()
       V.EvKey V.KBackTab []     -> return ()
+      V.EvKey (V.KChar 'h') []  -> left
+      V.EvKey (V.KChar 'l') []  -> right
     
       _ -> case (e, n) of
           (V.EvKey V.KRight [], ChunkField2) -> return ()
           (V.EvKey V.KLeft [],  ChunkField1) -> return ()
+          (V.EvKey V.KRight [], SubsetField) -> return ()
+          (V.EvKey V.KLeft [],  SubsetField) -> return ()
           _ -> do zoom (ps.psForm) $ handleFormEvent ev
                   f <- use $ ps.psForm
                   when (formState f ^. pOk) $ do
