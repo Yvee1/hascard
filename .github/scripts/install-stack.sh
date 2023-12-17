@@ -19,7 +19,8 @@ else
   then
       curl --location "$URL" > stack.zip
       unzip stack.zip
-      mkdir "$HOME/stack"
+      ls
+      mkdir -p "$HOME/stack"
       mv stack.exe "$HOME/stack"
       export PATH=$PATH:"$HOME/stack"
   else
