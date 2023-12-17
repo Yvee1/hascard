@@ -23,6 +23,7 @@ import UI.Attributes
 import UI.BrickHelpers
 import System.FilePath
 import Data.List (intercalate)
+import qualified Brick.Types as BT
 import qualified Data.List.NonEmpty as NE
 import qualified Data.Text as T
 import qualified Data.Map.Strict as M
@@ -44,7 +45,7 @@ drawInfo s = if not (s ^. showControls) then emptyWidget else
     DefinitionState {}     -> ", ENTER: flip card / continue"
     MultipleChoiceState {} -> ", ENTER: submit answer / continue"
     MultipleAnswerState {} -> ", ENTER: select / continue, c: submit selection"
-    OpenQuestionState {}   -> ", LEFT/RIGHT/TAB: navigate gaps, ENTER: submit answer / continue, F1: show answer"
+    OpenQuestionState {}   -> ", LEFT/RIGHT/TAB: navigate gaps, ENTER: submit answer / continue, Ctrl+F1: show answer"
     ReorderState {}        -> ", ENTER: grab, c: submit answer"
 
 drawCardBox :: Widget Name -> Widget Name
@@ -67,31 +68,38 @@ drawFooter s = if s^.reviewMode
         endCard = maybe False (isFinalPopup . view popupState) (s^.popup)
 
 drawCardUI :: CS -> Widget Name
-drawCardUI s = let p = 1 in
-  joinBorders $ drawCardBox $ (<=> drawFooter s) $
-  case (s ^. shownCards) !! (s ^. index) of
-    Definition title _ descr -> drawHeader title
-                          <=> B.hBorder
-                          <=> padLeftRight p (drawDef s descr <=> str " ")
+drawCardUI s = 
+  let card = (s ^. shownCards) !! (s ^. index)
+  in
+  joinBorders $ 
+  drawCardBox $ 
+  drawHeader card
+  <=>
+  B.hBorder
+  <=>
+  scrollableViewportPercent 60 (CardViewport (s ^. index))
+  (drawContent s card)
+  <=>
+  str " "
+  <=>
+  drawFooter s
 
-    MultipleChoice question _ correct others -> drawHeader question
-                                          <=> B.hBorder
-                                          <=> padLeftRight p (drawChoices s (listMultipleChoice correct others) <=> str " ")
+drawHeader :: Card -> Widget Name
+drawHeader (Definition title _ _) = drawTitle title
+drawHeader (MultipleChoice question _ _ _) = drawTitle question
+drawHeader (OpenQuestion question _ _) = drawTitle question
+drawHeader (MultipleAnswer question _ _) = drawTitle question
+drawHeader (Reorder question _ _) = drawTitle question
 
-    OpenQuestion title _ perforated -> drawHeader title
-                                 <=> B.hBorder
-                                 <=> padLeftRight p (atLeastV 1 (drawPerforated s perforated) <=> str " ")
+drawContent :: CS -> Card -> Widget Name
+drawContent s (Definition _ _ descr) = padLeftRight 1 $ drawDef s descr
+drawContent s (MultipleChoice _ _ correct others) = padLeftRight 1 $ drawChoices s (listMultipleChoice correct others)
+drawContent s (OpenQuestion _ _ perforated) = padLeftRight 1 $ drawPerforated s perforated
+drawContent s (MultipleAnswer _ _ options) = padRight (Pad 1) $ drawOptions s options
+drawContent s (Reorder{}) = padLeftRight 1 $ drawReorder s
 
-    MultipleAnswer question _ options -> drawHeader question
-                                   <=> B.hBorder
-                                   <=> padRight (Pad p) (drawOptions s options <=> str " ")
-
-    Reorder question _ _ -> drawHeader question
-                      <=> B.hBorder
-                      <=> padLeftRight p (drawReorder s <=> str " ")
-
-drawHeader :: String -> Widget Name
-drawHeader title = withAttr titleAttr $
+drawTitle :: String -> Widget n
+drawTitle title = withAttr titleAttr $
                    padLeftRight 1 $
                    hCenteredStrWrap title
 
@@ -128,10 +136,11 @@ drawChoices s options = case (s ^. cardState, s ^. currentCard) of
   (MultipleChoiceState {_highlighted=i, _tried=kvs}, MultipleChoice _ _ (CorrectOption k _) _)  -> vBox formattedOptions
 
              where formattedOptions :: [Widget Name]
-                   formattedOptions = [ prefix <+> coloring (drawDescr opt) |
+                   formattedOptions = [ visibility $ prefix <+> coloring (drawDescr opt) |
                                         (j, opt) <- zip [0..] options,
                                         let prefix = if i == j then withAttr highlightedChoiceAttr (str "* ") else str "  "
                                             chosen = M.findWithDefault False j kvs
+                                            visibility = if i == j && not chosen then visible else id
                                             coloring = case (chosen, j==k) of
                                               (False, _)    -> id
                                               (True, False) -> withAttr incorrectChoiceAttr
@@ -143,10 +152,11 @@ drawOptions :: CS -> NonEmpty Option -> Widget Name
 drawOptions s = case (s ^. cardState, s ^. currentCard) of
   (MultipleAnswerState {_highlighted=j, _selected=kvs, _entered=submitted}, _) ->
     vBox . NE.toList .  NE.map drawOption . (`NE.zip` NE.fromList [0..])
-      where drawOption (Option kind text, i) = coloring (str "[") <+> coloring (highlighting (str symbol)) <+> coloring (str "] ") <+> drawDescr text
+      where drawOption (Option kind text, i) = visibility $ coloring (str "[") <+> coloring (highlighting (str symbol)) <+> coloring (str "] ") <+> drawDescr text
               where symbol = if (i == j && not submitted) || enabled then "*" else " "
                     enabled = M.findWithDefault False i kvs
                     highlighting = if i == j && not submitted then withAttr highlightedOptAttr else id
+                    visibility = if i == j && not submitted then visible else id
                     coloring = case (submitted, enabled, kind) of
                                   (True, True, Correct) -> withAttr correctOptAttr
                                   (True, False, Incorrect) -> withAttr correctOptAttr
@@ -174,20 +184,22 @@ makeSentenceWidget w state = vBox . fst . makeSentenceWidget' 0 0
     makeSentenceWidget' padding i (Perforated pre _ post) = case state ^. cardState of
       OpenQuestionState {_gapInput = kvs, _highlighted=j, _entered=submitted, _correctGaps=cgs} ->
         let (ws, n, fit') = wrapStringWithPadding padding w pre
-            gap = M.findWithDefault "" i kvs
+            stored = M.findWithDefault "" i kvs
+            gap = if stored == "" then "░" else stored
             n' =  w - n - textWidth gap
 
             cursor :: Widget Name -> Widget Name
             -- i is the index of the gap that we are drawing; j is the gap that is currently selected
             cursor = if i == j then showCursor Ordinary (Location (textWidth gap, 0)) else id
 
+            visibility = if i == j && not submitted then visible else id
             correct = M.findWithDefault False i cgs
             coloring = case (submitted, correct) of
               (False, _) -> withAttr gapAttr
               (True, False) -> withAttr incorrectGapAttr
               (True, True) -> withAttr correctGapAttr
 
-            gapWidget = cursor $ coloring (str gap) in
+            gapWidget = visibility . cursor $ coloring (str gap) in
 
               if n' >= 0
                 then let (ws1@(w':ws'), fit) = makeSentenceWidget' (w-n') (i+1) post in
@@ -230,13 +242,14 @@ drawReorder s = case (s ^. cardState, s ^. currentCard) of
                   (True, False) -> withAttr highlightedElementAttr
                   _             -> id
 
+          visibility = if i == j && not submitted then visible else id
+
           number =
             case (submitted, i+1 == k) of
               (False, _)    -> str (show (i+1) <> ". ")
               (True, False) -> withAttr incorrectElementAttr (str (show k <> ". "))
               (True, True ) -> withAttr correctElementAttr (str (show k <> ". "))
-      in
-        number <+> color (drawDescr text)
+      in visibility $ number <+> color (drawDescr text)
 
   _ -> error "cardstate mismatch"
 
@@ -246,6 +259,12 @@ drawReorder s = case (s ^. cardState, s ^. currentCard) of
 halt' :: EventM n GlobalState ()
 halt' = removeToModeOrQuit' beforeMoving CardSelector
   where beforeMoving = zoom css refreshRecents
+
+scroll :: CS -> Int -> EventM Name s ()
+scroll s = scroll' $ s ^. index
+
+scroll' :: Int -> Int -> EventM Name s ()
+scroll' i = vScrollBy $ viewportScroll $ CardViewport i
 
 handleEvent :: BrickEvent Name Event -> EventM Name GlobalState ()
 handleEvent (VtyEvent e) =
@@ -268,7 +287,14 @@ handleEvent (VtyEvent e) =
                   then if not (s^.reviewMode) then next
                     else cs.popup ?= correctPopup
                   else cs.cardState.flipped %= not
+              V.EvKey V.KUp [] -> up
+              V.EvKey (V.KChar 'k') [] -> up
+              V.EvKey V.KDown [] -> down
+              V.EvKey (V.KChar 'j') [] -> down
               _ -> return ()
+
+              where up = when f $ scroll s (-1)
+                    down = when f $ scroll s 1
 
           (MultipleChoiceState {_highlighted = i, _number = n, _tried = kvs}, MultipleChoice _ _ (CorrectOption j _) _) ->
             case ev of
@@ -286,11 +312,13 @@ handleEvent (VtyEvent e) =
 
             where frozen = M.findWithDefault False j kvs
 
-                  down = when (i < n-1 && not frozen) $
-                           cs.cardState.highlighted += 1
+                  down = if not frozen 
+                         then when (i < n-1) $ cs.cardState.highlighted += 1
+                         else scroll s 1
 
-                  up = when (i > 0 && not frozen) $
-                         cs.cardState.highlighted -= 1
+                  up = if not frozen 
+                       then when (i > 0) $ cs.cardState.highlighted -= 1
+                       else scroll s (-1)
 
                   correctlyAnswered = i == j && M.size (M.filter id kvs) == 1
 
@@ -320,72 +348,85 @@ handleEvent (VtyEvent e) =
 
             where frozen = submitted
 
-                  down = when (i < n-1 && not frozen) $
-                           cs.cardState.highlighted += 1
+                  down = if not frozen 
+                         then when (i < n-1) $ cs.cardState.highlighted += 1
+                         else scroll s 1
 
-                  up = when (i > 0 && not frozen) $
-                         cs.cardState.highlighted -= 1
+                  up = if not frozen 
+                       then when (i > 0) $ cs.cardState.highlighted -= 1
+                       else scroll s (-1)
 
                   correctlyAnswered = NE.toList (NE.map isOptionCorrect opts) == map snd (M.toAscList kvs)
 
           (OpenQuestionState {_highlighted = i, _number = n, _gapInput = kvs, _correctGaps = cGaps, _failed=fail}, OpenQuestion _ _ perforated) ->
-            let frozen = M.foldr (&&) True cGaps in
-              case ev of
-                V.EvKey (V.KFun 1) [] -> zoom (cs.cardState) $ do
-                  gapInput .= correctAnswers
-                  entered .= True
-                  failed .= True
-                  correctGaps .= M.fromAscList [(i, True) | i <- [0..n-1]]
-                        where correctAnswers = M.fromAscList $ zip [0..] $ map NE.head (sentenceToGaps (perforatedToSentence perforated))
+            case ev of
+              V.EvKey (V.KFun 1) [V.MCtrl] -> zoom (cs.cardState) $ do
+                gapInput .= correctAnswers
+                entered .= True
+                failed .= True
+                correctGaps .= M.fromAscList [(i, True) | i <- [0..n-1]]
+                      where correctAnswers = M.fromAscList $ zip [0..] $ map NE.head (sentenceToGaps (perforatedToSentence perforated))
 
-                V.EvKey (V.KChar '\t') [] -> zoom (cs.cardState) $ do
-                  if i < n - 1 && not frozen
-                    then highlighted += 1
-                    else highlighted .= 0
+              V.EvKey (V.KChar '\t') [] -> zoom (cs.cardState) $ do
+                if i < n - 1 && not frozen
+                  then highlighted += 1
+                  else highlighted .= 0
 
-                V.EvKey V.KRight [] -> 
-                  when (i < n - 1 && not frozen) $
-                    cs.cardState.highlighted += 1
+              V.EvKey V.KRight [] -> 
+                when (i < n - 1 && not frozen) $
+                  cs.cardState.highlighted += 1
 
-                V.EvKey V.KLeft [] ->
-                  when (i > 0 && not frozen) $
-                    cs.cardState.highlighted -= 1
+              V.EvKey V.KLeft [] ->
+                when (i > 0 && not frozen) $
+                  cs.cardState.highlighted -= 1
 
-                -- C-w deletes a word back (eg. "test test" -> "test")
-                V.EvKey (V.KChar 'w') [V.MCtrl] -> zoom (cs.cardState) $ do
-                    unless frozen $ gapInput.ix i %= backword
-                  where backword "" = ""
-                        backword xs = unwords . init . words $ xs
+              -- C-w deletes a word back (eg. "test test" -> "test")
+              V.EvKey (V.KChar 'w') [V.MCtrl] -> zoom (cs.cardState) $ do
+                  unless frozen $ gapInput.ix i %= backword
+                where backword "" = ""
+                      backword xs = unwords . init . words $ xs
 
-                V.EvKey (V.KChar c) [] -> zoom (cs.cardState) $ do
-                    unless frozen $ gapInput.at i.non "" %= (++[c])
+              V.EvKey V.KUp [] -> up
+              V.EvKey V.KDown [] -> down
 
-                V.EvKey V.KEnter [] -> case (frozen, fail) of
-                  (False, _) -> zoom cs $ do
-                    let sentence = perforatedToSentence perforated
-                        gaps = sentenceToGaps sentence
+              V.EvKey (V.KChar c) [] -> zoom (cs.cardState) $ do
+                  unless frozen $ gapInput.at i.non "" %= (++[c])
+                  case c of
+                    'k' -> up
+                    'j' -> down
+                    _ -> return ()
 
-                        wordIsCorrect :: String -> NonEmpty String -> Bool
-                        wordIsCorrect = if s^.isCaseSensitive
-                          then elem
-                          else (\word possibilites -> map toLower word `elem` NE.map (map toLower) possibilites)
+              V.EvKey V.KEnter [] -> case (frozen, fail) of
+                (False, _) -> zoom cs $ do
+                  let sentence = perforatedToSentence perforated
+                      gaps = sentenceToGaps sentence
 
-                    cardState.correctGaps %= M.mapWithKey (\j _ -> M.findWithDefault "" j kvs `wordIsCorrect` (gaps !! j))
-                    cardState.entered .= True
+                      wordIsCorrect :: String -> NonEmpty String -> Bool
+                      wordIsCorrect = if s^.isCaseSensitive
+                        then elem
+                        else (\word possibilites -> map toLower word `elem` NE.map (map toLower) possibilites)
 
-                    unlessM (M.foldr (&&) True <$> use (cardState.correctGaps)) $
-                      cardState.failed .= True
+                  cardState.correctGaps %= M.mapWithKey (\j _ -> M.findWithDefault "" j kvs `wordIsCorrect` (gaps !! j))
+                  cardState.entered .= True
 
-                  (_, True) -> next
-                  (_, False) -> do
-                    cs.correctCards %= (s^.index:)
-                    next
+                  unlessM (M.foldr (&&) True <$> use (cardState.correctGaps)) $
+                    cardState.failed .= True
 
-                V.EvKey V.KBS [] -> unless frozen $
-                    cs.cardState.gapInput.ix i %= backspace
-                  where backspace "" = ""
-                        backspace xs = init xs
-                _ -> return ()
+                (_, True) -> next
+                (_, False) -> do
+                  cs.correctCards %= (s^.index:)
+                  next
+
+              V.EvKey V.KBS [] -> unless frozen $
+                  cs.cardState.gapInput.ix i %= backspace
+                where backspace "" = ""
+                      backspace xs = init xs
+
+              _ -> return ()
+
+              where frozen = M.foldr (&&) True cGaps
+                    down = when frozen $ scroll s 1
+                    up = when frozen $ scroll s (-1)
 
           (ReorderState {_highlighted = i, _entered = submitted, _grabbed=dragging, _number = n, _order = kvs }, Reorder _ _ elts) ->
             case ev of
@@ -407,7 +448,7 @@ handleEvent (VtyEvent e) =
 
                   down = zoom (cs.cardState) $
                     case (frozen, i < n - 1, dragging) of
-                      (True, _, _)  -> return ()
+                      (True, _, _)  -> scroll s 1
                       (_, False, _) -> return ()
                       (_, _, False) -> highlighted += 1
                       (_, _, True)  -> do highlighted += 1
@@ -415,7 +456,7 @@ handleEvent (VtyEvent e) =
 
                   up = zoom (cs.cardState) $
                     case (frozen, i > 0, dragging) of
-                      (True, _, _)  -> return ()
+                      (True, _, _)  -> scroll s (-1)
                       (_, False, _) -> return ()
                       (_, _, False) -> highlighted -= 1
                       (_, _, True)  -> do highlighted -= 1
@@ -424,6 +465,7 @@ handleEvent (VtyEvent e) =
                   correct = all (uncurry (==) . (\i -> (i+1, fst (kvs M.! i)))) [0..n-1]
 
           _ -> error "impossible"
+handleEvent (BT.MouseDown (SBClick el (CardViewport i)) _ _ _) = handleClickScroll (scroll' i) el
 handleEvent _ = return ()
 
 next :: EventM Name GlobalState ()

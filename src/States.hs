@@ -37,6 +37,7 @@ data Name =
           | MainMenuList
           | InfoViewport
           | SettingsViewport
+          | CardViewport Int
           | RecentsList
           | FileBrowserList
           | SBClick T.ClickableScrollbarElement Name

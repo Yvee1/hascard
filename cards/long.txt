@@ -1,0 +1,94 @@
+# Very long definition of Haskell
+Haskell (/ˈhæskəl/) is a general-purpose, statically-typed, purely functional programming language with type inference and lazy evaluation. 
+Designed for teaching, research, and industrial applications, Haskell has pioneered a number of programming language features such as type classes, which enable type-safe operator overloading, and monadic input/output (IO). 
+It is named after logician Haskell Curry. Haskell's main implementation is the Glasgow Haskell Compiler (GHC).
+
+Haskell's semantics are historically based on those of the Miranda programming language, which served to focus the efforts of the initial Haskell working group.
+The last formal specification of the language was made in July 2010, while the development of GHC continues to expand Haskell via language extensions.
+
+Haskell is used in academia and industry.
+As of May 2021, Haskell was the 28th most popular programming language by Google searches for tutorials, and made up less than 1% of active users on the GitHub source code repository. 
+
+After the release of Miranda by Research Software Ltd. in 1985, interest in lazy functional languages grew. By 1987, more than a dozen non-strict, purely functional programming languages existed. 
+Miranda was the most widely used, but it was proprietary software. 
+At the conference on Functional Programming Languages and Computer Architecture (FPCA '87) in Portland, Oregon, there was a strong consensus that a committee be formed to define an open standard for such languages.
+The committee's purpose was to consolidate existing functional languages into a common one to serve as a basis for future research in functional-language design.
+Haskell was developed by a committee, attempting to bring together off the shelf solutions where possible.
+
+Type classes, which enable type-safe operator overloading, were first proposed by Philip Wadler and Stephen Blott to address the ad-hoc handling of equality types and arithmetic overloading in languages at the time.
+
+In early versions of Haskell up until and including version 1.2, user interaction and IO (input and output) were handled by both streams based and continuation based mechanisms which were widely considered unsatisfactory.
+In version 1.3, monadic IO was introduced, along with the generalisation of type classes to higher kinds (type constructors).
+Along with "do notation", which provides syntactic sugar for the Monad type class, this gave Haskell an effect system that maintained referential transparency and was convenient.
+
+Other notable changes in early versions were the approach to the 'seq' function, which creates a data dependency between values, and is used in lazy languages to avoid excessive memory consumption; with it moving from a type class to a standard function to make refactoring more practical.
+
+The first version of Haskell ("Haskell 1.0") was defined in 1990.
+The committee's efforts resulted in a series of language definitions (1.0, 1.1, 1.2, 1.3, 1.4). 
+
+---
+# Very many options
+- 1
+- 2
+- 3
+- 4
+- 5
+- 6
+- 7
+- 8
+- 9
+* Ten Ten Ten Ten Ten Ten Ten Ten Ten Ten Ten Ten Ten Ten Ten Ten Ten Ten Ten Ten Ten Ten Ten Ten Ten Ten Ten Ten Ten Ten Ten Ten Ten Ten Ten Ten Ten Ten Ten Ten Ten Ten Ten Ten Ten Ten Ten Ten Ten Ten Ten Ten Ten Ten Ten Ten Ten Ten Ten Ten 
+---
+
+# Very many options
+[ ] 1
+[ ] 2
+[ ] 3
+[ ] 4
+[*] Five Five Five Five Five Five Five Five Five Five Five Five Five Five Five Five Five Five Five Five Five Five Five Five Five Five Five Five Five Five Five Five Five Five Five Five Five Five Five Five Five Five Five Five Five Five Five Five 
+[ ] 6
+[ ] 7
+[ ] 8
+[ ] 9
+[*] Ten Ten Ten Ten Ten Ten Ten Ten Ten Ten Ten Ten Ten Ten Ten Ten Ten Ten Ten Ten Ten Ten Ten Ten Ten Ten Ten Ten Ten Ten Ten Ten Ten Ten Ten Ten Ten Ten Ten Ten Ten Ten Ten Ten Ten Ten Ten Ten Ten Ten Ten Ten Ten Ten Ten Ten Ten Ten Ten Ten 
+
+---
+# Very long open question of Haskell
+Haskell (/ˈhæskəl/) is a general-purpose, statically-typed, purely functional programming language with type inference and lazy evaluation. 
+Designed for teaching, research, and industrial applications, Haskell has pioneered a number of programming language features such as type classes, which enable type-safe operator overloading, and monadic input/output (IO). 
+It is named after logician _Haskell Curry_. Haskell's main implementation is the Glasgow Haskell Compiler (GHC).
+
+Haskell's semantics are historically based on those of the Miranda programming language, which served to focus the efforts of the initial Haskell working group.
+The last formal specification of the language was made in July 2010, while the development of GHC continues to expand Haskell via language extensions.
+
+Haskell is used in academia and industry.
+As of May 2021, Haskell was the _28_th most popular programming language by Google searches for tutorials, and made up less than 1% of active users on the GitHub source code repository. 
+
+After the release of Miranda by Research Software Ltd. in 1985, interest in lazy functional languages grew. By 1987, more than a dozen non-strict, purely functional programming languages existed.
+Miranda was the most widely used, but it was proprietary software. At the conference on Functional Programming Languages and Computer Architecture (FPCA '87) in Portland, Oregon, there was a strong consensus that a committee be formed to define an open standard for such languages. 
+The committee's purpose was to consolidate existing functional languages into a common one to serve as a basis for future research in functional-language design.
+Haskell was developed by a committee, attempting to bring together off the shelf solutions where possible.
+
+Type classes, which enable type-safe operator overloading, were first proposed by Philip Wadler and Stephen Blott to address the ad-hoc handling of equality types and arithmetic overloading in languages at the time.
+
+In early versions of Haskell up until and including version 1.2, user interaction and IO (input and output) were handled by both streams based and continuation based mechanisms which were widely considered unsatisfactory.
+In version 1.3, monadic IO was introduced, along with the generalisation of type classes to higher kinds (type constructors).
+Along with "do notation", which provides syntactic sugar for the Monad type class, this gave Haskell an effect system that maintained referential transparency and was convenient.
+
+Other notable changes in early versions were the approach to the '_seq_' function, which creates a data dependency between values, and is used in lazy languages to avoid excessive memory consumption; with it moving from a type class to a standard function to make refactoring more practical.
+
+The first version of Haskell ("Haskell 1.0") was defined in 1990. 
+The committee's efforts resulted in a series of language definitions (1.0, 1.1, 1.2, 1.3, 1.4). 
+
+---
+# Very long reorder
+1. a
+2. b
+3. c
+4. d
+5. e
+7. g
+6. f
+8. h
+9. i
+10. j
