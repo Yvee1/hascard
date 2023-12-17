@@ -1,11 +1,11 @@
 module Types where
 import Data.Functor
-import Data.List
+import Data.List ( intercalate, intersperse )
 import Data.List.NonEmpty (NonEmpty)
-import System.FilePath
-import System.Process
-import System.Info
-import System.IO
+import System.FilePath ( (</>) )
+import System.Process ( runCommand, readProcess )
+import System.Info ( os )
+import System.IO ( openTempFile, hPutStrLn, hClose )
 import qualified Data.List.NonEmpty as NE
 import qualified System.Directory as D
 
@@ -55,19 +55,20 @@ instance Show External where
 
 openCommand :: String
 openCommand = case os of
-  "darwin" -> "open"
-  "linux"  -> "xdg-open"
-  _        -> error "Unkown OS for opening images"
+  "darwin"  -> "open"
+  "linux"   -> "xdg-open"
+  "mingw32" -> ""
+  _         -> error $ "Unknown OS (" <> os <> ") for opening files"
 
-openImage :: FilePath -> FilePath -> IO ()
-openImage origin relative = openImage' (origin </> relative)
+openFile :: FilePath -> FilePath -> IO ()
+openFile origin relative = openFile' (origin </> relative)
 
-openImage' :: FilePath -> IO ()
-openImage' fp = do
+openFile' :: FilePath -> IO ()
+openFile' fp = do
   exists <- D.doesFileExist fp 
   if exists
     then void $ runCommand (openCommand <> " \"" <> fp <> "\"")
-    else error $ "The image you were trying to open does not exist: " <> fp
+    else error $ "The file you were trying to open does not exist: " <> fp
 
 openLatex :: String -> IO ()
 openLatex latex = do
@@ -82,14 +83,14 @@ openLatex latex = do
   (tempfile, temph) <- openTempFile dir "hascard-latex-"
   hPutStrLn temph text
   hClose temph
-  callProcess "pdflatex" ["-output-directory", dir, tempfile]
-  openImage' (tempfile <> ".pdf")
+  readProcess "pdflatex" ["-output-directory", dir, tempfile] ""
+  openFile' (tempfile <> ".pdf")
 
 openCardExternal :: FilePath -> Card -> IO ()
 openCardExternal origin card =
   case external card of
     Nothing -> pure ()
-    Just (Image _ relative) -> openImage origin relative
+    Just (Image _ relative) -> openFile origin relative
     Just (Latex text) -> openLatex text
 
 whenJust :: Applicative m => Maybe a -> (a -> m ()) -> m ()
