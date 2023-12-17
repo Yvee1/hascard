@@ -15,7 +15,8 @@ else
       ARCH="osx"
   fi
   URL="https://www.stackage.org/stack/$ARCH-x86_64"
-  if [ "$RUNNER_OS" = "Windows" ] then
+  if [ "$RUNNER_OS" = "Windows" ]
+  then
       curl --location "$URL" > stack.zip
       unzip stack.zip
       mkdir "$HOME/stack"
