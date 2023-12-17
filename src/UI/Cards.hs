@@ -261,10 +261,10 @@ handleEvent (VtyEvent e) =
       s <- use cs
       flip (`maybe` (`handlePopupEvent` ev)) pUp $
         case (s ^. cardState, s ^. currentCard) of
-          (DefinitionState{_flipped = f}, _) ->
+          (DefinitionState{_flipped = f}, Definition {definition = d}) ->
             case ev of
               V.EvKey V.KEnter []  ->
-                if f
+                if f || all isSpace d 
                   then if not (s^.reviewMode) then next
                     else cs.popup ?= correctPopup
                   else cs.cardState.flipped %= not
