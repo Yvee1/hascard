@@ -18,7 +18,7 @@ else
   if [ "$RUNNER_OS" = "Windows" ]
   then
       curl --location "$URL" > stack.zip
-      unzip stack.zip
+      unzip -o stack.zip
       ls
       mkdir -p "$HOME/stack"
       mv stack.exe "$HOME/stack"
