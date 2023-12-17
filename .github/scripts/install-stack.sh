@@ -15,19 +15,20 @@ else
       ARCH="osx"
   fi
   URL="https://www.stackage.org/stack/$ARCH-x86_64"
-  curl --location "$URL" > stack.tar.gz
-  gunzip stack.tar.gz
-  tar -x -f stack.tar --strip-components 1
-  mkdir -p "$HOME/.local/bin"
-  if [ "$RUNNER_OS" = "Windows" ]
-  then
+  if [ "$RUNNER_OS" = "Windows" ] then
+      curl --location "$URL" > stack.zip
+      unzip stack.zip
       mkdir "$HOME/stack"
       mv stack.exe "$HOME/stack"
       export PATH=$PATH:"$HOME/stack"
   else
+      curl --location "$URL" > stack.tar.gz
+      gunzip stack.tar.gz
+      tar -x -f stack.tar --strip-components 1
+      mkdir -p "$HOME/.local/bin"
       mv stack "$HOME/.local/bin/"
+      rm stack.tar
   fi
-  rm stack.tar
 fi
 
 stack --version
