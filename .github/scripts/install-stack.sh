@@ -8,6 +8,9 @@ else
   if [ "$RUNNER_OS" = "Linux" ] 
   then
       ARCH="linux"
+  elif [ "$RUNNER_OS" = "Windows" ]
+  then
+      ARCH="windows"
   else
       ARCH="osx"
   fi
@@ -16,7 +19,14 @@ else
   gunzip stack.tar.gz
   tar -x -f stack.tar --strip-components 1
   mkdir -p "$HOME/.local/bin"
-  mv stack "$HOME/.local/bin/"
+  if [ "$RUNNER_OS" = "Windows" ]
+  then
+      mkdir "$HOME/stack"
+      mv stack.exe "$HOME/stack"
+      export PATH=$PATH:"$HOME/stack"
+  else
+      mv stack "$HOME/.local/bin/"
+  fi
   rm stack.tar
 fi
 
