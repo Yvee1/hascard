@@ -24,7 +24,7 @@ cardSelectorState = do
   let prettyRecents = shortenFilepaths (S.toList rs)
       options = Vec.fromList (prettyRecents ++ ["Select file from system"])
       initialState = CSS
-        { _list = L.list Ordinary options 1
+        { _list = L.list RecentsList options 1
         , _exception = Nothing
         , _recents = rs
         , _maxRecentsToShow = maxRs }
@@ -38,7 +38,7 @@ mainMenuState =
                   , "Settings"
                   , "Quit" ]
 
-      initialState = MMS (L.list Ordinary options 1) in
+      initialState = MMS (L.list MainMenuList options 1) in
   MainMenuState initialState
 
 safeHead :: [a] -> Maybe a
@@ -93,7 +93,7 @@ infoState = InfoState ()
 
 fileBrowserState :: IO State
 fileBrowserState = do
-  browser <- newFileBrowser selectNonDirectories Ordinary Nothing
+  browser <- newFileBrowser selectNonDirectories FileBrowserList Nothing
   let filteredBrowser = setFileBrowserEntryFilter (Just (entryFilter False)) browser
   return $ FileBrowserState (FBS filteredBrowser Nothing [] Nothing False)
 

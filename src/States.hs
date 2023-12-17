@@ -11,6 +11,7 @@ import Lens.Micro.Platform
 import System.Random.MWC (GenIO)
 import Stack hiding (head)
 import Types
+import qualified Brick.Types as T
 import qualified Data.List.NonEmpty as NE
 import qualified Data.Map.Strict as M
 import qualified Graphics.Vty as V
@@ -33,6 +34,12 @@ data Name =
           | ParametersOkField
 
           | Ordinary
+          | MainMenuList
+          | InfoViewport
+          | SettingsViewport
+          | RecentsList
+          | FileBrowserList
+          | SBClick T.ClickableScrollbarElement Name
   deriving (Eq, Ord, Show)
 type Event = ()
 

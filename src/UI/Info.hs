@@ -6,7 +6,9 @@ import Brick.Widgets.Border.Style
 import Brick.Widgets.Center
 import States
 import StateManagement
+import qualified Brick.Types as T
 import qualified Graphics.Vty as V
+import UI.BrickHelpers
 
 drawUI :: IS -> [Widget Name]
 drawUI = (:[]) . const ui
@@ -22,17 +24,21 @@ ui =
   hBorder <=>
   drawInfo
 
+scroll :: Int -> EventM Name s ()
+scroll = vScrollBy (viewportScroll InfoViewport)
+
 handleEvent :: BrickEvent Name Event -> EventM Name GlobalState ()
-handleEvent (VtyEvent e) =
+handleEvent (VtyEvent e) = do
   case e of
     V.EvKey V.KEsc [] -> popState
     V.EvKey (V.KChar 'q') [] -> popState
     V.EvKey V.KEnter [] -> popState
-    V.EvKey V.KDown [] -> vScrollBy (viewportScroll Ordinary) 1
-    V.EvKey (V.KChar 'j') [] -> vScrollBy (viewportScroll Ordinary) 1
-    V.EvKey V.KUp [] -> vScrollBy (viewportScroll Ordinary) (-1)
-    V.EvKey (V.KChar 'k') [] -> vScrollBy (viewportScroll Ordinary) (-1)
+    V.EvKey V.KDown [] -> scroll 1
+    V.EvKey (V.KChar 'j') [] -> scroll 1
+    V.EvKey V.KUp [] -> scroll (-1)
+    V.EvKey (V.KChar 'k') [] -> scroll (-1)
     _ -> return ()
+handleEvent (T.MouseDown (SBClick el InfoViewport) _ _ _) = handleClickScroll scroll el
 handleEvent _ = return ()
 
 titleAttr :: AttrName
@@ -44,9 +50,9 @@ theMap = attrMap V.defAttr
 
 drawInfo :: Widget Name
 drawInfo =
-  padLeftRight 1 $
-  vLimitPercent 60 $
-  viewport Ordinary Vertical (strWrap info)
+  padLeft (Pad 1) $
+  scrollableViewportPercent 60 InfoViewport $
+  strWrap info
 
 info :: String
 info = unlines

@@ -136,4 +136,4 @@ refreshRecents = do
   let prettyRecents = shortenFilepaths (toList rs)
       options       = Vec.fromList (prettyRecents ++ ["Select file from system"])
   recents .= rs
-  list .= L.list Ordinary options 1
+  list .= L.list RecentsList options 1

@@ -10,9 +10,11 @@ import Data.Maybe
 import Data.Text (pack)
 import Graphics.Vty (imageWidth, imageHeight, charFill)
 import Lens.Micro
+import States (Name(SBClick))
 import Text.Read (readMaybe)
 import UI.Attributes
 import qualified Graphics.Vty as V
+import qualified Brick.Types as T
 
 hCenteredStrWrap :: String -> Widget n
 hCenteredStrWrap = hCenteredStrWrapWithAttr id
@@ -122,3 +124,47 @@ renderNaturalNumber bound postfix n foc val =
   in if null postfix
     then hLimit (length (show bound)) (csr (addAttr (str val')) <+> hFill ' ') 
     else csr (addAttr (str val')) <+> str postfix
+
+-- https://github.com/jtdaugherty/brick/issues/290#issuecomment-699570168
+fixedHeightOrViewport :: (Ord n, Show n) => Int -> n -> Widget n -> Widget n
+fixedHeightOrViewport maxHeight vpName w =
+    Widget Fixed Fixed $ do
+        -- Render the viewport contents in advance
+        result <- render w
+        -- If the contents will fit in the maximum allowed rows,
+        -- just return the content without putting it in a viewport.
+        if imageHeight (image result) <= maxHeight
+            then return result
+            -- Otherwise put the contents (pre-rendered) in a viewport
+            -- and limit the height to the maximum allowable height.
+            else render (vLimit maxHeight $
+                         viewport vpName Vertical $
+                         Widget Fixed Fixed $ return result)
+
+fixedHeightOrViewportPercent :: (Ord n, Show n) => Int -> n -> Widget n -> Widget n
+fixedHeightOrViewportPercent percentage vpName w =
+    Widget Fixed Fixed $ do
+        result <- render w
+        available <- availHeight <$> getContext
+
+        if imageHeight (image result) <= percentage * available `div` 100
+            then return result
+            else render (vLimitPercent percentage $
+                         viewport vpName Vertical w)
+
+handleClickScroll :: (Int -> EventM n s ()) -> ClickableScrollbarElement -> EventM n s ()
+handleClickScroll scroll el =
+  case el of
+    T.SBHandleBefore -> scroll (-1)
+    T.SBHandleAfter  -> scroll 1
+    T.SBTroughBefore -> scroll (-10)
+    T.SBTroughAfter  -> scroll 10
+    T.SBBar          -> return ()
+
+scrollableViewportPercent :: Int -> Name -> Widget Name -> Widget Name
+scrollableViewportPercent percent n =
+  withClickableVScrollBars SBClick .
+  withVScrollBarHandles .
+  withVScrollBars OnRight .
+  fixedHeightOrViewportPercent percent n .
+  padRight (Pad 1) 

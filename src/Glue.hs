@@ -1,5 +1,6 @@
 module Glue where
 import Brick
+import Control.Monad (when)
 import Control.Monad.State.Lazy
 import States
 import StateManagement
@@ -17,9 +18,15 @@ globalApp = App
   { appDraw = drawUI
   , appChooseCursor = showFirstCursor
   , appHandleEvent = handleEvent
-  , appStartEvent = return ()
+  , appStartEvent = enableMouse
   , appAttrMap = handleAttrMap
   }
+
+enableMouse = do
+  vty <- getVtyHandle
+  let output = V.outputIface vty
+  when (V.supportsMode output V.Mouse) $
+      liftIO $ V.setMode output V.Mouse True
 
 drawUI :: GlobalState -> [Widget Name]
 drawUI gs = case evalState getState gs of
