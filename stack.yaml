@@ -36,6 +36,7 @@ packages:
 #
 extra-deps:
 - vty-windows-0.2.0.1
+- brick-2.3.1@sha256:4c36e5d77dc360641a5aa9361949d981e4aecc7f1372c862e0b2451d614b5f5c,17394
 # - acme-missiles-0.3
 # - git: https://github.com/commercialhaskell/stack.git
 #   commit: e7b331f14bcffb8367cd58fbfc8b40ec7642100a

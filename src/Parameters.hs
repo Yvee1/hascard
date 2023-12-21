@@ -137,7 +137,8 @@ chunkSubsetField capacity stLens initialState =
                     , formFieldLens = stLens
                     , formFieldUpdate = const
                     , formFieldRenderHelper = id
-                    , formFieldConcat = customConcat }
+                    , formFieldConcat = customConcat
+                    , formFieldVisibilityMode = ShowAugmentedField }
 
 okField :: (Ord n, Show n) => Lens' s Bool -> n -> String -> s -> FormFieldState s e n
 okField stLens name label initialState =
@@ -153,7 +154,8 @@ okField stLens name label initialState =
                     , formFieldLens = stLens
                     , formFieldUpdate = const
                     , formFieldRenderHelper = id
-                    , formFieldConcat = vBox }
+                    , formFieldConcat = vBox
+                    , formFieldVisibilityMode = ShowAugmentedField }
 
 renderOk :: String -> n -> Bool -> Bool -> Widget n
 renderOk label _ focus _ =

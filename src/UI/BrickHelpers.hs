@@ -80,7 +80,8 @@ yesnoField rightAlign stLens name label initialState =
                     , formFieldLens = stLens
                     , formFieldUpdate = const
                     , formFieldRenderHelper = id
-                    , formFieldConcat = vBox }
+                    , formFieldConcat = vBox
+                    , formFieldVisibilityMode = ShowFocusedFieldOnly }
 
 renderYesno :: Ord n => Bool -> String -> n -> Bool -> Bool -> Widget n
 renderYesno rightAlign label n foc val =
@@ -114,7 +115,8 @@ naturalNumberField bound stLens name postfix initialState =
                     , formFieldLens = stLens
                     , formFieldUpdate = const
                     , formFieldRenderHelper = id
-                    , formFieldConcat = vBox }
+                    , formFieldConcat = vBox
+                    , formFieldVisibilityMode = ShowAugmentedField }
 
 renderNaturalNumber :: Int -> String -> n -> Bool -> Int -> Widget n
 renderNaturalNumber bound postfix n foc val =
