@@ -24,7 +24,6 @@ else
     BUNDLE_NAME="$REPO-$RELEASE_VERSION-$ARCH.zip"
     powershell Compress-Archive -Path "$REPO.exe" -DestinationPath "$BUNDLE_NAME"
     echo "SHA256:"
-    shasum -a 256 "$BUNDLE_NAME"
     ls $HOME/ghr/
     echo $PATH
     ghr -t "$GITHUB_TOKEN" -u "$OWNER" -r "$REPO" --replace "$(git describe --tags)" "$BUNDLE_NAME"
