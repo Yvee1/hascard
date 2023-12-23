@@ -22,7 +22,7 @@ else
     cp "$BIN" "./$REPO.exe"
     chmod +x "./$REPO.exe"
     BUNDLE_NAME="$REPO-$RELEASE_VERSION-$ARCH.zip"
-    zip "$BUNDLE_NAME" "$REPO.exe"
+    powershell Compress-Archive -Path "$REPO.exe" -DestinationPath "$BUNDLE_NAME"
     echo "SHA256:"
     shasum -a 256 "$BUNDLE_NAME"
     ls $HOME/ghr/
