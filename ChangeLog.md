@@ -1,11 +1,15 @@
 # Changelog for hascard
+## 0.6.0.1
+Fixes:
+- Change key for showing answer to open questions from F1 to Shift+Tab, which should cause fewer conflicts with existing keybindings (issue #31).
+
 ## 0.6.0.0
 New:
 - Windows support.
-- `export` CLI command for exporting hascard cards to delimited text files.
-- Possibility to vertically scroll flashcards if they are long enough.
+- `export` CLI command for exporting hascard cards to delimited text files (issue #33).
+- Possibility to vertically scroll flashcards if they are long enough (issue #25).
 - Scrollbars for menus where scrolling is possible, which can be controlled by mouse if the terminal supports this.
-- Setting for shuffling answers to multiple choice/answer questions.
+- Setting for shuffling answers to multiple choice/answer questions (issue #19).
 
 Fixes:
 - Improved navigation of parameter selection menu.
