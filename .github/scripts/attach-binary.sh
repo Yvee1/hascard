@@ -23,10 +23,7 @@ else
     chmod +x "./$REPO.exe"
     BUNDLE_NAME="$REPO-$RELEASE_VERSION-$ARCH.zip"
     powershell Compress-Archive -Path "$REPO.exe" -DestinationPath "$BUNDLE_NAME"
-    echo "SHA256:"
-    ls $HOME/ghr/
-    echo $PATH
-    ghr -t "$GITHUB_TOKEN" -u "$OWNER" -r "$REPO" --replace "$(git describe --tags)" "$BUNDLE_NAME"
+    $HOME/ghr/ghr.exe -t "$GITHUB_TOKEN" -u "$OWNER" -r "$REPO" --replace "$(git describe --tags)" "$BUNDLE_NAME"
   else
     BIN="$(stack path --local-install-root)/bin/$REPO"
     BUNDLE_NAME="$REPO-$RELEASE_VERSION-$ARCH.tar.gz"
