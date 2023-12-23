@@ -25,7 +25,7 @@ A minimal commandline utility for reviewing notes. 'Flashcards' can be written i
 - [Miscellaneous info](#miscellaneous-info)
 
 ## Installation
-Installation on Windows is not possible sadly, aside from WSL. This is because hascard depends on vty which only supports UNIX-like operating systems (this includes macOS).
+Windows, Linux and macOS are supported.
 
 ### Homebrew (for macOS)
 For macOS users an installation using homebrew is provided via a custom tap. You can run 
@@ -35,7 +35,7 @@ brew install Yvee1/tools/hascard
 ```
 
 ### Binary
-Ubuntu and macOS binaries are available under [releases](https://github.com/Yvee1/hascard/releases/). To be able to run it from any directory, it has to be added to the PATH. This can be done by copying it to e.g. the `/usr/local/bin` directory.
+Ubuntu, macOS, and Windows binaries are available under [releases](https://github.com/Yvee1/hascard/releases/). To be able to run it from any directory, it has to be added to the PATH. In Linux, this can be achieved, for example, by copying it to the `/usr/local/bin` directory.
 
 ### Arch Linux
 Thanks to [loki7990](https://github.com/loki7990), hascard is also on the AUR: https://aur.archlinux.org/packages/hascard/.
@@ -59,7 +59,7 @@ Simply run `hascard` to open the main application. Menu navigation can be done w
 After finishing a deck, there is an option to create new decks from the correctly answered or incorrectly answered cards, or both. The correct cards of a file named `deck.txt` are stored in `deck+.txt` in the same folder, and the incorrect ones in the file `deck-.txt`. Make sure you do not have files of those names that you want to keep since these _will_ be overwritten.
 
 ### CLI
-The CLI provides two commands, `run` and `import`. The `hascard run` is essentially the same as just `hascard`, but the `run` command can be given a file to run the application on directly. When run on a file directly, parameters like whether to shuffle the deck are specified via CLI options instead of in a menu.
+The CLI provides three commands, `run`, `import`, `export`. The `hascard run` command is essentially the same as just `hascard`, but the `run` command can be given a file to run the application on directly. When run on a file directly, parameters like whether to shuffle the deck are specified via CLI options instead of in a menu.
 
 As an example, say you have a file `deck.txt` with lots of cards in it and you want to review 5 random ones, you can use `hascard run deck -s -a 5`. Here `-s` shuffles the deck and `-a 5` specifies we only want to look at 5 of them. For more info, see `hascard run --help`.
 
@@ -82,6 +82,10 @@ _en outre|de plus_
 _de même_
 ```
 with the command `hascard import input.txt output.txt -r`. More info can be found in the help text at `hascard import --help`.
+
+#### Exporting decks
+Similarly, one may want to convert hascard cards to delimited text files for use in other applications.
+This functionality is provided by `hascard export`. For more info, see `hascard export --help`.
 
 ## Cards
 Decks of cards are written in `.txt` or `.md` files. A deck contains multiple cards which are seperated with a line containing three dashes `---`. For examples, see the [`/cards`](https://github.com/Yvee1/hascard/tree/master/cards) directory. 

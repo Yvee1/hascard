@@ -1,4 +1,16 @@
 # Changelog for hascard
+## 0.6.0.0
+New:
+- Windows support.
+- `export` CLI command for exporting hascard cards to delimited text files.
+- Possibility to vertically scroll flashcards if they are long enough.
+- Scrollbars for menus where scrolling is possible, which can be controlled by mouse if the terminal supports this.
+- Setting for shuffling answers to multiple choice/answer questions.
+
+Fixes:
+- Improved navigation of parameter selection menu.
+- An empty definition card does not need to be flipped.
+
 ## 0.5.0.3.1
 Update versions and information
 
