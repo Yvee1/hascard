@@ -41,12 +41,12 @@ drawUI s =  [maybe emptyWidget (`drawPopup` s) (s^.popup), drawCardUI s <=> draw
 
 drawInfo :: CS -> Widget Name
 drawInfo s = if not (s ^. showControls) then emptyWidget else
-  strWrap . ("ESC: quit" <>) $ case s ^. cardState of
-    DefinitionState {}     -> ", ENTER: flip card / continue"
-    MultipleChoiceState {} -> ", ENTER: submit answer / continue"
-    MultipleAnswerState {} -> ", ENTER: select / continue, c: submit selection"
-    OpenQuestionState {}   -> ", LEFT/RIGHT/TAB: navigate gaps, ENTER: submit answer / continue, Ctrl+F1: show answer"
-    ReorderState {}        -> ", ENTER: grab, c: submit answer"
+  strWrap . ("Esc: quit" <>) $ case s ^. cardState of
+    DefinitionState {}     -> ", Enter: flip card / continue"
+    MultipleChoiceState {} -> ", Enter: submit answer / continue"
+    MultipleAnswerState {} -> ", Enter: select / continue, c: submit selection"
+    OpenQuestionState {}   -> ", Left/Right/Tab: navigate gaps, Enter: submit answer / continue, Shift+Tab: show answer"
+    ReorderState {}        -> ", Enter: grab, c: submit answer"
 
 drawCardBox :: Widget Name -> Widget Name
 drawCardBox w = C.center $
@@ -360,7 +360,7 @@ handleEvent (VtyEvent e) =
 
           (OpenQuestionState {_highlighted = i, _number = n, _gapInput = kvs, _correctGaps = cGaps, _failed=fail}, OpenQuestion _ _ perforated) ->
             case ev of
-              V.EvKey (V.KFun 1) [V.MCtrl] -> zoom (cs.cardState) $ do
+              V.EvKey (V.KChar '\t') [V.MShift] -> zoom (cs.cardState) $ do
                 gapInput .= correctAnswers
                 entered .= True
                 failed .= True
@@ -391,7 +391,7 @@ handleEvent (VtyEvent e) =
 
               V.EvKey (V.KChar c) [] -> zoom (cs.cardState) $ do
                   unless frozen $ gapInput.at i.non "" %= (++[c])
-                  case c of
+                  when frozen $ case c of
                     'k' -> up
                     'j' -> down
                     _ -> return ()
@@ -425,8 +425,8 @@ handleEvent (VtyEvent e) =
               _ -> return ()
 
               where frozen = M.foldr (&&) True cGaps
-                    down = when frozen $ scroll s 1
-                    up = when frozen $ scroll s (-1)
+                    down = scroll s 1
+                    up = scroll s (-1)
 
           (ReorderState {_highlighted = i, _entered = submitted, _grabbed=dragging, _number = n, _order = kvs }, Reorder _ _ elts) ->
             case ev of

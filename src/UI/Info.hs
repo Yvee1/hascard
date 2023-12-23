@@ -63,10 +63,10 @@ info = unlines
   , ""
   , " * Enter confirms a selection, flips a card or continues to the next card"
   , ""
-  , " * Use TAB or the arrow keys for navigating gaps in open questions"
+  , " * Use Tab or the arrow keys for navigating gaps in open questions"
   , ""
   , " * Use the c key for confirming reorder questions or multiple choice questions with more than 1 possible answer"
   , ""
-  , " * Use Ctrl+F1 to show the answers of a open question"
+  , " * Use Shift+Tab to show the answers of a open question"
   , ""
   , " * Use Ctrl+Left and Ctrl+Right to move to previous and next cards without having to answer them; this is disabled in review mode"]
