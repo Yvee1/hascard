@@ -4,8 +4,10 @@ module Main where
 import UI
 import Control.Exception (displayException, try)
 import Control.Monad (void, when)
+import Data.Either.Extra (mapLeft)
 import Data.Version (showVersion)
 import Data.Void
+import Export
 import Lens.Micro.Platform
 import Paths_hascard (version)
 import Parser
@@ -23,6 +25,7 @@ import qualified Stack
 data Command = Command
   | Run RunOpts
   | Import ImportOpts
+  | Export ExportOpts
 
 data Opts = Opts
   { _optCommand      :: Maybe Command
@@ -51,6 +54,7 @@ main = do
     (True, _)                -> putStrLn (showVersion version)
     (_, Just (Run rOpts))    -> run rOpts
     (_, Just (Import iOpts)) -> doImport iOpts
+    (_, Just (Export eOpts)) -> doExport eOpts
     (_, Nothing)             ->
       do g <- createSystemRandom 
          let gs = GlobalState {_mwc=g, _states=Map.empty, _stack=Stack.empty, _parameters= defaultParameters }
@@ -63,7 +67,8 @@ opts = Opts
     <> command "import" (info (Import <$> importOpts) (progDesc "Convert a delimited text file (e.g. exported from Quizlet) to a file compatible with hascard.\
     \ The delimiters can be specified via CLI options. By default, terms and definitions are assumed to be separated by tabs, and different cards by new lines.\
     \ Either 'Definition' cards are generated (traditional flashcards), or 'Open question' cards (where the answer needs to be typed).\
-    \ For 'Open question' cards, a delimiter can be specified which separates multiple correct answers."))))
+    \ For 'Open question' cards, a delimiter can be specified that separates multiple correct answers."))
+    <> command "export" (info (Export <$> exportOpts) (progDesc "Convert hascard cards to a delimited text file. Only definition and open question cards can be exported"))))
   <*> switch (long "version" <> short 'v' <> help "Show version number")
 
 runOpts :: Parser RunOpts
@@ -83,6 +88,13 @@ importOpts = ImportOpts
   <*> strOption (long "row-delimiter" <> metavar "delimiter" <> help "The delimiter used to separate different cards; default: \\n." <> value "\n")
   <*> strOption (long "term-def-delimiter" <> metavar "delimiter" <> help "The delimiter used to separate terms and definitions; default: \\t." <> value "\t")
   <*> optional (strOption (long "def-delimiter" <> metavar "delimiter" <> help "The delimiter used to separate different definitions for the same term; no delimiter is used by default."))
+
+exportOpts :: Parser ExportOpts
+exportOpts = ExportOpts
+  <$> argument str (metavar "INPUT" <> help "A file containing hascard cards")
+  <*> argument str (metavar "DESINATION" <> help "The filename/path to which the output should be saved")
+  <*> strOption (long "card-delimiter" <> metavar "delimiter" <> help "The delimiter used to separate different cards; default: \\n." <> value "\n")
+  <*> strOption (long "question-delimiter" <> metavar "delimiter" <> help "The delimiter used to separate terms and definitions; default: ,." <> value ",")
 
 optsWithHelp :: ParserInfo Opts
 optsWithHelp = info (opts <**> helper) $
@@ -154,6 +166,23 @@ doImport opts' = do
           writeFile (opts ^. optOutput) . cardsToString $ cards
           putStrLn "Successfully converted the file."
         Left msg -> putStrLn msg
+
+doExport :: ExportOpts -> IO ()
+doExport opts' = do
+  let opts = opts' & optCardDelimiter %~ parseStringLiteral
+                   & optQuestionDelimiter %~ parseStringLiteral
+  valOrExc <- try $ readFile (opts ^. optExportInput) :: IO (Either IOError String)
+  let eitherResult = do
+        val <- mapLeft displayException valOrExc
+        cards <- parseCards val
+        exportCards opts cards
+
+
+  case eitherResult of
+    Left msg -> putStrLn msg
+    Right output -> do
+      writeFile (opts ^. optExportOutput) output
+      putStrLn "Successfully converted the file."
          
 parseStringLiteral :: String -> String
 parseStringLiteral s = case parse (many charLiteral) "" s of

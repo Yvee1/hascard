@@ -81,7 +81,7 @@ yesnoField rightAlign stLens name label initialState =
                     , formFieldUpdate = const
                     , formFieldRenderHelper = id
                     , formFieldConcat = vBox
-                    , formFieldVisibilityMode = ShowFocusedFieldOnly }
+                    , formFieldVisibilityMode = ShowAugmentedField }
 
 renderYesno :: Ord n => Bool -> String -> n -> Bool -> Bool -> Widget n
 renderYesno rightAlign label n foc val =
