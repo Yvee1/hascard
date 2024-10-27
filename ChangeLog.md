@@ -1,4 +1,8 @@
 # Changelog for hascard
+## 0.6.0.2
+Fixes:
+- Remove Shift+Tab key binding as it is unreliable. We switch to a different approach: show the correct answer(s) when submitting empty answer(s) (which is not correct) or submitting the same answer(s) twice in a row.
+
 ## 0.6.0.1
 Fixes:
 - Change key for showing answer to open questions from F1 to Shift+Tab, which should cause fewer conflicts with existing keybindings (issue #31).
