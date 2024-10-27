@@ -45,7 +45,7 @@ drawInfo s = if not (s ^. showControls) then emptyWidget else
     DefinitionState {}     -> ", Enter: flip card / continue"
     MultipleChoiceState {} -> ", Enter: submit answer / continue"
     MultipleAnswerState {} -> ", Enter: select / continue, c: submit selection"
-    OpenQuestionState {}   -> ", Left/Right/Tab: navigate gaps, Enter: submit answer / continue, Shift+Tab: show answer"
+    OpenQuestionState {}   -> ", Left/Right/Tab: navigate gaps, Enter: submit answer / continue"
     ReorderState {}        -> ", Enter: grab, c: submit answer"
 
 drawCardBox :: Widget Name -> Widget Name
@@ -358,15 +358,11 @@ handleEvent (VtyEvent e) =
 
                   correctlyAnswered = NE.toList (NE.map isOptionCorrect opts) == map snd (M.toAscList kvs)
 
-          (OpenQuestionState {_highlighted = i, _number = n, _gapInput = kvs, _correctGaps = cGaps, _failed=fail}, OpenQuestion _ _ perforated) ->
+          (OpenQuestionState {_highlighted = i, _number = n, _gapInput = kvs, _correctGaps = cGaps, _failed=fail, _previousInput = pkvs}, OpenQuestion _ _ perforated) ->
+            let frozen = M.foldr (&&) True cGaps
+                down = scroll s 1
+                up = scroll s (-1) in
             case ev of
-              V.EvKey (V.KChar '\t') [V.MShift] -> zoom (cs.cardState) $ do
-                gapInput .= correctAnswers
-                entered .= True
-                failed .= True
-                correctGaps .= M.fromAscList [(i, True) | i <- [0..n-1]]
-                      where correctAnswers = M.fromAscList $ zip [0..] $ map NE.head (sentenceToGaps (perforatedToSentence perforated))
-
               V.EvKey (V.KChar '\t') [] -> zoom (cs.cardState) $ do
                 if i < n - 1 && not frozen
                   then highlighted += 1
@@ -397,7 +393,7 @@ handleEvent (VtyEvent e) =
                     _ -> return ()
 
               V.EvKey V.KEnter [] -> case (frozen, fail) of
-                (False, _) -> zoom cs $ do
+                (False, _) -> zoom (cs.cardState) $ do
                   let sentence = perforatedToSentence perforated
                       gaps = sentenceToGaps sentence
 
@@ -406,11 +402,23 @@ handleEvent (VtyEvent e) =
                         then elem
                         else (\word possibilites -> map toLower word `elem` NE.map (map toLower) possibilites)
 
-                  cardState.correctGaps %= M.mapWithKey (\j _ -> M.findWithDefault "" j kvs `wordIsCorrect` (gaps !! j))
-                  cardState.entered .= True
+                      allEmpty = all null kvs
+                      sameAsPrevious = kvs == pkvs
 
-                  unlessM (M.foldr (&&) True <$> use (cardState.correctGaps)) $
-                    cardState.failed .= True
+                  correctGaps %= M.mapWithKey (\j _ -> M.findWithDefault "" j kvs `wordIsCorrect` (gaps !! j))
+                  entered .= True
+
+                  allCorrect <- M.foldr (&&) True <$> use correctGaps
+
+                  when (allEmpty && not allCorrect || sameAsPrevious) $ do
+                    let correctAnswers = M.fromAscList $ zip [0..] $ map NE.head (sentenceToGaps (perforatedToSentence perforated))
+                    correctGaps .= M.fromAscList [(i, True) | i <- [0..n-1]]
+                    gapInput .= correctAnswers
+
+                  unless allCorrect $
+                    failed .= True
+
+                  previousInput .= kvs
 
                 (_, True) -> next
                 (_, False) -> do
@@ -423,10 +431,6 @@ handleEvent (VtyEvent e) =
                       backspace xs = init xs
 
               _ -> return ()
-
-              where frozen = M.foldr (&&) True cGaps
-                    down = scroll s 1
-                    up = scroll s (-1)
 
           (ReorderState {_highlighted = i, _entered = submitted, _grabbed=dragging, _number = n, _order = kvs }, Reorder _ _ elts) ->
             case ev of

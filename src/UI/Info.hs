@@ -67,6 +67,4 @@ info = unlines
   , ""
   , " * Use the c key for confirming reorder questions or multiple choice questions with more than 1 possible answer"
   , ""
-  , " * Use Shift+Tab to show the answers of a open question"
-  , ""
   , " * Use Ctrl+Left and Ctrl+Right to move to previous and next cards without having to answer them; this is disabled in review mode"]

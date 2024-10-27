@@ -103,6 +103,7 @@ data CardState =
   , _entered        :: Bool
   , _correctGaps    :: Map Int Bool
   , _failed         :: Bool
+  , _previousInput  :: Map Int String
   }
   | ReorderState
   { _highlighted    :: Int
@@ -124,7 +125,8 @@ defaultCardState OpenQuestion{perforated=perf} = OpenQuestionState
   , _number = nGapsInPerforated perf
   , _entered = False
   , _correctGaps = M.fromList [(i, False) | i <- [0..nGapsInPerforated perf - 1]]
-  , _failed = False }
+  , _failed = False
+  , _previousInput = M.empty }
 defaultCardState MultipleAnswer{options=opts} = MultipleAnswerState 
   { _highlighted = 0
   , _selected = M.fromList [(i, False) | i <- [0..NE.length opts-1]]
